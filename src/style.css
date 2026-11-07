@@ -674,4 +674,159 @@ button {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  
+.central-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.central-stat,
+.session-control-panel,
+.activity-panel {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.central-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.central-stat-label,
+.central-stat-detail {
+  color: #99949a;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.central-stat-value {
+  color: #e5c78b;
+  font-size: 21px;
+}
+
+.central-stat-detail {
+  letter-spacing: 0;
+  font-size: 11px;
+}
+
+.session-control-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 28px;
+}
+
+.session-control-panel h3 {
+  margin: 9px 0 6px;
+}
+
+.session-control-panel p {
+  color: #99949a;
+  font-size: 12px;
+}
+
+.engine-action,
+.log-form button {
+  border: 1px solid #9c7943;
+  border-radius: 6px;
+  padding: 11px 16px;
+  background: #9c7943;
+  color: #17130e;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.engine-action.danger {
+  border-color: #9b4d4d;
+  background: #9b4d4d;
+  color: white;
+}
+
+.engine-action:disabled,
+.log-form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-panel {
+  margin-top: 25px;
+}
+
+.log-form {
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.log-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  background: rgba(0,0,0,.2);
+  color: #eee;
+}
+
+.log-form input:disabled {
+  opacity: 0.4;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.activity-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.activity-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #c49a59;
+  flex-shrink: 0;
+}
+
+.activity-entry p {
+  margin: 0 0 5px;
+  font-size: 12px;
+}
+
+.activity-entry small {
+  color: #888;
+  font-size: 10px;
+}
+
+.empty-activity {
+  color: #888;
+  font-size: 12px;
+  padding: 10px 0;
+}
+
+@media (max-width: 600px) {
+  .central-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-control-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 }
