@@ -91,3 +91,16 @@
 @keyframes fragmentDrift{from{opacity:.12;transform:translateY(8px);filter:blur(3px)}to{opacity:.72;transform:translateY(-8px);filter:blur(0)}}
 @media(max-width:760px){.rupture-editor{grid-template-columns:1fr}.rupture-preview{min-height:180px}.omen-fragment{max-width:38vw}}
 @media(prefers-reduced-motion:reduce){.rupture-wave,.rupture-atmosphere,.rupture-preview-wave,.omen-echo,.omen-fragment{animation:none!important}}
+
+/* 0.4.1 — renderização resiliente, independente de keyframes */
+.showtime-mode,.showtime-mode body,.showtime-mode #app{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;background:transparent!important}
+.showtime-overlay{position:fixed!important;z-index:2147483000!important;inset:0!important;display:block!important;visibility:visible!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;opacity:1!important;pointer-events:none!important;background:transparent!important}
+.showtime-rupture .rupture-copy{z-index:100!important;display:block!important;visibility:visible!important;opacity:1!important;animation:none!important;filter:none!important}
+.showtime-rupture .rupture-copy h1,.showtime-rupture .rupture-copy p{display:block!important;visibility:visible!important;opacity:1!important;color:#fff!important;text-shadow:0 2px 18px #000,0 0 8px #000!important}
+.showtime-omen .omen-whisper-field{z-index:30!important;display:block!important;visibility:visible!important;opacity:1!important}
+.showtime-hallucination .omen-whisper{z-index:35!important;display:block!important;visibility:visible!important;opacity:var(--whisper-alpha)!important;animation:whisperFloat var(--float-duration) ease-in-out var(--delay) infinite alternate!important}
+.showtime-echo .omen-echo{z-index:35!important;display:block!important;visibility:visible!important;opacity:var(--whisper-alpha)!important;animation:echoVisibleFloat var(--float-duration) ease-in-out var(--delay) infinite alternate!important}
+.showtime-prophecy .prophecy-main{z-index:40!important;display:block!important;visibility:visible!important;opacity:.96!important;animation:none!important}
+.showtime-prophecy .omen-fragment{z-index:35!important;display:block!important;visibility:visible!important;opacity:.72!important;animation:none!important}
+.omen-whisper-caption{z-index:60!important;display:block!important;visibility:visible!important}
+@keyframes echoVisibleFloat{0%,100%{transform:translate(-50%,-50%) scale(.96);filter:blur(1px)}50%{transform:translate(-50%,-50%) scale(1.04);filter:blur(0)}}
