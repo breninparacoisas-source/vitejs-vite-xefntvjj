@@ -3,11 +3,11 @@ import './ambience.css';
 
 const CHANNEL = 'com.arton.engine/ambience/v1';
 const MODAL_ID = 'com.arton.engine/ambience/overlay';
+const METADATA_KEY = 'com.arton.engine/ambience';
 
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number };
 
-let activePreset: AmbiencePreset = 'off';
 
 function validPayload(value: unknown): value is AmbiencePayload {
   if (!value || typeof value !== 'object') return false;
@@ -24,6 +24,7 @@ async function openAmbience(preset: AmbiencePreset): Promise<void> {
     try { await OBR.modal.close(MODAL_ID); } catch { /* Nenhum ambiente aberto. */ }
     return;
   }
+  try { await OBR.modal.close(MODAL_ID); } catch { /* Troca de ambiente ou primeira abertura. */ }
   const url = new URL('/', window.location.origin);
   url.searchParams.set('ambience', '1');
   url.searchParams.set('preset', preset);
@@ -40,11 +41,17 @@ async function openAmbience(preset: AmbiencePreset): Promise<void> {
 export function initializeAmbienceBackground(): void {
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
-    activePreset = event.data.preset;
-    void openAmbience(activePreset).catch((error) => {
+    void openAmbience(event.data.preset).catch((error) => {
       console.error('Falha ao atualizar AMBIENCE:', error);
     });
   });
+  void OBR.room.getMetadata().then((metadata) => {
+    const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
+    if (saved && ['forest', 'tavern', 'dungeon'].includes(saved.preset || '')) {
+      return openAmbience(saved.preset as AmbiencePreset);
+    }
+    return undefined;
+  }).catch((error) => console.warn('Não foi possível recuperar AMBIENCE:', error));
   console.log('ARTON ENGINE: receptor AMBIENCE ativo.');
 }
 
@@ -80,9 +87,9 @@ export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM:
       void (async () => {
         const payload: AmbiencePayload = { version: 1, preset, createdAt: Date.now() };
         try {
-          activePreset = preset;
           if (preset === 'off') await openAmbience('off');
           else await openAmbience(preset);
+          await OBR.room.setMetadata({ [METADATA_KEY]: { preset, updatedAt: payload.createdAt } });
           await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
           OBR.notification.show(preset === 'off' ? 'Ambientação desligada.' : 'Ambientação enviada para a sala.');
         } catch (error) {
