@@ -247,3 +247,8 @@ html:has(.ambience-overlay),body:has(.ambience-overlay),body:has(.ambience-overl
 @keyframes swampDrift{from{transform:translate3d(-2%,2%,0) scale(1.03)}to{transform:translate3d(3%,-2%,0) scale(1.13)}}
 @keyframes coastHaze{from{transform:translateX(-2%) translateY(1%)}to{transform:translateX(2%) translateY(-1%)}}
 @keyframes battlefieldSmoke{from{transform:translate3d(-3%,1%,0) scale(1.04);opacity:.55}to{transform:translate3d(3%,-1%,0) scale(1.14);opacity:.95}}
+
+.ambience-customizer-actions{display:flex;gap:9px;align-items:center}
+.ambience-customizer-heading .ambience-apply-settings{background:rgba(198,165,104,.16);border-color:rgba(198,165,104,.5);color:#ead3a4}
+.ambience-customizer-heading .ambience-apply-settings:hover:not(:disabled){background:rgba(198,165,104,.26)}
+@media(max-width:700px){.ambience-customizer-actions{width:100%;flex-wrap:wrap}.ambience-customizer-actions button{flex:1}}
