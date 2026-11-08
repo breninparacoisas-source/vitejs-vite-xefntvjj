@@ -57,6 +57,7 @@ async function openEffect(payload: EffectPayload): Promise<void> {
   const url = new URL('/', window.location.origin);
   url.searchParams.set('showtime', '1');
   url.searchParams.set('kind', payload.kind);
+  url.searchParams.set('effectId', payload.id);
   url.searchParams.set('title', payload.title.slice(0, 100));
   url.searchParams.set('message', payload.message.slice(0, 700));
   url.searchParams.set('omenStyle', payload.settings.omenStyle);
@@ -269,6 +270,12 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   const wordCount = Math.max(4, Math.min(24, Number(params.get('count')) || 12));
   const speed = Math.max(0.5, Math.min(2, Number(params.get('speed')) || 1));
   const omenStyle = params.get('omenStyle') || 'hallucination';
+  const effectId = params.get('effectId') || 'arton';
+  let visualSeed = 0;
+  for (let index = 0; index < effectId.length; index += 1) visualSeed = (visualSeed * 31 + effectId.charCodeAt(index)) >>> 0;
+  const originX = 18 + (visualSeed % 650) / 10;
+  const originY = 16 + ((visualSeed >>> 8) % 680) / 10;
+  const originStyle = '--origin-x:' + originX.toFixed(1) + '%;--origin-y:' + originY.toFixed(1) + '%;';
 
   document.documentElement.style.background = 'transparent';
   document.documentElement.style.margin = '0';
@@ -279,10 +286,11 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
 
   if (kind === 'presence') {
     root.innerHTML = [
-      '<main class="showtime-overlay showtime-presence" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
-      '<div class="presence-darkness"></div><div class="presence-pressure"></div><div class="presence-shadow" aria-hidden="true"><div class="presence-form"></div><div class="presence-edge"></div></div>',
-      '<div class="presence-distortion" aria-hidden="true"><i></i><i></i><i></i></div>',
-      '<div class="presence-copy">' + (title ? '<span>A PRESENÇA</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '<main class="showtime-overlay showtime-presence" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';' + originStyle + '" role="status" aria-live="polite">',
+      '<div class="presence-world-dim"></div><div class="presence-pressure-wave"></div><div class="presence-shadow-front"></div><div class="presence-shadow-trail"></div>',
+      '<div class="presence-air-warp" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>',
+      '<div class="presence-edge-loss"></div>',
+      '<div class="presence-copy">' + (title ? '<span>ALGO SE APROXIMOU</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
     ].join('');
     return;
@@ -290,11 +298,11 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
 
   if (kind === 'threshold') {
     root.innerHTML = [
-      '<main class="showtime-overlay showtime-threshold" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
-      '<div class="threshold-atmosphere"></div><div class="threshold-pull"></div>',
-      '<div class="threshold-gate" aria-hidden="true"><div class="threshold-interior"></div><div class="threshold-rim"></div><div class="threshold-fracture"></div></div>',
-      '<div class="threshold-fragments" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
-      '<div class="threshold-copy">' + (title ? '<span>ENTRE UM LUGAR E OUTRO</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '<main class="showtime-overlay showtime-threshold" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';' + originStyle + '" role="status" aria-live="polite">',
+      '<div class="threshold-world-bend"></div><div class="threshold-opening" aria-hidden="true"><div class="threshold-beyond"></div><div class="threshold-contour"></div></div>',
+      '<div class="threshold-displacement" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
+      '<div class="threshold-falloff"></div>',
+      '<div class="threshold-copy">' + (title ? '<span>O ESPAÇO CEDE</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
     ].join('');
     return;
@@ -304,7 +312,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
     root.innerHTML = [
       '<main class="showtime-overlay showtime-rupture" style="--rupture-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
       '<div class="rupture-vignette"></div><div class="rupture-atmosphere"></div>',
-      '<div class="rupture-tear" aria-hidden="true"><svg viewBox="0 0 900 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="tearGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d9b0"/><stop offset=".45" stop-color="#b95d70"/><stop offset="1" stop-color="#33243f"/></linearGradient></defs><path class="tear-shadow" d="M468 -30 L420 130 474 214 397 320 455 408 362 512 421 604 337 730 380 930"/><path class="tear-core" d="M468 -30 L420 130 474 214 397 320 455 408 362 512 421 604 337 730 380 930"/><path class="tear-branch" d="M421 130 L310 190 260 280 M455 408 L570 350 640 250 M362 512 L240 550 170 640 M421 604 L540 670 610 780"/></svg></div>',
+      '<div class="rupture-tear" aria-hidden="true"><svg viewBox="0 0 1600 900" preserveAspectRatio="none"><defs><linearGradient id="tearGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d9b0"/><stop offset=".45" stop-color="#b95d70"/><stop offset="1" stop-color="#33243f"/></linearGradient></defs><path class="tear-shadow" d="M-80 610 L170 530 300 590 470 390 620 455 790 230 930 310 1110 120 1260 205 1690 40"/><path class="tear-core" d="M-80 610 L170 530 300 590 470 390 620 455 790 230 930 310 1110 120 1260 205 1690 40"/><path class="tear-branch" d="M300 590 L250 760 120 850 M620 455 L590 260 500 170 M930 310 L1010 500 1160 590 M1260 205 L1400 300 1510 270"/></svg></div>',
       '<div class="rupture-shards" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
       '<div class="rupture-copy">' + (title ? '<span class="rupture-kicker">A REALIDADE CEDE</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
