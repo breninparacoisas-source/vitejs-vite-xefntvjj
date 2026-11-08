@@ -60,6 +60,7 @@ const GRADE_PROFILES: Record<CinematicStyle, GradeProfile> = {
 const CINEMATIC_SHADER = `
 uniform shader scene;
 uniform vec2 size;
+uniform mat3 view;
 uniform float time;
 uniform float startTime;
 uniform float duration;
@@ -76,7 +77,8 @@ uniform float flash;
 
 half4 main(float2 coord) {
   vec2 uv = coord / size;
-  half4 source = scene.eval(coord);
+  vec2 sceneCoord = (vec3(coord, 1.0) * view).xy;
+  half4 source = scene.eval(sceneCoord);
   float phase = clamp((time - startTime) / duration, 0.0, 1.0);
   float fadeIn = smoothstep(0.0, 0.10, phase);
   float fadeOut = 1.0 - smoothstep(0.88, 1.0, phase);
