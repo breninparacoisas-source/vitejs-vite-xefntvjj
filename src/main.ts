@@ -456,7 +456,7 @@ const isAmbienceOverlay = runtimeParams.get('ambience') === '1';
 
 if (OBR.isAvailable && isShowtimeBackground) {
   OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); });
-} else if (OBR.isAvailable && !isShowtimeOverlay) {
+} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay) {
   OBR.onReady(async () => {
     connected = true;
     try {
