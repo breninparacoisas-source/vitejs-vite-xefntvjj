@@ -125,8 +125,8 @@ async function fireEffect(
   };
 
   try {
-    await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
     await openEffect(payload);
+    await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
   } catch (error) {
     console.error('Erro ao disparar SHOWTIME:', error);
     OBR.notification.show('Não foi possível disparar o efeito. Verifique a conexão da sala.');
@@ -248,14 +248,18 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   const omenStyle = params.get('omenStyle') || 'hallucination';
 
   document.documentElement.style.background = 'transparent';
+  document.documentElement.style.margin = '0';
+  document.documentElement.style.padding = '0';
   document.body.classList.add('showtime-mode');
+  document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
+  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
 
   if (kind === 'appearance') {
     root.innerHTML = [
-      '<main class="showtime-overlay showtime-rupture" style="--rupture-intensity:' + intensity + '" role="status" aria-live="polite">',
+      '<main class="showtime-overlay showtime-rupture" style="--rupture-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';position:fixed;inset:0;width:100vw;height:100vh;display:block;visibility:visible;opacity:1;pointer-events:none;background:transparent;" role="status" aria-live="polite">',
       '<div class="rupture-atmosphere"></div>',
       '<div class="rupture-wave rupture-wave-one"></div><div class="rupture-wave rupture-wave-two"></div><div class="rupture-wave rupture-wave-three"></div>',
-      '<div class="rupture-copy">' + (title ? '<h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '<div class="rupture-copy" style="position:absolute;z-index:50;right:20px;bottom:10vh;left:20px;display:block;visibility:visible;opacity:1;text-align:center;pointer-events:none;">' + (title ? '<h1 style="display:block;visibility:visible;opacity:1;color:#fff;font-size:clamp(28px,4.5vw,54px);text-shadow:0 2px 18px #000;">' + title + '</h1>' : '') + (message ? '<p style="display:block;visibility:visible;opacity:1;color:#fff;font-size:clamp(16px,2vw,24px);text-shadow:0 2px 12px #000;">' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
     ].join('');
     return;
@@ -298,7 +302,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   const caption = omenStyle === 'prophecy' ? '' : '<div class="omen-whisper-caption">' + (title ? escapeHtml(title) : 'SUSSURROS') + '</div>';
   const mainPhrase = omenStyle === 'prophecy' ? '<div class="prophecy-main">' + escapeHtml(firstPhrase) + '</div>' : '';
   root.innerHTML = [
-    '<main class="showtime-overlay showtime-omen ' + styleClass + '" style="--omen-intensity:' + intensity + '" role="status" aria-live="off">',
+    '<main class="showtime-overlay showtime-omen ' + styleClass + '" style="--omen-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';position:fixed;inset:0;width:100vw;height:100vh;display:block;visibility:visible;opacity:1;pointer-events:none;background:transparent;" role="status" aria-live="off">',
     '<div class="omen-atmosphere"></div><div class="omen-haze"></div>',
     mainPhrase,
     '<div class="omen-whisper-field" aria-hidden="true">' + whisperElements.join('') + '</div>',
