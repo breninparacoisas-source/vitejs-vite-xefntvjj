@@ -53,7 +53,7 @@ async function openScene(payload: FarewellPayload): Promise<void> {
   try {
     await OBR.modal.close(MODAL_ID);
   } catch {
-    // Não havia uma cena anterior aberta.
+    // Nenhuma cena anterior aberta.
   }
 
   await OBR.modal.open({
@@ -71,7 +71,7 @@ async function openScene(payload: FarewellPayload): Promise<void> {
       console.warn('Falha ao encerrar CINEMÁTICO:', error);
     });
     closeTimer = undefined;
-  }, duration);
+  }, duration + 250);
 }
 
 export function initializeCinematicBackground(): void {
@@ -97,7 +97,7 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
       <div class="cinematic-welcome-copy">
         <span class="cinematic-kicker">DIREÇÃO NARRATIVA · EXPERIÊNCIA 01</span>
         <h3>Algumas despedidas<br>merecem <em>um instante a mais.</em></h3>
-        <p>Uma sequência dramática contínua. O mapa permanece visível sob a atmosfera, enquanto a cena conduz o olhar e desacelera o momento.</p>
+        <p>Uma sequência dramática contínua. A atmosfera muda aos poucos, o movimento desacelera e a despedida ganha espaço sem esconder completamente o mapa.</p>
       </div>
       <div class="cinematic-preview" aria-hidden="true">
         <div class="cinematic-preview-light"></div>
@@ -108,15 +108,15 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
 
     <div class="cinematic-editor-heading">
       <div><span>01 / LUTO E PERDA</span><h3>Uma despedida</h3></div>
-      <small>SEQUÊNCIA DE 3 ATOS</small>
+      <small>SEQUÊNCIA NARRATIVA</small>
     </div>
 
     <section class="cinematic-editor">
       <div class="cinematic-editor-description">
         <div class="cinematic-act-list">
-          <div><span>ATO I</span><strong>A queda do mundo</strong><p>A atmosfera escurece e o movimento desacelera.</p></div>
-          <div><span>ATO II</span><strong>O silêncio que fica</strong><p>Uma pausa visual dá espaço para a última fala.</p></div>
-          <div><span>ATO III</span><strong>A memória permanece</strong><p>O nome e a despedida surgem e desaparecem lentamente.</p></div>
+          <div><span>ATO I</span><strong>A queda do mundo</strong><p>A luz perde força e a cena começa a desacelerar.</p></div>
+          <div><span>ATO II</span><strong>O silêncio que fica</strong><p>O nome ganha espaço enquanto a atmosfera se move lentamente.</p></div>
+          <div><span>ATO III</span><strong>A memória permanece</strong><p>A despedida desaparece em uma transição gradual.</p></div>
         </div>
       </div>
       <div class="cinematic-controls">
@@ -129,18 +129,18 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         <div class="cinematic-control-range">
           <label for="cinematic-intensity">PRESENÇA VISUAL <output id="cinematic-intensity-value">65%</output></label>
           <input id="cinematic-intensity" type="range" min="0.25" max="0.85" step="0.05" value="0.65">
-          <small>Controla o peso da vinheta e da atmosfera, sem cobrir completamente o mapa.</small>
+          <small>Controla a intensidade da atmosfera e das bordas escurecidas.</small>
         </div>
         <div class="cinematic-control-range">
           <label for="cinematic-duration">DURAÇÃO <output id="cinematic-duration-value">22 s</output></label>
           <input id="cinematic-duration" type="range" min="12" max="35" step="1" value="22">
-          <small>A sequência se encerra automaticamente ao final.</small>
+          <small>A sequência termina sozinha depois da transição final.</small>
         </div>
         <button class="cinematic-launch" data-cinematic-launch="farewell" ${disabled}>INICIAR DESPEDIDA</button>
         <p class="cinematic-status">${status}</p>
       </div>
     </section>
-    <p class="cinematic-footnote">Esta é a primeira experiência de teste do CINEMÁTICO. Ela não altera o token, o mapa ou os dados da campanha.</p>
+    <p class="cinematic-footnote">Cena de teste. Não altera tokens, mapa ou dados da campanha.</p>
   `;
 }
 
@@ -203,17 +203,30 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const intensity = Math.max(0.25, Math.min(0.85, Number(params.get('intensity')) || 0.65));
   const duration = Math.max(12, Math.min(35, Number(params.get('duration')) || 22)) / 1000;
 
-  document.documentElement.style.cssText = 'background:transparent!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important;';
-  document.body.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;overflow:hidden!important;background:transparent!important;';
+  for (const element of [document.documentElement, document.body, root]) {
+    element.style.setProperty('background', 'transparent', 'important');
+    element.style.setProperty('background-color', 'transparent', 'important');
+    element.style.setProperty('margin', '0', 'important');
+    element.style.setProperty('padding', '0', 'important');
+    element.style.setProperty('width', '100%', 'important');
+    element.style.setProperty('height', '100%', 'important');
+    element.style.setProperty('overflow', 'hidden', 'important');
+  }
   root.className = 'cinematic-overlay';
-  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
+  root.style.setProperty('position', 'fixed', 'important');
+  root.style.setProperty('inset', '0', 'important');
+  root.style.setProperty('z-index', '2147483000', 'important');
+  root.style.setProperty('pointer-events', 'none', 'important');
 
   root.innerHTML = `
     <main class="farewell-scene" style="--farewell-intensity:${intensity};--farewell-duration:${duration}s">
+      <div class="farewell-camera">
+        <div class="farewell-light-beam"></div>
+        <div class="farewell-haze"></div>
+        <div class="farewell-horizon"></div>
+      </div>
       <div class="farewell-dimming"></div>
-      <div class="farewell-drift"></div>
       <div class="farewell-vignette"></div>
-      <div class="farewell-haze"></div>
       <div class="farewell-caption">
         <span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>
         <h1>${character}</h1>
