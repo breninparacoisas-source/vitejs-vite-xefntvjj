@@ -243,7 +243,7 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<section class="showtime-intro"><div class="showtime-intro-copy"><span class="showtime-eyebrow">◆ MOMENTOS CINEMATOGRÁFICOS</span>',
     '<h3>A narração é sua.<br><em>A realidade se transforma.</em></h3>',
     '<p>Efeitos translúcidos sobre o mapa. Imagens próprias, movimentos e sussurros visuais para dar corpo aos seus momentos narrativos.</p>',
-    '<div class="showtime-audience"><span></span> CAMADA TRANSPARENTE · MAPA SEMPRE VISÍVEL</div></div><div class="showtime-intro-emblem" aria-hidden="true">✧</div></section>',
+    '<div class="showtime-audience"><span></span> CAMADA TRANSPARENTE · MAPA SEMPRE VISÍVEL</div></div></section>',
     '<div class="showtime-section-heading"><div><span>01 / MANIFESTAÇÃO</span><h3>Aparição personalizada</h3></div><small>IMAGEM PNG COM TRANSPARÊNCIA</small></div>',
     '<section class="showtime-editor appearance-editor">',
     '<div class="appearance-image-column"><div class="appearance-image-preview" id="appearance-image-preview">' + imagePreview + '</div>',
@@ -254,7 +254,7 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-range"><label for="appearance-opacity">OPACIDADE <output id="appearance-opacity-value">88%</output></label><input id="appearance-opacity" type="range" min="0.25" max="1" step="0.01" value="0.88"></div>',
     '<div class="showtime-range"><label for="appearance-scale">TAMANHO <output id="appearance-scale-value">1.0×</output></label><input id="appearance-scale" type="range" min="0.5" max="1.6" step="0.1" value="1"></div>',
     '<div class="showtime-range"><label for="appearance-duration">DURAÇÃO <output id="appearance-duration-value">10 s</output></label><input id="appearance-duration" type="range" min="5" max="30" step="1" value="10"></div>',
-    '<button class="showtime-fire-button" data-showtime="appearance" ' + disabled + '><span>✦</span> DISPARAR APARIÇÃO <span class="button-arrow">→</span></button></div></section>',
+    '<button class="showtime-fire-button" data-showtime="appearance" ' + disabled + '>DISPARAR APARIÇÃO <span class="button-arrow">→</span></button></div></section>',
     '<div class="showtime-section-heading omen-heading"><div><span>02 / ALTERAÇÃO DA PERCEPÇÃO</span><h3>Presságio alucinado</h3></div><small>FRASES QUE SUSSURRAM PELA TELA</small></div>',
     '<section class="showtime-editor omen-editor"><div class="omen-editor-description"><div class="omen-preview-art" aria-hidden="true"><span>Você já esteve aqui...</span><span>ele está olhando</span><span>não confie na luz</span><span>Você já esteve aqui...</span></div>',
     '<p>Escreva uma frase por linha. O SHOWTIME espalha as frases pelo espaço, repete algumas e faz cada uma flutuar, sumir e reaparecer em seu próprio ritmo.</p></div>',
@@ -264,7 +264,7 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-range"><label for="omen-speed">VELOCIDADE <output id="omen-speed-value">1.0×</output></label><input id="omen-speed" type="range" min="0.5" max="2" step="0.1" value="1"></div>',
     '<div class="showtime-range"><label for="omen-intensity">INTENSIDADE <output id="omen-intensity-value">65%</output></label><input id="omen-intensity" type="range" min="0.2" max="1" step="0.05" value="0.65"></div>',
     '<div class="showtime-range"><label for="omen-duration">DURAÇÃO <output id="omen-duration-value">12 s</output></label><input id="omen-duration" type="range" min="5" max="30" step="1" value="12"></div>',
-    '<button class="showtime-fire-button omen-fire-button" data-showtime="omen" ' + disabled + '><span>✧</span> LIBERAR PRESSÁGIO <span class="button-arrow">→</span></button></div></section>',
+    '<button class="showtime-fire-button omen-fire-button" data-showtime="omen" ' + disabled + '>LIBERAR PRESSÁGIO <span class="button-arrow">→</span></button></div></section>',
     '<p class="showtime-footnote">' + status + '</p>',
   ].join('');
 }
