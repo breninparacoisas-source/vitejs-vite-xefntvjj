@@ -1,4 +1,4 @@
-import OBR, { buildEffect } from '@owlbear-rodeo/sdk';
+import OBR from '@owlbear-rodeo/sdk';
 import type { ViewportTransform } from '@owlbear-rodeo/sdk';
 import './cinematic.css';
 
@@ -25,133 +25,6 @@ type CinematicPayload = {
 
 let closeTimer: number | undefined;
 let activeRun = 0;
-
-type GradeProfile = {
-  tint: { x: number; y: number; z: number };
-  saturation: number; grade: number; glow: number; vignette: number;
-  bars: number; particles: number; grain: number; flash: number;
-};
-const GRADE_PROFILES: Record<CinematicStyle, GradeProfile> = {
-  melancholic: { tint:{x:0.62,y:0.72,z:1}, saturation:0.48, grade:0.42, glow:0.10, vignette:0.62, bars:0.96, particles:0.28, grain:0.05, flash:0.015 },
-  heroic: { tint:{x:1,y:0.67,z:0.28}, saturation:1.12, grade:0.25, glow:0.42, vignette:0.34, bars:0.96, particles:0.95, grain:0.025, flash:0.28 },
-  hopeful: { tint:{x:1,y:0.84,z:0.48}, saturation:1.12, grade:0.22, glow:0.5, vignette:0.24, bars:0.88, particles:0.82, grain:0.018, flash:0.22 },
-  tragic: { tint:{x:0.95,y:0.25,z:0.22}, saturation:0.35, grade:0.52, glow:0.045, vignette:0.76, bars:1, particles:0.9, grain:0.07, flash:0.08 },
-};
-
-const CINEMATIC_OVERLAY_SHADER = `
-uniform vec2 size;
-uniform mat3 view;
-uniform float time;
-uniform float startTime;
-uniform float duration;
-uniform vec3 tint;
-uniform float glow;
-uniform float vignette;
-uniform float bars;
-uniform float particles;
-uniform float grain;
-uniform float flash;
-half4 main(float2 coord) {
-  vec2 screenCoord = (vec3(coord, 1.0) * view).xy;
-  vec2 uv = screenCoord / size;
-  float phase = clamp((time - startTime) / duration, 0.0, 1.0);
-  float envelope = smoothstep(0.0, 0.09, phase) * (1.0 - smoothstep(0.88, 1.0, phase));
-  float edge = length((uv - vec2(0.5,0.5)) * vec2(1.0,0.86));
-  float vignetteAlpha = smoothstep(0.28,0.78,edge) * vignette * envelope;
-  float edgeY = min(uv.y,1.0-uv.y);
-  float barAlpha = (1.0-smoothstep(0.045,0.065,edgeY)) * bars * envelope;
-  float focusDistance = length((uv-vec2(0.5,0.44))*vec2(1.0,0.86));
-  float glowAlpha = (1.0-smoothstep(0.08,0.64,focusDistance)) * glow * (0.82+0.18*sin(time*1.25)) * envelope;
-  vec2 grid = uv * vec2(22.0,13.0);
-  vec2 cell = floor(grid);
-  vec2 local = fract(grid);
-  float seed = fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
-  vec2 particlePos = vec2(fract(seed*17.13),fract(seed*31.71+time*(0.018+seed*0.022)));
-  float particleDistance = length((local-particlePos)*vec2(1.0,1.45));
-  float particleShape = 1.0-smoothstep(0.012,0.038,particleDistance);
-  float particleAlpha = step(0.90,seed)*particleShape*particles*envelope*(0.45+0.55*sin(time*1.6+seed*20.0));
-  float noise = fract(sin(dot(coord+time,vec2(12.9898,78.233)))*43758.5453);
-  float grainAlpha = step(1.0-grain*0.18,noise)*grain*envelope;
-  float phaseFlash = exp(-pow((phase-0.115)*34.0,2.0))*flash;
-  float lightAlpha = max(glowAlpha,particleAlpha);
-  float darkAlpha = max(vignetteAlpha,barAlpha);
-  float alpha = clamp(max(darkAlpha,max(lightAlpha,max(grainAlpha,phaseFlash))),0.0,0.98);
-  vec3 color = mix(vec3(0.0),tint,lightAlpha/max(alpha,0.001));
-  color = mix(color,vec3(1.0),phaseFlash/max(alpha,0.001));
-  return half4(color,alpha);
-}
-`;
-
-const CINEMATIC_GRADE_SHADER = `
-uniform shader scene;
-uniform vec2 size;
-uniform mat3 view;
-uniform float time;
-uniform float startTime;
-uniform float duration;
-uniform vec3 tint;
-uniform float saturation;
-uniform float grade;
-half4 main(float2 coord) {
-  vec2 screenCoord = (vec3(coord,1.0)*view).xy;
-  half4 source = scene.eval(screenCoord);
-  vec2 uv = coord/size;
-  float phase = clamp((time-startTime)/duration,0.0,1.0);
-  float envelope = smoothstep(0.0,0.10,phase)*(1.0-smoothstep(0.90,1.0,phase));
-  vec3 original = source.rgb;
-  float luminance = dot(original,vec3(0.2126,0.7152,0.0722));
-  vec3 graded = mix(vec3(luminance),original,saturation);
-  graded = mix(graded,graded*tint,grade);
-  float edge = length((uv-vec2(0.5,0.5))*vec2(1.0,0.86));
-  graded *= 1.0-smoothstep(0.28,0.82,edge)*0.18;
-  return half4(mix(original,graded,envelope),source.a);
-}
-`;
-
-async function addCinematicGrade(style: CinematicStyle, intensity: number, durationMs: number): Promise<string[]> {
-  const profile = GRADE_PROFILES[style];
-  const strength = 0.75 + ((Math.max(0.08,Math.min(0.42,intensity))-0.08)/0.34)*0.9;
-  const startTime = Date.now()/1000;
-  const duration = durationMs/1000;
-  const ids: string[] = [];
-  const overlay = buildEffect()
-    .effectType('VIEWPORT')
-    .blendMode('SRC_OVER')
-    .locked(true)
-    .disableHit(true)
-    .sksl(CINEMATIC_OVERLAY_SHADER)
-    .uniforms([
-      {name:'startTime',value:startTime},{name:'duration',value:duration},
-      {name:'tint',value:profile.tint},{name:'glow',value:profile.glow*strength},
-      {name:'vignette',value:profile.vignette*strength},{name:'bars',value:profile.bars},
-      {name:'particles',value:profile.particles*strength},{name:'grain',value:profile.grain*strength},
-      {name:'flash',value:profile.flash*strength},
-    ]).build();
-  try {
-    await OBR.scene.local.addItems([overlay]);
-    ids.push(overlay.id);
-    console.info('CINEMÁTICO: camada viewport adicionada',overlay.id);
-  } catch(error) {
-    console.error('CINEMÁTICO: falha ao adicionar camada viewport',error);
-    OBR.notification.show('CINEMÁTICO: o Owlbear recusou a camada visual. Consulte o console.');
-    throw error;
-  }
-  try {
-    const grade = buildEffect().effectType('VIEWPORT').layer('POST_PROCESS')
-      .locked(true).disableHit(true).sksl(CINEMATIC_GRADE_SHADER)
-      .uniforms([
-        {name:'startTime',value:startTime},{name:'duration',value:duration},
-        {name:'tint',value:profile.tint},{name:'saturation',value:profile.saturation},
-        {name:'grade',value:profile.grade*strength},
-      ]).build();
-    await OBR.scene.local.addItems([grade]);
-    ids.push(grade.id);
-    console.info('CINEMÁTICO: pós-processamento adicionado',grade.id);
-  } catch(error) {
-    console.warn('CINEMÁTICO: pós-processamento indisponível; mantendo efeitos viewport.',error);
-  }
-  return ids;
-}
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -210,49 +83,38 @@ function unionBounds(a: Bounds, b: Bounds): Bounds {
 
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
   let original: ViewportTransform | undefined;
-  let gradeIds: string[] = [];
   try {
-    const [position, scale] = await Promise.all([OBR.viewport.getPosition(), OBR.viewport.getScale()]);
+    const [position, scale] = await Promise.all([
+      OBR.viewport.getPosition(),
+      OBR.viewport.getScale(),
+    ]);
     original = { position, scale };
     if (runId !== activeRun) return;
 
-    // O tratamento é um shader POST_PROCESS local: atua sobre a imagem do mapa,
-    // não é apenas um painel HTML sobreposto.
-    gradeIds = await addCinematicGrade(payload.style, payload.intensity, payload.durationMs);
-    if (runId !== activeRun) return;
-
-    // Ato I: o mundo perde saturação, surgem barras de cinema e a luz começa a se concentrar.
+    // A atmosfera visual é renderizada pelo modal HTML/CSS em cada cliente.
+    // A câmera é apenas uma camada da coreografia, não o efeito principal.
     await OBR.viewport.animateToBounds(payload.establishingBounds);
     if (runId !== activeRun) return;
-    await wait(1700);
+    await wait(1800);
 
-    // Ato II: a câmera se aproxima enquanto o shader cria foco de luz e partículas atmosféricas.
     await OBR.viewport.animateToBounds(payload.focusBounds);
     if (runId !== activeRun) return;
 
-    // Ato III: segura o plano para o momento emocional.
-    const revealHold = payload.style === 'tragic' ? 1500 : payload.style === 'heroic' ? 2100 : 1800;
-    const focusHold = Math.max(2200, payload.durationMs - 7200 - revealHold);
+    const revealHold = payload.style === 'tragic' ? 1700 : payload.style === 'heroic' ? 2300 : 2000;
+    const focusHold = Math.max(2500, payload.durationMs - 7600 - revealHold);
     await wait(focusHold);
     if (runId !== activeRun) return;
 
-    // Ato IV: a luz se espalha de novo no plano de contexto.
     await OBR.viewport.animateToBounds(payload.establishingBounds);
     if (runId !== activeRun) return;
     await wait(revealHold);
 
-    if (runId === activeRun) await OBR.viewport.animateTo(original);
+    if (runId === activeRun && original) await OBR.viewport.animateTo(original);
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
     if (original && runId === activeRun) {
       try { await OBR.viewport.animateTo(original); } catch (restoreError) {
         console.error('Não foi possível restaurar a câmera:', restoreError);
-      }
-    }
-  } finally {
-    if (gradeIds.length) {
-      try { await OBR.scene.local.deleteItems(gradeIds); } catch (error) {
-        console.warn('Não foi possível remover o tratamento cinematográfico:', error);
       }
     }
   }
@@ -507,16 +369,39 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   document.body.classList.add('cinematic-mode');
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.className = 'cinematic-overlay';
-  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
+  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;isolation:isolate!important;';
+
+  // Partículas HTML/CSS: não dependem do renderer experimental de shaders do Owlbear.
+  const particles = Array.from({ length: 34 }, (_, index) => {
+    const seed = (index * 37 + 13) % 101;
+    const x = (seed * 7.31) % 100;
+    const y = (seed * 13.17) % 100;
+    const delay = -((seed * 0.19) % 12);
+    const travel = 7 + (seed % 9);
+    const size = 1 + (seed % 4) * 0.55;
+    const drift = -34 + (seed % 69);
+    return '<i class="farewell-particle" style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;--delay:' + delay.toFixed(2) + 's;--travel:' + travel.toFixed(1) + 's;--size:' + size.toFixed(1) + 'px;--drift:' + drift + 'px"></i>';
+  }).join('');
+
   root.innerHTML = `
     <main class="farewell-scene farewell-${style}" style="--farewell-intensity:${intensity};--farewell-duration:${duration}s">
+      <div class="farewell-grade"></div>
+      <div class="farewell-haze"></div>
+      <div class="farewell-light"></div>
+      <div class="farewell-rays"></div>
+      <div class="farewell-ripple"></div>
       <div class="farewell-vignette"></div>
+      <div class="farewell-grain"></div>
+      <div class="farewell-particles" aria-hidden="true">${particles}</div>
+      <div class="farewell-letterbox farewell-letterbox-top"></div>
+      <div class="farewell-letterbox farewell-letterbox-bottom"></div>
       <div class="farewell-caption">
         <span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>
         <h1>${character}</h1>
         ${epitaph ? '<p>' + epitaph + '</p>' : ''}
         <span class="farewell-rule"></span>
       </div>
+      <div class="farewell-fade"></div>
     </main>
   `;
 }
