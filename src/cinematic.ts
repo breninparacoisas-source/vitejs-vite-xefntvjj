@@ -131,7 +131,7 @@ async function openScene(payload: CinematicPayload): Promise<void> {
   url.searchParams.set('epitaph', payload.epitaph.slice(0, 240));
   url.searchParams.set('style', payload.style);
   url.searchParams.set('intensity', String(payload.intensity));
-  url.searchParams.set('duration', String(payload.durationMs));
+  url.searchParams.set('duration', String(payload.durationMs / 1000));
 
   try { await OBR.modal.close(MODAL_ID); } catch { /* Cena anterior inexistente. */ }
   await OBR.modal.open({
