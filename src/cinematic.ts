@@ -362,17 +362,14 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const character = escapeHtml((params.get('character') || 'Uma despedida').slice(0, 80));
   const epitaph = escapeHtml((params.get('epitaph') || '').slice(0, 240));
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
-  const intensity = Math.max(0.08, Math.min(0.42, Number(params.get('intensity')) || 0.24));
   const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24)) / 1000;
 
   document.documentElement.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
-  document.body.classList.add('cinematic-mode');
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.className = 'cinematic-overlay';
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;isolation:isolate!important;';
 
-  // Partículas HTML/CSS: não dependem do renderer experimental de shaders do Owlbear.
-  const particles = Array.from({ length: 34 }, (_, index) => {
+  const particles = Array.from({ length: 26 }, (_, index) => {
     const seed = (index * 37 + 13) % 101;
     const x = (seed * 7.31) % 100;
     const y = (seed * 13.17) % 100;
@@ -383,25 +380,18 @@ export function renderCinematicOverlay(root: HTMLElement): void {
     return '<i class="farewell-particle" style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;--delay:' + delay.toFixed(2) + 's;--travel:' + travel.toFixed(1) + 's;--size:' + size.toFixed(1) + 'px;--drift:' + drift + 'px"></i>';
   }).join('');
 
-  root.innerHTML = `
-    <main class="farewell-scene farewell-${style}" style="--farewell-intensity:${intensity};--farewell-duration:${duration}s">
-      <div class="farewell-grade"></div>
-      <div class="farewell-haze"></div>
-      <div class="farewell-light"></div>
-      <div class="farewell-rays"></div>
-      <div class="farewell-ripple"></div>
-      <div class="farewell-vignette"></div>
-      <div class="farewell-grain"></div>
-      <div class="farewell-particles" aria-hidden="true">${particles}</div>
-      <div class="farewell-letterbox farewell-letterbox-top"></div>
-      <div class="farewell-letterbox farewell-letterbox-bottom"></div>
-      <div class="farewell-caption">
-        <span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>
-        <h1>${character}</h1>
-        ${epitaph ? '<p>' + epitaph + '</p>' : ''}
-        <span class="farewell-rule"></span>
-      </div>
-      <div class="farewell-fade"></div>
-    </main>
-  `;
+  root.innerHTML = [
+    '<main class="farewell-scene farewell-' + style + '" style="--farewell-duration:' + duration + 's">',
+    '<div class="farewell-light" aria-hidden="true"></div>',
+    '<div class="farewell-rays" aria-hidden="true"></div>',
+    '<div class="farewell-particles" aria-hidden="true">' + particles + '</div>',
+    '<div class="farewell-letterbox farewell-letterbox-top"></div>',
+    '<div class="farewell-letterbox farewell-letterbox-bottom"></div>',
+    '<div class="farewell-caption">',
+    '<span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>',
+    '<h1>' + character + '</h1>',
+    epitaph ? '<p>' + epitaph + '</p>' : '',
+    '<span class="farewell-rule"></span>',
+    '</div></main>',
+  ].join('');
 }
