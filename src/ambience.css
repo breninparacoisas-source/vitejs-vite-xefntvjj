@@ -55,3 +55,15 @@
 @keyframes dungeonBreath{from{transform:scale(.98);opacity:.55}to{transform:scale(1.04);opacity:1}}
 @media(max-width:760px){.ambience-presets{grid-template-columns:1fr}.ambience-preset{min-height:185px}.ambience-preset-preview{height:90px}.ambience-controls-row{align-items:flex-start;flex-direction:column}.ambience-section-heading small{display:none}.ambience-intro{padding:25px 22px}}
 @media(prefers-reduced-motion:reduce){.ambience-overlay *,.ambience-preset-preview:before{animation:none!important}}
+
+/* Audio is controlled in the extension panel, never in the map overlay. */
+.ambience-audio-settings{margin-top:22px;padding:22px;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,.025)}
+.ambience-audio-settings>div>span{color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1.6px}
+.ambience-audio-settings h3{margin:8px 0;color:var(--text);font:500 19px var(--heading)}
+.ambience-audio-settings p{color:var(--muted);font-size:11px;line-height:1.6}
+.ambience-audio-settings button{margin:12px 10px 0 0;padding:10px 14px;border:1px solid var(--border-strong);border-radius:4px;background:rgba(198,165,104,.08);color:var(--gold-light);font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.ambience-audio-settings button:disabled{opacity:.4;cursor:not-allowed}
+.ambience-audio-settings label{display:flex;justify-content:space-between;max-width:420px;margin-top:18px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px}
+.ambience-audio-settings input{display:block;width:min(420px,100%);margin-top:8px;accent-color:var(--gold)}
+.ambience-audio-settings #ambience-audio-status{margin:14px 0 0}
+.ambience-overlay,.ambience-overlay *{pointer-events:none!important}
