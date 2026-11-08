@@ -41,11 +41,11 @@
 .farewell-drift{position:absolute;inset:-12%;background:linear-gradient(112deg,transparent 22%,rgba(193,183,166,.035) 49%,transparent 76%),radial-gradient(ellipse at 50% 75%,rgba(174,159,139,.11),transparent 50%);filter:blur(18px);transform:translate3d(0,2%,0) scale(1.04);animation:farewellDrift var(--farewell-duration) cubic-bezier(.2,.55,.25,1) both}
 .farewell-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 52%,transparent 18%,rgba(5,6,9,.2) 66%,rgba(1,2,4,.76) 120%);opacity:0;animation:farewellVignette var(--farewell-duration) ease-in-out both}
 .farewell-haze{position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 72%,rgba(175,163,148,.13),transparent 45%);filter:blur(38px);opacity:0;animation:farewellHaze var(--farewell-duration) ease-in-out both}
-.farewell-caption{position:absolute;left:8%;right:8%;top:50%;transform:translateY(-42%);text-align:center;opacity:0;animation:farewellCaption var(--farewell-duration) ease-in-out 2.5s both}
+.farewell-caption{position:absolute;left:8%;right:8%;top:50%;transform:translateY(-42%);text-align:center;opacity:0;animation:farewellCaption var(--farewell-duration) ease-in-out both}
 .farewell-overline{display:block;margin-bottom:18px;color:rgba(218,208,192,.58);font:700 9px Inter,sans-serif;letter-spacing:3px}
 .farewell-caption h1{margin:0;color:#eee7dc;font:400 clamp(30px,5vw,64px)/1.1 Georgia,serif;letter-spacing:.02em;text-shadow:0 3px 35px rgba(0,0,0,.9)}
 .farewell-caption p{max-width:min(680px,82vw);margin:20px auto 0;color:rgba(225,216,202,.82);font:italic clamp(14px,1.8vw,21px)/1.65 Georgia,serif;text-shadow:0 2px 18px #000}
-.farewell-rule{display:block;width:0;height:1px;margin:25px auto 0;background:linear-gradient(90deg,transparent,rgba(206,187,158,.7),transparent);animation:farewellRule var(--farewell-duration) ease 3s both}
+.farewell-rule{display:block;width:0;height:1px;margin:25px auto 0;background:linear-gradient(90deg,transparent,rgba(206,187,158,.7),transparent);animation:farewellRule var(--farewell-duration) ease both}
 .farewell-endfade{position:absolute;inset:0;background:#050609;opacity:0;animation:farewellEnd var(--farewell-duration) ease-in 0s both}
 .farewell-progress{position:absolute;left:0;right:0;bottom:0;height:2px;transform:scaleX(0);transform-origin:left;background:rgba(201,181,151,.65);animation:farewellProgress var(--farewell-duration) linear both}
 @keyframes farewellDim{0%,8%{opacity:0}35%{opacity:calc(var(--farewell-intensity)*.58)}100%{opacity:calc(var(--farewell-intensity)*.7)}}
