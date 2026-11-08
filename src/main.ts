@@ -153,7 +153,7 @@ function render() {
         <div class="content">
           <div class="page-heading">
             <div>
-              <div class="eyebrow">◆ &nbsp; GM CONTROL CENTER</div>
+              <div class="eyebrow">GM CONTROL CENTER</div>
               <h2>${page.title}</h2>
               <p>${page.subtitle}</p>
             </div>
@@ -232,7 +232,7 @@ function renderPage(): string {
 
       <section class="session-control-panel">
         <div>
-          <div class="eyebrow">◆ &nbsp; CONTROLE DA SESSÃO</div>
+          <div class="eyebrow">CONTROLE DA SESSÃO</div>
           <h3>${active ? 'Sessão em andamento' : 'Tudo pronto para começar?'}</h3>
           <p>
             ${active
