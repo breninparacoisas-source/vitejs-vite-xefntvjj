@@ -2,7 +2,7 @@
 import './style.css';
 import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
-import { bindAmbienceActions, initializeAmbienceBackground, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
+import { bindAmbienceActions, initializeAmbienceBackground, initializeAmbiencePanel, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -458,6 +458,7 @@ if (OBR.isAvailable && isShowtimeBackground) {
   OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); });
 } else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay) {
   OBR.onReady(async () => {
+    initializeAmbiencePanel();
     connected = true;
     try {
       isGM = (await OBR.player.getRole()) === 'GM';
