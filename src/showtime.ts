@@ -4,7 +4,7 @@ import './showtime.css';
 const CHANNEL = 'com.arton.engine/showtime/v2';
 const MODAL_ID = 'com.arton.engine/showtime/overlay';
 
-type EffectKind = 'appearance' | 'omen';
+type EffectKind = 'appearance' | 'omen' | 'presence' | 'threshold';
 type EffectSettings = {
   durationMs: number;
   opacity: number;
@@ -37,7 +37,7 @@ function validPayload(value: unknown): value is EffectPayload {
   const settings = data.settings as Partial<EffectSettings> | undefined;
   return data.version === 2
     && typeof data.id === 'string'
-    && (data.kind === 'appearance' || data.kind === 'omen')
+    && ['appearance', 'omen', 'presence', 'threshold'].includes(data.kind || '')
     && typeof data.title === 'string'
     && typeof data.message === 'string'
     && typeof data.createdAt === 'number'
@@ -136,6 +136,10 @@ async function fireEffect(
 function updateRangeLabels(root: HTMLElement): void {
   const pairs: Array<[string, string, (value: number) => string]> = [
     ['rupture-intensity', 'rupture-intensity-value', (v) => Math.round(v * 100) + '%'],
+    ['presence-intensity', 'presence-intensity-value', (v) => Math.round(v * 100) + '%'],
+    ['presence-duration', 'presence-duration-value', (v) => v + ' s'],
+    ['threshold-intensity', 'threshold-intensity-value', (v) => Math.round(v * 100) + '%'],
+    ['threshold-duration', 'threshold-duration-value', (v) => v + ' s'],
     ['appearance-duration', 'appearance-duration-value', (v) => v + ' s'],
     ['omen-count', 'omen-count-value', (v) => String(v)],
     ['omen-speed', 'omen-speed-value', (v) => v.toFixed(1) + '×'],
@@ -180,7 +184,11 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-range"><label for="rupture-intensity">INTENSIDADE <output id="rupture-intensity-value">65%</output></label><input id="rupture-intensity" type="range" min="0.2" max="1" step="0.05" value="0.65"></div>',
     '<div class="showtime-range"><label for="appearance-duration">DURAÇÃO <output id="appearance-duration-value">10 s</output></label><input id="appearance-duration" type="range" min="5" max="30" step="1" value="10"></div>',
     '<button class="showtime-fire-button" data-showtime="appearance" ' + disabled + '>DISPARAR RUPTURA <span class="button-arrow">→</span></button></div></section>',
-    '<div class="showtime-section-heading omen-heading"><div><span>02 / ALTERAÇÃO DA PERCEPÇÃO</span><h3>Presságios</h3></div><small>TRÊS FORMAS DE INVADIR A PERCEPÇÃO</small></div>',
+    '<div class="showtime-section-heading"><div><span>02 / ALGO SE APROXIMA</span><h3>Presença</h3></div><small>UMA CHEGADA QUE ALTERA O AMBIENTE</small></div>',
+    '<section class="showtime-editor cinematic-editor"><div class="presence-preview"><div class="presence-preview-shadow"></div><div class="presence-preview-haze"></div><span>ALGO ESTÁ AQUI</span></div><div class="showtime-settings-column"><label for="presence-title">TÍTULO DA PRESENÇA</label><input id="presence-title" maxlength="100" value="Uma presença se revela" placeholder="Ex.: O guardião despertou"><label for="presence-message">MENSAGEM</label><input id="presence-message" maxlength="180" value="O ar se torna pesado." placeholder="Uma frase para acompanhar a chegada"><div class="showtime-range"><label for="presence-intensity">INTENSIDADE <output id="presence-intensity-value">75%</output></label><input id="presence-intensity" type="range" min="0.2" max="1" step="0.05" value="0.75"></div><div class="showtime-range"><label for="presence-duration">DURAÇÃO <output id="presence-duration-value">12 s</output></label><input id="presence-duration" type="range" min="5" max="30" step="1" value="12"></div><button class="showtime-fire-button" data-showtime="presence" ' + disabled + '>REVELAR PRESENÇA</button></div></section>',
+    '<div class="showtime-section-heading"><div><span>03 / UMA PASSAGEM SE ABRE</span><h3>Limiar</h3></div><small>UMA FENDA ENTRE DOIS LUGARES</small></div>',
+    '<section class="showtime-editor cinematic-editor"><div class="threshold-preview"><div class="threshold-preview-gate"></div><span>ALÉM DO LIMIAR</span></div><div class="showtime-settings-column"><label for="threshold-title">TÍTULO DA PASSAGEM</label><input id="threshold-title" maxlength="100" value="O limiar se abre" placeholder="Ex.: O caminho para outro plano"><label for="threshold-message">MENSAGEM</label><input id="threshold-message" maxlength="180" value="Do outro lado, algo aguarda." placeholder="Uma frase para acompanhar a abertura"><div class="showtime-range"><label for="threshold-intensity">INTENSIDADE <output id="threshold-intensity-value">70%</output></label><input id="threshold-intensity" type="range" min="0.2" max="1" step="0.05" value="0.7"></div><div class="showtime-range"><label for="threshold-duration">DURAÇÃO <output id="threshold-duration-value">12 s</output></label><input id="threshold-duration" type="range" min="5" max="30" step="1" value="12"></div><button class="showtime-fire-button" data-showtime="threshold" ' + disabled + '>ABRIR LIMIAR</button></div></section>',
+    '<div class="showtime-section-heading omen-heading"><div><span>04 / ALTERAÇÃO DA PERCEPÇÃO</span><h3>Presságios</h3></div><small>TRÊS FORMAS DE INVADIR A PERCEPÇÃO</small></div>',
     '<section class="showtime-editor omen-editor"><div class="omen-editor-description"><div class="omen-preview-art" aria-hidden="true"><span>Você já esteve aqui...</span><span>ele está olhando</span><span>não confie na luz</span><span>Você já esteve aqui...</span></div>',
     '<p>Escreva uma frase por linha. O SHOWTIME espalha as frases pelo espaço, repete algumas e faz cada uma flutuar, sumir e reaparecer em seu próprio ritmo.</p></div>',
     '<div class="omen-editor-controls"><label for="omen-title">IDENTIFICAÇÃO DO EFEITO (OPCIONAL)</label><input id="omen-title" maxlength="100" value="Sussurros do além" placeholder="Nome interno do presságio">',
@@ -205,7 +213,21 @@ export function bindShowtimeActions(root: HTMLElement, connected: boolean, isGM:
   root.querySelectorAll<HTMLButtonElement>('[data-showtime]').forEach((button) => {
     button.addEventListener('click', () => {
       const kind = button.dataset.showtime as EffectKind;
-      if (kind === 'appearance') {
+      if (kind === 'presence' || kind === 'threshold') {
+        const prefix = kind;
+        const settings: EffectSettings = {
+          durationMs: readRange(root, prefix + '-duration', 12) * 1000,
+          opacity: 1,
+          scale: 1,
+          intensity: readRange(root, prefix + '-intensity', kind === 'presence' ? 0.75 : 0.7),
+          wordCount: 0,
+          speed: 1,
+          omenStyle: 'hallucination',
+        };
+        const title = root.querySelector<HTMLInputElement>('#' + prefix + '-title')?.value || '';
+        const message = root.querySelector<HTMLInputElement>('#' + prefix + '-message')?.value || '';
+        void fireEffect(kind, title, message, settings, connected, isGM);
+      } else if (kind === 'appearance') {
         const settings: EffectSettings = {
           durationMs: readRange(root, 'appearance-duration', 10) * 1000,
           opacity: 1,
@@ -253,6 +275,29 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   document.body.classList.add('showtime-mode');
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
+
+  if (kind === 'presence') {
+    root.innerHTML = [
+      '<main class="showtime-overlay showtime-presence" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
+      '<div class="presence-darkness"></div><div class="presence-pressure"></div><div class="presence-shadow" aria-hidden="true"><div class="presence-form"></div><div class="presence-edge"></div></div>',
+      '<div class="presence-distortion" aria-hidden="true"><i></i><i></i><i></i></div>',
+      '<div class="presence-copy">' + (title ? '<span>A PRESENÇA</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '</main>',
+    ].join('');
+    return;
+  }
+
+  if (kind === 'threshold') {
+    root.innerHTML = [
+      '<main class="showtime-overlay showtime-threshold" style="--effect-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
+      '<div class="threshold-atmosphere"></div><div class="threshold-pull"></div>',
+      '<div class="threshold-gate" aria-hidden="true"><div class="threshold-interior"></div><div class="threshold-rim"></div><div class="threshold-fracture"></div></div>',
+      '<div class="threshold-fragments" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
+      '<div class="threshold-copy">' + (title ? '<span>ENTRE UM LUGAR E OUTRO</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '</main>',
+    ].join('');
+    return;
+  }
 
   if (kind === 'appearance') {
     root.innerHTML = [
