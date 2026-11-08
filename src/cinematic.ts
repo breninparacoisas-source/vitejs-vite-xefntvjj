@@ -11,7 +11,7 @@ type Point = { x: number; y: number };
 type Bounds = { min: Point; max: Point; width: number; height: number; center: Point };
 
 type CinematicPayload = {
-  version: 3;
+  version: 4;
   id: string;
   kind: CinematicKind;
   character: string;
