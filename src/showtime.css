@@ -37,3 +37,15 @@
 @media(prefers-reduced-motion:reduce){.showtime-overlay *{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
 .upload-png-button{border-color:rgba(143,170,139,.38);background:rgba(85,118,83,.13);color:#c5d7bd}.upload-png-button:hover{background:rgba(85,118,83,.24)}
+
+/* Hotfix de legibilidade: conteúdo não depende da conclusão de animações */
+.showtime-overlay .appearance-copy{z-index:30;display:block;visibility:visible;opacity:1;animation:none!important;filter:none!important}
+.showtime-overlay .appearance-copy h1,.showtime-overlay .appearance-copy p{position:relative;z-index:31;display:block;visibility:visible;opacity:1;color:#fff!important;text-shadow:0 2px 18px #000,0 0 8px rgba(0,0,0,.9)}
+.showtime-overlay .appearance-copy h1{font-size:clamp(28px,4.5vw,54px);font-weight:700}
+.showtime-overlay .appearance-copy p{font-size:clamp(16px,2vw,24px)}
+.showtime-overlay .appearance-image-stage{z-index:10}
+.showtime-overlay .appearance-custom-image{visibility:visible;animation:none!important;opacity:var(--effect-opacity);transform:scale(var(--effect-scale));filter:drop-shadow(0 0 24px rgba(135,69,73,.5))}
+.showtime-overlay .omen-whisper{z-index:20;display:block;visibility:visible;opacity:var(--whisper-alpha);animation:whisperDrift var(--float-duration) ease-in-out var(--delay) infinite alternate}
+.showtime-overlay .omen-whisper-field{z-index:15}
+.showtime-overlay .omen-whisper-caption{z-index:25;text-shadow:0 2px 12px #000}
+.showtime-overlay .omen-center-mark{z-index:10}
