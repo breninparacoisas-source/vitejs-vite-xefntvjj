@@ -62,3 +62,32 @@
 
 @media(max-width:760px){.showtime-intro{min-height:0;padding:25px 22px}.showtime-editor,.omen-editor{grid-template-columns:1fr}.appearance-image-preview{min-height:190px}.showtime-section-heading{align-items:flex-start;flex-direction:column}.showtime-section-heading small{text-align:left}}
 @media(max-width:480px){.appearance-custom-image{width:76vw;height:70vh;max-width:88vw}.appearance-copy{bottom:5vh}.omen-whisper{max-width:45vw;font-size:clamp(12px,var(--font-size),22px)}}
+
+
+/* SHOWTIME v0.4 — Ruptura e estilos de presságio */
+.rupture-editor{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}
+.rupture-preview{position:relative;display:flex;min-height:270px;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;border:1px solid rgba(170,117,121,.2);border-radius:8px;background:radial-gradient(ellipse at center,rgba(119,43,58,.18),rgba(15,13,19,.22) 65%);color:#eadcda}
+.rupture-preview>span{z-index:2;font-family:Georgia,serif;font-size:clamp(15px,2vw,22px);letter-spacing:.16em}
+.rupture-preview>small{z-index:2;color:#a18b8e;font:700 9px Arial,sans-serif;letter-spacing:.2em}
+.rupture-preview-wave{position:absolute;width:130px;height:130px;border:1px solid rgba(187,105,117,.45);border-radius:50%;box-shadow:0 0 35px rgba(138,49,69,.12),inset 0 0 35px rgba(138,49,69,.12);animation:rupturePreview 4s ease-out infinite}
+.rupture-preview-wave:before,.rupture-preview-wave:after{position:absolute;inset:-25px;border:1px solid rgba(187,105,117,.25);border-radius:50%;content:""}
+.rupture-preview-wave:after{inset:-52px;border-color:rgba(187,105,117,.13)}
+.showtime-rupture{background:transparent}
+.rupture-atmosphere{position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 50%,rgba(104,36,52,calc(var(--rupture-intensity)*.25)),transparent 45%),radial-gradient(ellipse at 20% 80%,rgba(40,26,56,.12),transparent 40%);animation:ruptureAtmosphere 5s ease-in-out infinite alternate}
+.rupture-wave{position:absolute;top:50%;left:50%;width:min(38vw,42vh);aspect-ratio:1;border:1px solid rgba(192,119,128,.5);border-radius:50%;box-shadow:0 0 34px rgba(141,49,67,.13),inset 0 0 40px rgba(141,49,67,.08);transform:translate(-50%,-50%) scale(.3);opacity:0;animation:rupturePulse 4.8s ease-out infinite}
+.rupture-wave-two{animation-delay:1.6s}.rupture-wave-three{animation-delay:3.2s}
+.rupture-copy{position:absolute;right:20px;bottom:clamp(42px,10vh,90px);left:20px;text-align:center;animation:copyReveal 1.3s ease .25s both}
+.rupture-copy h1{margin:0 0 8px;color:#f3e9df;font-size:clamp(24px,4vw,48px);font-weight:400;text-shadow:0 2px 20px rgba(0,0,0,.9)}
+.rupture-copy p{margin:0 auto;color:#d6c5bd;font-size:clamp(13px,1.7vw,19px);text-shadow:0 2px 12px rgba(0,0,0,.9)}
+.showtime-echo .omen-echo{position:absolute;top:var(--y);left:var(--x);max-width:min(45vw,520px);color:rgba(225,216,245,var(--whisper-alpha));font:italic clamp(16px,2.4vw,29px) Georgia,serif;text-align:center;text-shadow:0 0 20px rgba(153,132,204,.5),0 2px 12px #000;transform:translate(-50%,-50%);animation:echoPulse var(--float-duration) ease-in-out var(--delay) infinite;will-change:opacity,transform}
+.showtime-prophecy .prophecy-main{position:absolute;top:50%;left:50%;width:min(76vw,850px);color:rgba(236,226,248,.92);font:clamp(24px,4vw,48px) Georgia,serif;line-height:1.3;text-align:center;text-shadow:0 0 28px rgba(148,122,201,.5),0 2px 15px #000;transform:translate(-50%,-50%);animation:prophecyReveal 2s ease both}
+.omen-fragment{position:absolute;max-width:24vw;color:rgba(205,190,229,.5);font:italic clamp(12px,1.5vw,17px) Georgia,serif;text-shadow:0 2px 12px #000;animation:fragmentDrift 7s ease-in-out infinite alternate}
+.omen-fragment-0{top:16%;left:9%}.omen-fragment-1{top:22%;right:8%;animation-delay:-2s}.omen-fragment-2{right:12%;bottom:18%;animation-delay:-3.5s}.omen-fragment-3{bottom:13%;left:13%;animation-delay:-1.5s}.omen-fragment-4{top:48%;left:5%;animation-delay:-4s}
+@keyframes rupturePulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}18%{opacity:calc(var(--rupture-intensity)*.75)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}}
+@keyframes ruptureAtmosphere{from{opacity:.35;filter:blur(10px)}to{opacity:1;filter:blur(24px)}}
+@keyframes rupturePreview{0%{opacity:.1;transform:scale(.45)}65%{opacity:.75}100%{opacity:0;transform:scale(2.1)}}
+@keyframes echoPulse{0%,100%{opacity:0;filter:blur(5px);transform:translate(-50%,-50%) scale(.92)}20%,70%{opacity:var(--whisper-alpha);filter:blur(0);transform:translate(-50%,-50%) scale(1)}}
+@keyframes prophecyReveal{from{opacity:0;filter:blur(14px);letter-spacing:.18em}to{opacity:1;filter:blur(0);letter-spacing:.02em}}
+@keyframes fragmentDrift{from{opacity:.12;transform:translateY(8px);filter:blur(3px)}to{opacity:.72;transform:translateY(-8px);filter:blur(0)}}
+@media(max-width:760px){.rupture-editor{grid-template-columns:1fr}.rupture-preview{min-height:180px}.omen-fragment{max-width:38vw}}
+@media(prefers-reduced-motion:reduce){.rupture-wave,.rupture-atmosphere,.rupture-preview-wave,.omen-echo,.omen-fragment{animation:none!important}}
