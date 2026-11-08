@@ -168,7 +168,19 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
 let sfxVolume=0.55;
 let sfxEnabled=false;
 const SFX_IDS:SfxId[]=['sword','impact','arrow','spell','portal','heal','roar','growl','thunder','explosion','door','footsteps','metal','thud','knock','steps','wolf','birds','fire','chime','rain','creak'];
-const SFX_SOURCES:Partial<Record<SfxId,string>>={
+const SFX_SOURCES:Record<SfxId,string>={
+ sword:'https://sfxmint.com/dl/sword-clash-01.mp3',
+ impact:'https://sfxmint.com/dl/impact-punch-05.mp3',
+ arrow:'https://sfxmint.com/dl/bow-draw-10.mp3',
+ spell:'https://sfxmint.com/dl/magic-projectile-04.mp3',
+ portal:'https://sfxmint.com/dl/magic-scifi-portal-23.mp3',
+ heal:'https://sfxmint.com/dl/magic-buff-07.mp3',
+ roar:'https://sfxmint.com/dl/horror-growl-14.mp3',
+ growl:'https://sfxmint.com/dl/horror-growl-12.mp3',
+ thunder:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Thunder.ogg',
+ explosion:'https://sfxmint.com/dl/impact-explosion-08.mp3',
+ door:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Door_handle_creaking.ogg',
+ footsteps:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Walkingongravel.ogg',
  metal:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Metal_Clanging_Noises.ogg',
  thud:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dull_thud.ogg',
  creak:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Door_handle_creaking.ogg',
@@ -181,59 +193,6 @@ const SFX_SOURCES:Partial<Record<SfxId,string>>={
  chime:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Windchime.ogg'
 };
 
-let sfxContext:AudioContext|undefined;
-let sfxMaster:GainNode|undefined;
-function noiseBurst(ctx:AudioContext,out:AudioNode,duration:number,frequency:number,volume:number,filter:BiquadFilterType='lowpass'):void{
- const length=Math.floor(ctx.sampleRate*duration),buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
- for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/length,2.1);
- const source=ctx.createBufferSource(),band=ctx.createBiquadFilter(),gain=ctx.createGain();
- source.buffer=buffer;band.type=filter;band.frequency.value=frequency;gain.gain.value=volume;source.connect(band).connect(gain).connect(out);source.start();
-}
-function tone(ctx:AudioContext,out:AudioNode,hz:number,duration:number,volume:number,endHz?:number,type:OscillatorType='sine',delay=0):void{
- const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+delay;osc.type=type;osc.frequency.setValueAtTime(hz,start);
- if(endHz)osc.frequency.exponentialRampToValueAtTime(Math.max(1,endHz),start+duration);
- gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.025);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
- osc.connect(gain).connect(out);osc.start(start);osc.stop(start+duration+.03);
-}
-function playLegacySfx(id:SfxId):boolean{
- if(!['sword','impact','arrow','spell','portal','heal','roar','growl','thunder','explosion','door','footsteps'].includes(id)||!sfxContext||!sfxMaster||sfxContext.state!=='running')return false;
- const x=sfxContext,y=sfxMaster;
- switch(id){
- case 'sword':noiseBurst(x,y,.32,2100,.32,'highpass');tone(x,y,920,.46,.16,310,'triangle');tone(x,y,1460,.2,.08,760);break;
- case 'impact':noiseBurst(x,y,.4,480,.5);tone(x,y,105,.48,.4,35);break;
- case 'arrow':noiseBurst(x,y,.38,2700,.23,'bandpass');tone(x,y,700,.25,.07,160);break;
- case 'spell':tone(x,y,220,.72,.18,1300);tone(x,y,480,.6,.1,1600,'triangle',.08);tone(x,y,950,.5,.07,520,'sine',.18);noiseBurst(x,y,.5,3600,.07,'highpass');break;
- case 'portal':tone(x,y,78,1.7,.16,34,'sawtooth');tone(x,y,300,1.4,.1,900);tone(x,y,620,1.1,.07,150,'triangle',.12);noiseBurst(x,y,1.3,720,.12,'bandpass');break;
- case 'heal':[523,659,784,1047].forEach((hz,i)=>tone(x,y,hz,.8,.12,hz*1.01,'sine',i*.12));break;
- case 'roar':tone(x,y,90,1.1,.28,40,'sawtooth');tone(x,y,135,.9,.18,55,'triangle',.04);noiseBurst(x,y,1,800,.25);break;
- case 'growl':tone(x,y,65,.85,.23,32,'sawtooth');tone(x,y,92,.7,.12,45,'triangle',.08);noiseBurst(x,y,.7,390,.16);break;
- case 'thunder':noiseBurst(x,y,2.1,180,.5);tone(x,y,52,2.2,.38,24,'triangle');break;
- case 'explosion':noiseBurst(x,y,1,680,.65);tone(x,y,120,.85,.45,22);break;
- case 'door':noiseBurst(x,y,1.1,350,.28,'bandpass');tone(x,y,112,.8,.12,75,'sawtooth');tone(x,y,70,.5,.16,40,'triangle',.3);break;
- case 'footsteps':[0,.38,.78].forEach((d,i)=>{tone(x,y,i===1?75:90,.18,.2,36,'sine',d);noiseBurst(x,y,.1,240,.13);});break;
- }
- return true;
-}
-function enableLegacySfx():void{
- if(!sfxContext||sfxContext.state==='closed'){sfxContext=new AudioContext();sfxMaster=sfxContext.createGain();sfxMaster.gain.value=sfxVolume;sfxMaster.connect(sfxContext.destination);}
- void sfxContext.resume().then(()=>{sfxEnabled=sfxContext?.state==='running';const status=document.querySelector<HTMLElement>('#sfx-audio-status'),volume=document.querySelector<HTMLInputElement>('#sfx-volume'),button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');if(status)status.textContent=sfxEnabled?'Efeitos liberados neste dispositivo.':'O navegador não liberou o áudio. Tente novamente.';if(volume)volume.disabled=!sfxEnabled;if(button)button.textContent=sfxEnabled?'EFEITOS LIBERADOS':'LIBERAR EFEITOS';}).catch(error=>console.error('Falha ao liberar soundboard:',error));
-}
-const activeSfx=new Set<HTMLAudioElement>();
-function playSfx(id:SfxId):void{
- if(!sfxEnabled)return;
- if(playLegacySfx(id))return;
- const source=SFX_SOURCES[id];if(!source){playLegacySfx(id);return;}const player=new Audio(source);player.preload='auto';player.volume=sfxVolume;activeSfx.add(player);
- player.addEventListener('ended',()=>activeSfx.delete(player),{once:true});
- player.addEventListener('error',()=>{activeSfx.delete(player);const status=document.querySelector<HTMLElement>('#sfx-audio-status');if(status)status.textContent='Não foi possível carregar uma gravação. Verifique a conexão.';},{once:true});
- void player.play().catch(error=>{activeSfx.delete(player);console.warn('Falha ao reproduzir gravação:',id,error);const status=document.querySelector<HTMLElement>('#sfx-audio-status');if(status)status.textContent='Não foi possível reproduzir o som. Tente liberar o áudio novamente.';});
-}
-function enableSfxAudio():void{
- sfxEnabled=true;
- const status=document.querySelector<HTMLElement>('#sfx-audio-status'),volume=document.querySelector<HTMLInputElement>('#sfx-volume'),button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
- if(status)status.textContent='Sons liberados neste dispositivo.';
- if(volume)volume.disabled=false;
- if(button)button.textContent='SONS LIBERADOS';
-}
 function receiveSfx(value:unknown):void{
  if(!value||typeof value!=='object')return;
  const p=value as Partial<SfxPayload>;
@@ -245,7 +204,7 @@ function bindSoundboard(root:HTMLElement,connected:boolean,isGM:boolean):void{
  const enable=root.querySelector<HTMLButtonElement>('#sfx-audio-enable'),volume=root.querySelector<HTMLInputElement>('#sfx-volume'),output=root.querySelector<HTMLOutputElement>('#sfx-volume-value'),status=root.querySelector<HTMLElement>('#sfx-audio-status');
  if(!enable||!volume||!output||!status)return;
  enable.textContent=sfxEnabled?'SONS LIBERADOS':'LIBERAR SONS';volume.disabled=!sfxEnabled;volume.value=String(sfxVolume);output.textContent=Math.round(sfxVolume*100)+'%';
- enable.addEventListener('click',()=>{enableSfxAudio();enableLegacySfx();});
+ enable.addEventListener('click',enableSfxAudio);
  volume.addEventListener('input',()=>{sfxVolume=Number(volume.value);output.textContent=Math.round(sfxVolume*100)+'%';activeSfx.forEach(player=>{player.volume=sfxVolume;});});
  root.querySelectorAll<HTMLButtonElement>('[data-sfx]').forEach(button=>button.addEventListener('click',()=>{
   if(!connected||!isGM)return;
