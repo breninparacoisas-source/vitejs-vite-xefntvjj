@@ -1,9 +1,10 @@
 {
   "name": "ARTON ENGINE",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "manifest_version": 1,
   "description": "Central de controle e imersão para campanhas de RPG.",
   "author": "ARTON ENGINE",
+  "background_url": "/?background=1",
   "action": {
     "title": "ARTON ENGINE",
     "icon": "/icon.svg",
