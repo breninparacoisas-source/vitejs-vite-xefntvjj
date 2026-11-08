@@ -203,20 +203,12 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const intensity = Math.max(0.25, Math.min(0.85, Number(params.get('intensity')) || 0.65));
   const duration = Math.max(12, Math.min(35, Number(params.get('duration')) || 22)) / 1000;
 
-  for (const element of [document.documentElement, document.body, root]) {
-    element.style.setProperty('background', 'transparent', 'important');
-    element.style.setProperty('background-color', 'transparent', 'important');
-    element.style.setProperty('margin', '0', 'important');
-    element.style.setProperty('padding', '0', 'important');
-    element.style.setProperty('width', '100%', 'important');
-    element.style.setProperty('height', '100%', 'important');
-    element.style.setProperty('overflow', 'hidden', 'important');
-  }
+  // Repete a estratégia de transparência já usada pelo SHOWTIME, que preserva o mapa sob a modal.
+  document.documentElement.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
+  document.body.classList.add('cinematic-mode');
+  document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.className = 'cinematic-overlay';
-  root.style.setProperty('position', 'fixed', 'important');
-  root.style.setProperty('inset', '0', 'important');
-  root.style.setProperty('z-index', '2147483000', 'important');
-  root.style.setProperty('pointer-events', 'none', 'important');
+  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
 
   root.innerHTML = `
     <main class="farewell-scene" style="--farewell-intensity:${intensity};--farewell-duration:${duration}s">
