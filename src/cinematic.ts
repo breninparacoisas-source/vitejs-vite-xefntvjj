@@ -186,8 +186,18 @@ async function resolveEstablishingBounds(focusBounds: Bounds): Promise<Bounds> {
   );
   if (!characters.length) return expandBounds(focusBounds, 2.1);
 
+  // O plano de contexto inclui apenas companheiros próximos do foco.
+  // Isso evita que tokens espalhados por outras regiões do mapa reduzam a cena inteira.
+  const radiusX = Math.max(focusBounds.width * 3, 1);
+  const radiusY = Math.max(focusBounds.height * 3, 1);
+  const nearby = characters.filter((item) =>
+    Math.abs(item.position.x - focusBounds.center.x) <= radiusX
+    && Math.abs(item.position.y - focusBounds.center.y) <= radiusY
+  );
+  if (!nearby.length) return expandBounds(focusBounds, 2.1);
+
   try {
-    const groupBounds = await OBR.scene.items.getItemBounds(characters.map((item) => item.id));
+    const groupBounds = await OBR.scene.items.getItemBounds(nearby.map((item) => item.id));
     return expandBounds(unionBounds(groupBounds as Bounds, focusBounds), 1.35);
   } catch {
     return expandBounds(focusBounds, 2.1);
