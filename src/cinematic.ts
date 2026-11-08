@@ -123,6 +123,7 @@ half4 main(float2 coord) {
 
 async function addCinematicGrade(style: CinematicStyle, intensity: number, durationMs: number): Promise<string | undefined> {
   const profile = GRADE_PROFILES[style];
+  const strength = 0.65 + ((Math.max(0.08, Math.min(0.42, intensity)) - 0.08) / 0.34) * 0.75;
   const effect = buildEffect()
     .effectType('VIEWPORT')
     .layer('POST_PROCESS')
@@ -135,13 +136,13 @@ async function addCinematicGrade(style: CinematicStyle, intensity: number, durat
       { name: 'focus', value: { x: 0.5, y: 0.44 } },
       { name: 'tint', value: profile.tint },
       { name: 'saturation', value: profile.saturation },
-      { name: 'grade', value: profile.grade * intensity },
-      { name: 'glow', value: profile.glow * intensity },
-      { name: 'vignette', value: profile.vignette * intensity },
+      { name: 'grade', value: profile.grade * strength },
+      { name: 'glow', value: profile.glow * strength },
+      { name: 'vignette', value: profile.vignette * strength },
       { name: 'bars', value: profile.bars },
-      { name: 'particles', value: profile.particles * intensity },
-      { name: 'grain', value: profile.grain * intensity },
-      { name: 'flash', value: profile.flash * intensity },
+      { name: 'particles', value: profile.particles * strength },
+      { name: 'grain', value: profile.grain * strength },
+      { name: 'flash', value: profile.flash * strength },
     ])
     .build();
 
@@ -416,9 +417,9 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         </div>
 
         <div class="cinematic-control-range">
-          <label for="cinematic-intensity">VINHETA <output id="cinematic-intensity-value">24%</output></label>
+          <label for="cinematic-intensity">INTENSIDADE DOS EFEITOS <output id="cinematic-intensity-value">24%</output></label>
           <input id="cinematic-intensity" type="range" min="0.08" max="0.42" step="0.02" value="0.24">
-          <small>Tratamento discreto nas bordas. O mapa continua sendo o protagonista.</small>
+          <small>Controla a força da luz, gradação de cor, vinheta, partículas e granulação.</small>
         </div>
         <div class="cinematic-control-range">
           <label for="cinematic-duration">DURAÇÃO <output id="cinematic-duration-value">24 s</output></label>
