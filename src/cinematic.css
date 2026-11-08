@@ -134,3 +134,75 @@
 @keyframes memoryMotes{0%{opacity:0;transform:translate3d(0,18px,0) scale(.3)}30%{opacity:calc(var(--farewell-intensity)*1.3)}70%{opacity:calc(var(--farewell-intensity)*.8)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.4),-130px,0) scale(1.1)}}
 @keyframes deathFall{0%{opacity:0;transform:translate3d(0,-70px,0) scale(.5)}22%{opacity:calc(var(--farewell-intensity)*1.5)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.5),190px,0) scale(.8)}}
 @media(max-width:760px){.scene-reveal .farewell-caption,.scene-entrance .farewell-caption,.scene-memory .farewell-caption{left:50%;right:auto;width:90vw;max-width:90vw}.scene-sacrifice .farewell-caption{left:5%;width:90vw;max-width:90vw}.scene-death .farewell-caption{right:5%;width:90vw;max-width:90vw}}
+
+
+/* CINEMÁTICO 0.18 — linguagem de cinema: planos, impacto e assinatura visual por cena. */
+.farewell-grade,.farewell-vignette,.farewell-flash,.farewell-shockwave,.farewell-streaks,.farewell-frame{position:absolute;inset:0;pointer-events:none}
+.farewell-grade{z-index:0;opacity:.8;mix-blend-mode:soft-light;background:linear-gradient(115deg,rgba(8,12,22,.24),transparent 48%,rgba(5,7,12,.18));animation:gradeBreath var(--farewell-duration) ease-in-out both}
+.farewell-vignette{z-index:5;opacity:0;background:radial-gradient(ellipse at 50% 46%,transparent 34%,rgba(0,0,0,.22) 72%,rgba(0,0,0,.58) 115%);animation:vignetteBuild var(--farewell-duration) ease-in-out both}
+.farewell-flash{z-index:7;opacity:0;background:radial-gradient(ellipse at 50% 48%,rgba(255,244,215,.82),rgba(255,207,139,.24) 30%,transparent 67%);mix-blend-mode:screen;animation:sceneFlash var(--farewell-duration) ease-out both}
+.farewell-shockwave{z-index:3;left:50%;top:48%;right:auto;bottom:auto;width:12vmin;height:12vmin;border:1px solid rgba(255,226,177,.65);border-radius:50%;transform:translate(-50%,-50%) scale(.1);opacity:0;box-shadow:0 0 34px rgba(255,196,117,.2),inset 0 0 25px rgba(255,225,180,.12);animation:shockwave var(--farewell-duration) cubic-bezier(.12,.72,.2,1) both}
+.farewell-streaks{z-index:4;opacity:0;background:repeating-linear-gradient(108deg,transparent 0 7%,rgba(230,236,255,.18) 7.08%,transparent 7.18% 13%);mask-image:linear-gradient(180deg,#000,transparent 82%);animation:streakPass var(--farewell-duration) ease-in-out both}
+.farewell-frame{z-index:9;inset:clamp(12px,2.2vw,34px);border:1px solid rgba(238,222,195,.12);opacity:0;box-shadow:inset 0 0 80px rgba(0,0,0,.12);animation:frameReveal var(--farewell-duration) ease both}
+.farewell-caption{max-width:min(760px,82vw)}
+.farewell-particle{animation-duration:calc(var(--travel)*.78)}
+.farewell-heroic .farewell-grade{background:linear-gradient(180deg,rgba(255,185,78,.12),transparent 55%,rgba(22,10,3,.25));mix-blend-mode:screen}
+.farewell-heroic .farewell-vignette{background:radial-gradient(ellipse at 50% 40%,transparent 42%,rgba(25,12,3,.3) 82%,rgba(0,0,0,.62) 115%);opacity:1}
+.farewell-heroic .farewell-flash{animation-name:heroicFlare}
+.farewell-heroic .farewell-shockwave{border-color:rgba(255,211,132,.72);box-shadow:0 0 60px rgba(255,178,70,.36),inset 0 0 30px rgba(255,231,179,.2)}
+.farewell-heroic .farewell-frame{border-color:rgba(255,214,153,.28);box-shadow:inset 0 0 80px rgba(100,50,12,.2)}
+.farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(34,56,85,.3),rgba(7,13,25,.18));mix-blend-mode:multiply}
+.farewell-melancholic .farewell-vignette{background:radial-gradient(ellipse at 48% 43%,transparent 28%,rgba(9,18,32,.38) 74%,rgba(1,4,12,.78) 115%);opacity:1}
+.farewell-melancholic .farewell-streaks{background:repeating-linear-gradient(104deg,transparent 0 3.5%,rgba(185,207,235,.14) 3.56%,transparent 3.64% 7%);animation-name:rainPass}
+.farewell-melancholic .farewell-frame{border-color:rgba(187,208,235,.12)}
+.farewell-hopeful .farewell-grade{background:linear-gradient(180deg,rgba(255,240,197,.18),transparent 56%,rgba(90,62,28,.08));mix-blend-mode:screen}
+.farewell-hopeful .farewell-vignette{background:radial-gradient(ellipse at 50% 35%,transparent 46%,rgba(77,56,28,.16) 88%,rgba(25,20,14,.36) 115%);opacity:1}
+.farewell-hopeful .farewell-flash{animation-name:hopeBloom;background:radial-gradient(ellipse at 50% 38%,rgba(255,249,219,.7),rgba(255,220,159,.2) 35%,transparent 72%)}
+.farewell-hopeful .farewell-frame{border-color:rgba(255,238,199,.18)}
+.farewell-tragic .farewell-grade{background:linear-gradient(125deg,rgba(64,8,18,.34),rgba(12,5,9,.16) 50%,rgba(82,14,18,.32));mix-blend-mode:multiply}
+.farewell-tragic .farewell-vignette{background:radial-gradient(ellipse at 58% 48%,transparent 20%,rgba(35,4,9,.48) 64%,rgba(0,0,0,.92) 115%);opacity:1}
+.farewell-tragic .farewell-flash{background:radial-gradient(ellipse at 58% 48%,rgba(255,180,148,.58),rgba(180,35,45,.22) 35%,transparent 70%);animation-name:tragicPulse}
+.farewell-tragic .farewell-frame{border-color:rgba(183,79,73,.24);box-shadow:inset 0 0 100px rgba(30,0,6,.3)}
+/* Cena: revelação — cortina de luz e descoberta. */
+.scene-reveal .farewell-flash{animation-name:revealFlash}
+.scene-reveal .farewell-shockwave{animation-name:revealRing}
+.scene-reveal .farewell-vignette{background:linear-gradient(90deg,rgba(0,0,0,.72),transparent 34%,transparent 66%,rgba(0,0,0,.72));animation-name:revealCurtain}
+.scene-reveal .farewell-streaks{opacity:.65;animation-name:streakPass}
+/* Cena: entrada — contraluz, impacto e expansão. */
+.scene-entrance .farewell-flash{animation-name:entranceFlash}
+.scene-entrance .farewell-shockwave{width:24vmin;height:24vmin;animation-name:entranceWave}
+.scene-entrance .farewell-vignette{background:radial-gradient(ellipse at 50% 55%,transparent 18%,rgba(0,0,0,.45) 72%,rgba(0,0,0,.82) 115%);opacity:1}
+.scene-entrance .farewell-frame{border-width:2px}
+/* Cena: sacrifício — pulso, estilhaços e queda de luz. */
+.scene-sacrifice .farewell-flash{animation-name:sacrificeFlash}
+.scene-sacrifice .farewell-shockwave{animation-name:sacrificeWave;border-color:rgba(255,163,97,.8)}
+.scene-sacrifice .farewell-vignette{background:radial-gradient(ellipse at 50% 50%,transparent 12%,rgba(20,5,4,.42) 58%,rgba(0,0,0,.9) 115%);opacity:1}
+/* Cena: memória — luz vazada e película antiga. */
+.scene-memory .farewell-grade{background:linear-gradient(115deg,rgba(180,126,58,.16),transparent 42%,rgba(38,24,12,.18));mix-blend-mode:screen}
+.scene-memory .farewell-flash{animation-name:memoryLeak;background:linear-gradient(112deg,transparent 8%,rgba(255,221,157,.22) 26%,transparent 47%,rgba(255,241,206,.12) 66%,transparent 82%)}
+.scene-memory .farewell-vignette{background:radial-gradient(ellipse,transparent 30%,rgba(38,26,15,.3) 100%);opacity:1}
+.scene-memory .farewell-shockwave{display:none}
+/* Cena: morte — colapso de luz e vazio final. */
+.scene-death .farewell-flash{animation-name:deathPulse;background:radial-gradient(ellipse at 62% 48%,rgba(198,78,68,.48),rgba(56,8,16,.18) 38%,transparent 72%)}
+.scene-death .farewell-vignette{background:radial-gradient(ellipse at 52% 46%,transparent 10%,rgba(21,2,8,.55) 58%,rgba(0,0,0,.96) 115%);opacity:1}
+.scene-death .farewell-shockwave{animation-name:deathCollapse;border-color:rgba(190,92,87,.42)}
+.scene-death .farewell-streaks{background:repeating-linear-gradient(180deg,transparent 0 8%,rgba(186,74,75,.13) 8.1%,transparent 8.2% 16%);animation-name:rainPass}
+@keyframes gradeBreath{0%,100%{opacity:.22}35%,70%{opacity:.88}}
+@keyframes vignetteBuild{0%,8%{opacity:0}28%,84%{opacity:1}100%{opacity:.18}}
+@keyframes sceneFlash{0%,8%,100%{opacity:0}14%{opacity:calc(var(--farewell-intensity)*1.2)}23%{opacity:0}48%{opacity:calc(var(--farewell-intensity)*.35)}58%{opacity:0}}
+@keyframes heroicFlare{0%,100%{opacity:0;transform:scale(.7)}14%{opacity:calc(var(--farewell-intensity)*1.5);transform:scale(1.2)}30%{opacity:calc(var(--farewell-intensity)*.2)}48%{opacity:calc(var(--farewell-intensity)*.65)}62%{opacity:0}}
+@keyframes hopeBloom{0%,100%{opacity:0;transform:scale(.75)}30%{opacity:calc(var(--farewell-intensity)*.7);transform:scale(1.05)}65%{opacity:calc(var(--farewell-intensity)*.48);transform:scale(1.2)}}
+@keyframes tragicPulse{0%,100%{opacity:0}18%{opacity:calc(var(--farewell-intensity)*.65)}24%{opacity:0}64%{opacity:calc(var(--farewell-intensity)*.35)}72%{opacity:0}}
+@keyframes revealFlash{0%,100%{opacity:0;transform:scale(.82)}38%{opacity:calc(var(--farewell-intensity)*1.5);transform:scale(1.12)}54%{opacity:0}}
+@keyframes revealRing{0%,24%{opacity:0;transform:translate(-50%,-50%) scale(.1)}42%{opacity:.85;transform:translate(-50%,-50%) scale(4.8)}72%,100%{opacity:0;transform:translate(-50%,-50%) scale(7)}}
+@keyframes revealCurtain{0%,20%{opacity:0}42%,65%{opacity:1}100%{opacity:.3}}
+@keyframes entranceFlash{0%,100%{opacity:0;transform:scale(.5)}20%{opacity:calc(var(--farewell-intensity)*1.7);transform:scale(1.25)}32%{opacity:0}52%{opacity:calc(var(--farewell-intensity)*.45)}65%{opacity:0}}
+@keyframes entranceWave{0%,15%{opacity:0;transform:translate(-50%,-50%) scale(.1)}28%{opacity:.9;transform:translate(-50%,-50%) scale(2.2)}55%,100%{opacity:0;transform:translate(-50%,-50%) scale(5.5)}}
+@keyframes sacrificeFlash{0%,100%{opacity:0}22%{opacity:calc(var(--farewell-intensity)*1.8)}27%{opacity:0}43%{opacity:calc(var(--farewell-intensity)*.85)}52%{opacity:0}}
+@keyframes sacrificeWave{0%,20%{opacity:0;transform:translate(-50%,-50%) scale(.1)}34%{opacity:1;transform:translate(-50%,-50%) scale(2.8)}58%,100%{opacity:0;transform:translate(-50%,-50%) scale(5.2)}}
+@keyframes memoryLeak{0%,100%{opacity:0;transform:translateX(-16%)}35%{opacity:.9;transform:translateX(0)}68%{opacity:.45;transform:translateX(12%)}}
+@keyframes deathPulse{0%,100%{opacity:0}25%{opacity:calc(var(--farewell-intensity)*.85)}32%{opacity:0}58%{opacity:calc(var(--farewell-intensity)*.22)}72%{opacity:0}}
+@keyframes deathCollapse{0%,20%{opacity:0;transform:translate(-50%,-50%) scale(4)}48%{opacity:.7;transform:translate(-50%,-50%) scale(.2)}68%,100%{opacity:0;transform:translate(-50%,-50%) scale(.05)}}
+@keyframes rainPass{0%,100%{opacity:0;transform:translateY(-4%)}28%,78%{opacity:.72;transform:translateY(4%)}}
+@keyframes streakPass{0%,100%{opacity:0;transform:translateX(-8%)}35%,72%{opacity:.65;transform:translateX(6%)}}
+@keyframes frameReveal{0%,12%,100%{opacity:0}28%,82%{opacity:1}}
