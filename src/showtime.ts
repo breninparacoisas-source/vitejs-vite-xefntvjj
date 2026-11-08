@@ -260,7 +260,8 @@ export function bindShowtimeActions(root: HTMLElement, connected: boolean, isGM:
 
 export function renderShowtimeOverlay(root: HTMLElement): void {
   const params = new URLSearchParams(window.location.search);
-  const kind = params.get('kind') === 'omen' ? 'omen' : 'appearance';
+  const requestedKind = params.get('kind');
+  const kind: EffectKind = requestedKind === 'omen' || requestedKind === 'presence' || requestedKind === 'threshold' ? requestedKind : 'appearance';
   const title = escapeHtml((params.get('title') || '').slice(0, 100));
   const message = (params.get('message') || '').slice(0, 700);
   const opacity = Math.max(0.25, Math.min(1, Number(params.get('opacity')) || 0.88));
