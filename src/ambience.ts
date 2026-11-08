@@ -8,7 +8,33 @@ const METADATA_KEY = 'com.arton.engine/ambience';
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number };
 
+type AmbienceSettings = { intensity: number; brightness: number; motion: number };
+const DEFAULT_SETTINGS: AmbienceSettings = { intensity: 70, brightness: 0, motion: 65 };
+let ambienceSettings: AmbienceSettings = { ...DEFAULT_SETTINGS };
+let settingsTimer = 0;
 let activePreset: AmbiencePreset = 'off';
+
+function normalizeSettings(value?: Partial<AmbienceSettings>): AmbienceSettings {
+  return {
+    intensity: Math.max(0, Math.min(100, Number.isFinite(value?.intensity) ? Number(value?.intensity) : DEFAULT_SETTINGS.intensity)),
+    brightness: Math.max(-40, Math.min(40, Number.isFinite(value?.brightness) ? Number(value?.brightness) : DEFAULT_SETTINGS.brightness)),
+    motion: Math.max(0, Math.min(100, Number.isFinite(value?.motion) ? Number(value?.motion) : DEFAULT_SETTINGS.motion)),
+  };
+}
+
+function settingsQuery(settings: AmbienceSettings): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('intensity', String(settings.intensity));
+  params.set('brightness', String(settings.brightness));
+  params.set('motion', String(settings.motion));
+  return params;
+}
+
+function applyOverlaySettings(root: HTMLElement, settings: AmbienceSettings): void {
+  root.style.setProperty('--ambience-intensity', String(settings.intensity / 100));
+  root.style.setProperty('--ambience-brightness', String(settings.brightness / 100));
+  root.style.setProperty('--ambience-motion', String(settings.motion / 100));
+}
 
 function refreshAudioPanel(): void {
   const enable = document.querySelector<HTMLButtonElement>('#ambience-audio-enable');
@@ -31,12 +57,13 @@ function validPayload(value: unknown): value is AmbiencePayload {
   const data = value as Partial<AmbiencePayload>;
   return data.version === 1
     && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(data.preset || '')
+    && (!data.settings || typeof data.settings === 'object')
     && typeof data.createdAt === 'number'
     && Date.now() - data.createdAt < 120_000
     && data.createdAt <= Date.now() + 5_000;
 }
 
-async function openAmbience(preset: AmbiencePreset): Promise<void> {
+async function openAmbience(preset: AmbiencePreset, settings: AmbienceSettings = ambienceSettings): Promise<void> {
   if (preset === 'off') {
     try { await OBR.modal.close(MODAL_ID); } catch { /* Nenhum ambiente aberto. */ }
     return;
@@ -45,6 +72,7 @@ async function openAmbience(preset: AmbiencePreset): Promise<void> {
   const url = new URL('/', window.location.origin);
   url.searchParams.set('ambience', '1');
   url.searchParams.set('preset', preset);
+  settingsQuery(settings).forEach((value, key) => url.searchParams.set(key, value));
   await OBR.modal.open({
     id: MODAL_ID,
     url: url.toString(),
@@ -60,6 +88,7 @@ export function initializeAmbienceBackground(): void {
     if (!validPayload(event.data)) return;
     if (activePreset !== event.data.preset && audio) stopAudio();
     activePreset = event.data.preset;
+    ambienceSettings = normalizeSettings(event.data.settings);
     if (activePreset === 'off') stopAudio();
     refreshAudioPanel();
     void openAmbience(event.data.preset).catch((error) => {
@@ -70,6 +99,7 @@ export function initializeAmbienceBackground(): void {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
     if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
+      ambienceSettings = normalizeSettings(saved.settings);
       refreshAudioPanel();
       if (activePreset === 'off') return openAmbience('off');
       return openAmbience(activePreset);
@@ -90,6 +120,7 @@ export function initializeAmbiencePanel(): void {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
     if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
+      ambienceSettings = normalizeSettings(saved.settings);
       if (activePreset === 'off') stopAudio();
       refreshAudioPanel();
     }
@@ -122,6 +153,7 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     '<section class="ambience-presets">',
     ...presets.map((preset, index) => '<button class="ambience-preset ambience-' + preset.id + '" data-ambience="' + preset.id + '" ' + disabled + '><span class="ambience-preset-preview" aria-hidden="true"><span class="scene-light"></span><span class="scene-shape"></span><span class="scene-depth"></span><span class="scene-label">' + String(index + 1).padStart(2, '0') + '</span></span><span class="ambience-preset-copy"><strong>' + preset.title + '</strong><small>' + preset.description + '</small><span class="ambience-preset-action">APLICAR AMBIENTAÇÃO</span></span></button>'),
     '</section>',
+    '<section class="ambience-customizer"><div class="ambience-customizer-heading"><div><span class="ambience-eyebrow">AJUSTE FINO</span><h3>Personalize a atmosfera</h3><p>Os ajustes são aplicados a todos na sala. O volume de áudio continua individual.</p></div><button type="button" id="ambience-reset-settings" ' + disabled + '>RESTAURAR PADRÃO</button></div><div class="ambience-setting-grid"><label class="ambience-setting"><span><strong>Intensidade</strong><output id="ambience-intensity-value">' + ambienceSettings.intensity + '%</output></span><small>Força dos efeitos visuais</small><input id="ambience-intensity" type="range" min="0" max="100" value="' + ambienceSettings.intensity + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Clareza</strong><output id="ambience-brightness-value">' + (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness + '</output></span><small>Clarear ou escurecer a cena</small><input id="ambience-brightness" type="range" min="-40" max="40" value="' + ambienceSettings.brightness + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Movimento</strong><output id="ambience-motion-value">' + ambienceSettings.motion + '%</output></span><small>Velocidade dos efeitos animados</small><input id="ambience-motion" type="range" min="0" max="100" value="' + ambienceSettings.motion + '" ' + disabled + '></label></div><p class="ambience-customizer-note">Ajustes em tempo real: escolha o nível de presença visual sem alterar a imagem original do mapa.</p></section>',
     '<section class="ambience-audio-settings"><div class="ambience-audio-copy"><span class="ambience-eyebrow">MESA DE SOM</span><h3>Paisagem sonora</h3><p>O som é reproduzido neste dispositivo. Ative uma vez para liberar a reprodução no navegador.</p><p id="ambience-audio-status">' + (activePreset === 'off' ? 'Escolha um ambiente para liberar a paisagem sonora.' : 'Ambiente pronto. Ative o áudio neste dispositivo.') + '</p></div><div class="ambience-audio-controls"><button id="ambience-audio-enable" ' + (activePreset === 'off' ? 'disabled' : '') + '>ATIVAR ÁUDIO</button><label for="ambience-volume"><span>VOLUME</span><output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" class="ambience-mute" disabled>SILENCIAR NESTE DISPOSITIVO</button></div></section>',
     '<p class="ambience-footnote">' + status + ' Os efeitos visuais são sobrepostos ao mapa e não recebem cliques.</p>',
   ].join('');;
@@ -167,22 +199,70 @@ function bindLocalAudioControls(root: HTMLElement): void {
   });
 }
 
+async function publishSettings(root: HTMLElement, connected: boolean, isGM: boolean): Promise<void> {
+  if (!connected || !isGM) return;
+  const intensity = root.querySelector<HTMLInputElement>('#ambience-intensity');
+  const brightness = root.querySelector<HTMLInputElement>('#ambience-brightness');
+  const motion = root.querySelector<HTMLInputElement>('#ambience-motion');
+  if (!intensity || !brightness || !motion) return;
+  ambienceSettings = normalizeSettings({
+    intensity: Number(intensity.value),
+    brightness: Number(brightness.value),
+    motion: Number(motion.value),
+  });
+  const intensityValue = root.querySelector<HTMLOutputElement>('#ambience-intensity-value');
+  const brightnessValue = root.querySelector<HTMLOutputElement>('#ambience-brightness-value');
+  const motionValue = root.querySelector<HTMLOutputElement>('#ambience-motion-value');
+  if (intensityValue) intensityValue.textContent = ambienceSettings.intensity + '%';
+  if (brightnessValue) brightnessValue.textContent = (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness;
+  if (motionValue) motionValue.textContent = ambienceSettings.motion + '%';
+  window.clearTimeout(settingsTimer);
+  settingsTimer = window.setTimeout(() => {
+    const payload: AmbiencePayload = { version: 1, preset: activePreset, settings: ambienceSettings, createdAt: Date.now() };
+    void OBR.room.setMetadata({ [METADATA_KEY]: { preset: activePreset, settings: ambienceSettings, updatedAt: payload.createdAt } });
+    void OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
+    if (activePreset !== 'off') void openAmbience(activePreset, ambienceSettings);
+  }, 180);
+}
+
+function bindAmbienceCustomizer(root: HTMLElement, connected: boolean, isGM: boolean): void {
+  const controls = ['#ambience-intensity', '#ambience-brightness', '#ambience-motion'];
+  controls.forEach((selector) => {
+    root.querySelector<HTMLInputElement>(selector)?.addEventListener('input', () => {
+      void publishSettings(root, connected, isGM);
+    });
+  });
+  root.querySelector<HTMLButtonElement>('#ambience-reset-settings')?.addEventListener('click', () => {
+    const values: Array<[string, number]> = [
+      ['#ambience-intensity', DEFAULT_SETTINGS.intensity],
+      ['#ambience-brightness', DEFAULT_SETTINGS.brightness],
+      ['#ambience-motion', DEFAULT_SETTINGS.motion],
+    ];
+    values.forEach(([selector, value]) => {
+      const input = root.querySelector<HTMLInputElement>(selector);
+      if (input) input.value = String(value);
+    });
+    void publishSettings(root, connected, isGM);
+  });
+}
+
 export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM: boolean): void {
   bindLocalAudioControls(root);
+  bindAmbienceCustomizer(root, connected, isGM);
   root.querySelectorAll<HTMLButtonElement>('[data-ambience]').forEach((button) => {
     button.addEventListener('click', () => {
       if (!connected || !isGM) return;
       const preset = button.dataset.ambience as AmbiencePreset;
       if (!['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(preset)) return;
       void (async () => {
-        const payload: AmbiencePayload = { version: 1, preset, createdAt: Date.now() };
+        const payload: AmbiencePayload = { version: 1, preset, settings: ambienceSettings, createdAt: Date.now() };
         try {
           if (activePreset !== preset && audio) stopAudio();
           activePreset = preset;
           if (preset === 'off') { stopAudio(); await openAmbience('off'); }
-          else await openAmbience(preset);
+          else await openAmbience(preset, ambienceSettings);
           refreshAudioPanel();
-          await OBR.room.setMetadata({ [METADATA_KEY]: { preset, updatedAt: payload.createdAt } });
+          await OBR.room.setMetadata({ [METADATA_KEY]: { preset, settings: ambienceSettings, updatedAt: payload.createdAt } });
           await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
           OBR.notification.show(preset === 'off' ? 'Ambientação desligada.' : 'Ambientação enviada para a sala.');
         } catch (error) {
@@ -407,6 +487,7 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
   const preset = params.get('preset') as AmbiencePreset;
   const supported: AmbiencePreset[] = ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'];
   if (!supported.includes(preset)) return;
+  const settings = normalizeSettings({ intensity: Number(params.get('intensity')), brightness: Number(params.get('brightness')), motion: Number(params.get('motion')) });
 
   // A camada é um viewport independente: não depende da altura do conteúdo do #app.
   document.documentElement.style.cssText = 'width:100%;height:100%;min-height:100%;margin:0;padding:0;overflow:hidden;background:transparent;';
@@ -414,6 +495,7 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
   root.style.cssText = 'position:fixed!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-width:100%!important;min-height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;z-index:2147483000!important;';
   root.innerHTML = '<main class="ambience-overlay ambience-overlay-' + preset + '" aria-hidden="true"><div class="ambience-atmosphere"></div><div class="ambience-clouds"></div><canvas class="ambience-weather-canvas"></canvas><div class="ambience-grain"></div><div class="ambience-edge"></div></main>';
 
+  applyOverlaySettings(root, settings);
   const canvas = root.querySelector<HTMLCanvasElement>('.ambience-weather-canvas');
   const ctx = canvas?.getContext('2d', { alpha: true });
   if (!canvas || !ctx) return;
@@ -477,12 +559,15 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
     const dt = Math.min(.04, (time - (lastTime || time)) / 1000);
     lastTime = time;
     ctx.clearRect(0, 0, width, height);
+    const intensity = settings.intensity / 100;
+    const motion = settings.motion / 65;
+    ctx.globalAlpha = intensity;
 
     if (preset === 'snow') {
-      const gust = Math.sin(time * .00022) * 260 + Math.sin(time * .00061) * 110;
+      const gust = (Math.sin(time * .00022 * motion) * 260 + Math.sin(time * .00061 * motion) * 110);
       for (const p of particles) {
-        p.x += (gust + p.drift * 75) * dt;
-        p.y += p.speed * dt;
+        p.x += (gust + p.drift * 75) * dt * motion;
+        p.y += p.speed * dt * motion;
         p.phase += dt * .55;
         if (p.y > height + 24 || p.x > width + 60 || p.x < -60) {
           p.x = random(-80, width + 80); p.y = random(-100, -20);
@@ -501,8 +586,8 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
       ctx.restore();
     } else if (preset === 'storm') {
       for (const p of particles) {
-        p.x += (-360 + p.drift * 90) * dt;
-        p.y += p.speed * dt;
+        p.x += (-360 + p.drift * 90) * dt * motion;
+        p.y += p.speed * dt * motion;
         if (p.y > height + 40 || p.x < -50) {
           p.x = random(0, width + 180); p.y = random(-180, -20);
         }
@@ -525,6 +610,7 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
         if (lightning < .025) lightning = 0;
       }
     }
+    ctx.globalAlpha = 1;
     frame = window.requestAnimationFrame(draw);
   };
 
