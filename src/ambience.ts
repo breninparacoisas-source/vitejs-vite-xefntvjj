@@ -137,11 +137,6 @@ export function initializeAmbiencePanel(): void {
 
 export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
   const disabled = !connected || !isGM ? 'disabled' : '';
-  const status = !connected
-    ? 'Conecte a extensão a uma sala do Owlbear Rodeo para controlar a ambientação.'
-    : !isGM
-      ? 'O mestre controla o ambiente da sala. Cada jogador ativa o próprio áudio.'
-      : 'A troca de ambiente é sincronizada com todos os participantes da sala.';
   const presets: Array<{ id: AmbiencePreset; title: string; description: string }> = [
     { id: 'forest', title: 'Floresta', description: 'Vento entre as árvores, insetos e vida distante.' },
     { id: 'tavern', title: 'Taverna', description: 'Calor de lareira, crepitar de madeira e murmúrio acolhedor.' },
