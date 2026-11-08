@@ -114,7 +114,7 @@ function render() {
             <span class="nav-icon">⌂</span> Central
           </button>
           <button data-page="eventos" class="${currentPage === 'eventos' ? 'active' : ''}">
-            <span class="nav-icon">✧</span> SHOWTIME
+            SHOWTIME
           </button>
           <button data-page="cenas" class="${currentPage === 'cenas' ? 'active' : ''}">
             <span class="nav-icon">◉</span> Cenas
