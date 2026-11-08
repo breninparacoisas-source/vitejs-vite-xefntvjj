@@ -157,7 +157,7 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     '<section class="ambience-presets">',
     ...presets.map((preset, index) => '<button class="ambience-preset ambience-' + preset.id + '" data-ambience="' + preset.id + '" ' + disabled + '><span class="ambience-preset-preview" aria-hidden="true"><span class="scene-light"></span><span class="scene-shape"></span><span class="scene-depth"></span><span class="scene-label">' + String(index + 1).padStart(2, '0') + '</span></span><span class="ambience-preset-copy"><strong>' + preset.title + '</strong><small>' + preset.description + '</small><span class="ambience-preset-action">APLICAR AMBIENTAÇÃO</span></span></button>'),
     '</section>',
-    '<section class="ambience-customizer"><div class="ambience-customizer-heading"><div><span class="ambience-eyebrow">AJUSTE FINO</span><h3>Personalize a atmosfera</h3><p>Os ajustes são aplicados a todos na sala. O volume de áudio continua individual.</p></div><button type="button" id="ambience-reset-settings" ' + disabled + '>RESTAURAR PADRÃO</button></div><div class="ambience-setting-grid"><label class="ambience-setting"><span><strong>Intensidade</strong><output id="ambience-intensity-value">' + ambienceSettings.intensity + '%</output></span><small>Força dos efeitos visuais</small><input id="ambience-intensity" type="range" min="0" max="100" value="' + ambienceSettings.intensity + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Clareza</strong><output id="ambience-brightness-value">' + (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness + '</output></span><small>Clarear ou escurecer a cena</small><input id="ambience-brightness" type="range" min="-40" max="40" value="' + ambienceSettings.brightness + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Movimento</strong><output id="ambience-motion-value">' + ambienceSettings.motion + '%</output></span><small>Velocidade dos efeitos animados</small><input id="ambience-motion" type="range" min="0" max="100" value="' + ambienceSettings.motion + '" ' + disabled + '></label></div><p class="ambience-customizer-note">Ajustes em tempo real: escolha o nível de presença visual sem alterar a imagem original do mapa.</p></section>',
+    '<section class="ambience-customizer"><div class="ambience-customizer-heading"><div><span class="ambience-eyebrow">AJUSTE FINO</span><h3>Personalize a atmosfera</h3><p>Os ajustes são aplicados a todos na sala. O volume de áudio continua individual.</p></div><div class="ambience-customizer-actions"><button type="button" id="ambience-reset-settings" ' + disabled + '>RESTAURAR PADRÃO</button><button type="button" id="ambience-apply-settings" class="ambience-apply-settings" ' + disabled + '>APLICAR AJUSTES</button></div></div><div class="ambience-setting-grid"><label class="ambience-setting"><span><strong>Intensidade</strong><output id="ambience-intensity-value">' + ambienceSettings.intensity + '%</output></span><small>Força dos efeitos visuais</small><input id="ambience-intensity" type="range" min="0" max="100" value="' + ambienceSettings.intensity + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Clareza</strong><output id="ambience-brightness-value">' + (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness + '</output></span><small>Clarear ou escurecer a cena</small><input id="ambience-brightness" type="range" min="-40" max="40" value="' + ambienceSettings.brightness + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Movimento</strong><output id="ambience-motion-value">' + ambienceSettings.motion + '%</output></span><small>Velocidade dos efeitos animados</small><input id="ambience-motion" type="range" min="0" max="100" value="' + ambienceSettings.motion + '" ' + disabled + '></label></div><p class="ambience-customizer-note">Ajustes em tempo real: escolha o nível de presença visual sem alterar a imagem original do mapa.</p></section>',
     '<section class="ambience-audio-settings"><div class="ambience-audio-copy"><span class="ambience-eyebrow">MESA DE SOM</span><h3>Paisagem sonora</h3><p>O som é reproduzido neste dispositivo. Ative uma vez para liberar a reprodução no navegador.</p><p id="ambience-audio-status">' + (activePreset === 'off' ? 'Escolha um ambiente para liberar a paisagem sonora.' : 'Ambiente pronto. Ative o áudio neste dispositivo.') + '</p></div><div class="ambience-audio-controls"><button id="ambience-audio-enable" ' + (activePreset === 'off' ? 'disabled' : '') + '>ATIVAR ÁUDIO</button><label for="ambience-volume"><span>VOLUME</span><output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" class="ambience-mute" disabled>SILENCIAR NESTE DISPOSITIVO</button></div></section>',
     '<p class="ambience-footnote">' + status + ' Os efeitos visuais são sobrepostos ao mapa e não recebem cliques.</p>',
   ].join('');;
@@ -231,10 +231,20 @@ async function publishSettings(root: HTMLElement, connected: boolean, isGM: bool
 
 function bindAmbienceCustomizer(root: HTMLElement, connected: boolean, isGM: boolean): void {
   const controls = ['#ambience-intensity', '#ambience-brightness', '#ambience-motion'];
-  controls.forEach((selector) => {
-    root.querySelector<HTMLInputElement>(selector)?.addEventListener('input', () => {
-      void publishSettings(root, connected, isGM);
-    });
+  const updateLabels = () => {
+    const intensity = root.querySelector<HTMLInputElement>('#ambience-intensity');
+    const brightness = root.querySelector<HTMLInputElement>('#ambience-brightness');
+    const motion = root.querySelector<HTMLInputElement>('#ambience-motion');
+    const intensityValue = root.querySelector<HTMLOutputElement>('#ambience-intensity-value');
+    const brightnessValue = root.querySelector<HTMLOutputElement>('#ambience-brightness-value');
+    const motionValue = root.querySelector<HTMLOutputElement>('#ambience-motion-value');
+    if (intensity && intensityValue) intensityValue.textContent = intensity.value + '%';
+    if (brightness && brightnessValue) brightnessValue.textContent = (Number(brightness.value) > 0 ? '+' : '') + brightness.value;
+    if (motion && motionValue) motionValue.textContent = motion.value + '%';
+  };
+  controls.forEach((selector) => root.querySelector<HTMLInputElement>(selector)?.addEventListener('input', updateLabels));
+  root.querySelector<HTMLButtonElement>('#ambience-apply-settings')?.addEventListener('click', () => {
+    void publishSettings(root, connected, isGM);
   });
   root.querySelector<HTMLButtonElement>('#ambience-reset-settings')?.addEventListener('click', () => {
     const values: Array<[string, number]> = [
@@ -246,6 +256,7 @@ function bindAmbienceCustomizer(root: HTMLElement, connected: boolean, isGM: boo
       const input = root.querySelector<HTMLInputElement>(selector);
       if (input) input.value = String(value);
     });
+    updateLabels();
     void publishSettings(root, connected, isGM);
   });
 }
