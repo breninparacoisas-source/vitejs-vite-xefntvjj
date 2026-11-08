@@ -1,10 +1,9 @@
-import OBR from '@owlbear-rodeo/sdk';
+import OBR, { buildImageUpload } from '@owlbear-rodeo/sdk';
 import './showtime.css';
 
 const CHANNEL = 'com.arton.engine/showtime/v2';
 const MODAL_ID = 'com.arton.engine/showtime/overlay';
 const IMAGE_STORAGE_KEY = 'arton-engine.showtime.appearance-image';
-const IMAGE_TRANSFER_PREFIX = 'arton-engine.showtime.transfer.';
 
 type EffectKind = 'appearance' | 'omen';
 type EffectSettings = {
@@ -71,17 +70,7 @@ async function openEffect(payload: EffectPayload): Promise<void> {
   url.searchParams.set('kind', payload.kind);
   url.searchParams.set('title', payload.title.slice(0, 100));
   url.searchParams.set('message', payload.message.slice(0, 700));
-  if (payload.imageUrl.startsWith('data:image/')) {
-    try {
-      localStorage.setItem(IMAGE_TRANSFER_PREFIX + payload.id, payload.imageUrl);
-      url.searchParams.set('imageKey', payload.id);
-    } catch (error) {
-      console.error('Não foi possível preparar a imagem do SHOWTIME:', error);
-      OBR.notification.show('Não foi possível preparar a imagem para os jogadores.');
-    }
-  } else if (payload.imageUrl) {
-    url.searchParams.set('image', payload.imageUrl);
-  }
+  if (payload.imageUrl) url.searchParams.set('image', payload.imageUrl);
   url.searchParams.set('duration', String(payload.settings.durationMs));
   url.searchParams.set('opacity', String(payload.settings.opacity));
   url.searchParams.set('scale', String(payload.settings.scale));
@@ -156,36 +145,56 @@ async function fireEffect(
   }
 }
 
+async function chooseAppearanceImage(root: HTMLElement): Promise<boolean> {
+  try {
+    const images = await OBR.assets.downloadImages(false);
+    const chosen = images[0];
+    if (!chosen) {
+      OBR.notification.show('Nenhuma imagem foi selecionada.');
+      return false;
+    }
+    if (!chosen.image?.mime?.startsWith('image/') || !chosen.image.url) {
+      OBR.notification.show('A imagem escolhida não possui um endereço válido.');
+      return false;
+    }
+    selectedImageUrl = chosen.image.url;
+    try {
+      localStorage.setItem(IMAGE_STORAGE_KEY, selectedImageUrl);
+    } catch {
+      // A seleção permanece válida nesta sessão.
+    }
+    updateImagePreview(root);
+    OBR.notification.show('Imagem aplicada à Aparição.');
+    return true;
+  } catch (error) {
+    console.error('SHOWTIME: falha no seletor OBR.assets.downloadImages', error);
+    const detail = error instanceof Error ? error.message : String(error);
+    OBR.notification.show('O seletor do Owlbear falhou: ' + detail.slice(0, 120));
+    return false;
+  }
+}
+
 async function uploadAppearancePng(file: File, root: HTMLElement): Promise<void> {
   if (file.type !== 'image/png') {
-    OBR.notification.show('O arquivo precisa estar no formato PNG.');
+    OBR.notification.show('Escolha um arquivo PNG.');
     return;
   }
-  if (file.size > 1_000_000) {
-    OBR.notification.show('Para transmitir a imagem a todos, use um PNG de até 1 MB.');
+  if (file.size > 12 * 1024 * 1024) {
+    OBR.notification.show('O PNG precisa ter no máximo 12 MB.');
     return;
   }
 
   try {
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Formato de imagem inválido.'));
-      reader.onerror = () => reject(reader.error || new Error('Falha ao ler o arquivo.'));
-      reader.readAsDataURL(file);
-    });
-    selectedImageUrl = dataUrl;
-    try {
-      localStorage.setItem(IMAGE_STORAGE_KEY, selectedImageUrl);
-    } catch {
-      OBR.notification.show('Imagem carregada nesta sessão, mas não foi possível salvá-la para próximas sessões.');
-    }
-    const urlField = root.querySelector<HTMLInputElement>('#appearance-image-url');
-    if (urlField) urlField.value = '';
-    updateImagePreview(root);
-    OBR.notification.show('PNG carregado. Ele será enviado junto com a aparição para todos os jogadores.');
+    const bytes = await file.arrayBuffer();
+    const safeFile = new File([bytes], file.name, { type: 'image/png' });
+    const upload = buildImageUpload(safeFile).build();
+    await OBR.assets.uploadImages([upload], 'ATTACHMENT');
+    OBR.notification.show('PNG enviado. Agora selecione-o na janela de imagens para aplicá-lo à Aparição.');
+    await chooseAppearanceImage(root);
   } catch (error) {
-    console.error('Erro ao carregar PNG:', error);
-    OBR.notification.show('Não foi possível ler esse PNG.');
+    console.error('SHOWTIME: falha no upload do PNG', error);
+    const detail = error instanceof Error ? error.message : String(error);
+    OBR.notification.show('Falha no upload do PNG: ' + detail.slice(0, 120));
   }
 }
 
@@ -247,8 +256,8 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-section-heading"><div><span>01 / MANIFESTAÇÃO</span><h3>Aparição personalizada</h3></div><small>IMAGEM PNG COM TRANSPARÊNCIA</small></div>',
     '<section class="showtime-editor appearance-editor">',
     '<div class="appearance-image-column"><div class="appearance-image-preview" id="appearance-image-preview">' + imagePreview + '</div>',
-    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button upload-png-button" id="appearance-image-upload-button">CARREGAR PNG</button><input type="file" id="appearance-image-upload" accept="image/png,.png" hidden><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
-    '<p class="showtime-hint">Carregue um PNG de até 1 MB. Ele será transmitido diretamente aos jogadores, sem passar pela biblioteca.</p><label for="appearance-image-url">OU COLE UM LINK DIRETO DE IMAGEM</label><input id="appearance-image-url" type="url" placeholder="https://.../imagem.png" value="' + escapeHtml(selectedImageUrl) + '"><button type="button" class="showtime-text-button" id="appearance-image-url-apply">Usar link</button></div>',
+    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button" id="appearance-image-pick">ESCOLHER DA BIBLIOTECA</button><button type="button" class="showtime-secondary-button upload-png-button" id="appearance-image-upload-button">ENVIAR E APLICAR PNG</button><input type="file" id="appearance-image-upload" accept="image/png,.png" hidden><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
+    '<p class="showtime-hint">Escolha uma imagem da biblioteca ou envie um PNG. Após o envio, o seletor abre para você aplicar a imagem. A imagem aplicada será compartilhada com todos os jogadores.</p><label for="appearance-image-url">OU COLE UM LINK DIRETO DE IMAGEM</label><input id="appearance-image-url" type="url" placeholder="https://.../imagem.png" value="' + escapeHtml(selectedImageUrl) + '"><button type="button" class="showtime-text-button" id="appearance-image-url-apply">Usar link</button></div>',
     '<div class="showtime-settings-column"><label for="appearance-title">TÍTULO</label><input id="appearance-title" maxlength="100" value="Uma presença se revela" placeholder="Ex.: O Devorador de Almas">',
     '<label for="appearance-message">FRASE OPCIONAL</label><input id="appearance-message" maxlength="180" value="Algo antigo despertou..." placeholder="Uma frase curta para acompanhar a entrada">',
     '<div class="showtime-range"><label for="appearance-opacity">OPACIDADE <output id="appearance-opacity-value">88%</output></label><input id="appearance-opacity" type="range" min="0.25" max="1" step="0.01" value="0.88"></div>',
@@ -275,6 +284,10 @@ export function bindShowtimeActions(root: HTMLElement, connected: boolean, isGM:
 
   root.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach((input) => {
     input.addEventListener('input', () => updateRangeLabels(root));
+  });
+
+  root.querySelector<HTMLButtonElement>('#appearance-image-pick')?.addEventListener('click', () => {
+    void chooseAppearanceImage(root);
   });
 
   root.querySelector<HTMLButtonElement>('#appearance-image-upload-button')?.addEventListener('click', () => {
@@ -346,11 +359,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   const kind = params.get('kind') === 'omen' ? 'omen' : 'appearance';
   const title = escapeHtml((params.get('title') || '').slice(0, 100));
   const message = (params.get('message') || '').slice(0, 700);
-  const imageKey = params.get('imageKey') || '';
-  let imageUrl = params.get('image') || '';
-  if (imageKey) {
-    try { imageUrl = localStorage.getItem(IMAGE_TRANSFER_PREFIX + imageKey) || ''; } catch { imageUrl = ''; }
-  }
+  const imageUrl = params.get('image') || '';
   const opacity = Math.max(0.25, Math.min(1, Number(params.get('opacity')) || 0.88));
   const scale = Math.max(0.5, Math.min(1.6, Number(params.get('scale')) || 1));
   const intensity = Math.max(0.2, Math.min(1, Number(params.get('intensity')) || 0.65));
