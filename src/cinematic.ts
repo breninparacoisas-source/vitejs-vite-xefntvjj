@@ -38,7 +38,7 @@ const GRADE_PROFILES: Record<CinematicStyle, GradeProfile> = {
   tragic: { tint:{x:0.95,y:0.25,z:0.22}, saturation:0.35, grade:0.52, glow:0.045, vignette:0.76, bars:1, particles:0.9, grain:0.07, flash:0.08 },
 };
 
-const CINEMATIC_OVERLAY_SHADER = \`
+const CINEMATIC_OVERLAY_SHADER = `
 uniform vec2 size;
 uniform mat3 view;
 uniform float time;
@@ -80,9 +80,9 @@ half4 main(float2 coord) {
   color = mix(color,vec3(1.0),phaseFlash/max(alpha,0.001));
   return half4(color,alpha);
 }
-\`;
+`;
 
-const CINEMATIC_GRADE_SHADER = \`
+const CINEMATIC_GRADE_SHADER = `
 uniform shader scene;
 uniform vec2 size;
 uniform mat3 view;
@@ -106,7 +106,7 @@ half4 main(float2 coord) {
   graded *= 1.0-smoothstep(0.28,0.82,edge)*0.18;
   return half4(mix(original,graded,envelope),source.a);
 }
-\`;
+`;
 
 async function addCinematicGrade(style: CinematicStyle, intensity: number, durationMs: number): Promise<string[]> {
   const profile = GRADE_PROFILES[style];
