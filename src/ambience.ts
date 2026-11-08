@@ -73,6 +73,23 @@ export function initializeAmbienceBackground(): void {
   console.log('ARTON ENGINE: receptor AMBIENCE ativo.');
 }
 
+export function initializeAmbiencePanel(): void {
+  OBR.broadcast.onMessage(CHANNEL, (event) => {
+    if (!validPayload(event.data)) return;
+    activePreset = event.data.preset;
+    if (activePreset === 'off') stopAudio();
+    refreshAudioPanel();
+  });
+  void OBR.room.getMetadata().then((metadata) => {
+    const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
+    if (saved && ['forest', 'tavern', 'dungeon', 'off'].includes(saved.preset || '')) {
+      activePreset = saved.preset as AmbiencePreset;
+      if (activePreset === 'off') stopAudio();
+      refreshAudioPanel();
+    }
+  }).catch((error) => console.warn('Não foi possível recuperar estado do AMBIENCE:', error));
+}
+
 export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
   const disabled = !connected || !isGM ? 'disabled' : '';
   const status = !connected
