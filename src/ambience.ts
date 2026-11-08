@@ -226,7 +226,7 @@ const TRACKS:Record<Exclude<TrackId,'stop'>,TrackDefinition>={
  travel:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Warm_Sunset_by_MusicLFiles.ogg',credit:'Warm Sunset — MusicLFiles'},
  tavern:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Medieval_Story_by_Frank_Schr%C3%B6ter.ogg',credit:'Medieval Story — Frank Schröter'},
  mystery:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Placid_Ambient_by_MusicLFiles.ogg',credit:'Placid Ambient — MusicLFiles'},
- rest:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Purrple_Cat_-_Quiet_Night.ogg',credit:'Solace — Scott Buckley'}
+ rest:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Purrple_Cat_-_Quiet_Night.ogg',credit:'Quiet Night — Purrple Cat'}
 };
 let musicAudio:HTMLAudioElement|undefined;
 let musicFadeTimer:number|undefined;
