@@ -151,14 +151,14 @@ async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
     const chosen = images[0];
     if (!chosen) return;
 
-    if (chosen.image.mime !== 'image/png') {
-      OBR.notification.show('Escolha um arquivo PNG para preservar a transparência da aparição.');
+    if (!chosen.image.mime.startsWith('image/')) {
+      OBR.notification.show('O arquivo escolhido não é uma imagem compatível.');
       return;
     }
 
     const imageUrl = chosen.image.url;
-    if (!/^https?:\/\//i.test(imageUrl)) {
-      OBR.notification.show('A imagem selecionada não possui um endereço compartilhável.');
+    if (!imageUrl) {
+      OBR.notification.show('A biblioteca não retornou um endereço válido para essa imagem.');
       return;
     }
 
@@ -359,7 +359,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   document.body.classList.add('showtime-mode');
 
   if (kind === 'appearance') {
-    const image = imageUrl && /^https?:\/\//i.test(imageUrl)
+    const image = imageUrl
       ? '<img class="appearance-custom-image" src="' + escapeHtml(imageUrl) + '" alt="">'
       : '<div class="appearance-fallback" aria-hidden="true"><span>✧</span></div>';
     root.innerHTML = [
