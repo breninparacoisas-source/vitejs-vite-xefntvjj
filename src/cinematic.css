@@ -42,327 +42,78 @@
 .cinematic-coordinate-fields input{min-width:0}
 .cinematic-act-list>div{padding-bottom:20px}
 
-/* CINEMÁTICO 0.16 — quatro linguagens visuais, sem cobrir o mapa. */
+
+/* CINEMÁTICO — composição limpa, atmosférica e sincronizada com a câmera. */
 :root:has(#app.cinematic-overlay),html:has(#app.cinematic-overlay),body:has(#app.cinematic-overlay),body:has(#app.cinematic-overlay) #app{background:transparent!important}
 #app.cinematic-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;isolation:isolate}
-.cinematic-overlay .farewell-scene{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;background:transparent!important;color:#f4ecdf;isolation:isolate;contain:strict}
-.farewell-light,.farewell-rays,.farewell-particles,.farewell-letterbox{position:absolute;pointer-events:none}
-.farewell-light{z-index:1;left:50%;top:43%;width:min(48vw,650px);height:min(48vw,650px);transform:translate(-50%,-50%) scale(.72);border-radius:50%;background:radial-gradient(ellipse,rgba(255,236,199,.18) 0%,rgba(255,224,181,.08) 24%,transparent 66%);filter:blur(13px);opacity:0;mix-blend-mode:screen;animation:farewellLight var(--farewell-duration) ease-in-out both}
-.farewell-rays{z-index:2;inset:-25%;opacity:0;background:repeating-conic-gradient(from 202deg at 50% 43%,transparent 0deg 9deg,rgba(255,231,188,.045) 10deg 11deg,transparent 12deg 21deg);filter:blur(12px);mix-blend-mode:screen;mask-image:radial-gradient(ellipse at 50% 43%,#000 4%,rgba(0,0,0,.45) 32%,transparent 58%);animation:farewellRays var(--farewell-duration) ease-in-out both}
-.farewell-particles{z-index:4;inset:0;overflow:hidden;opacity:1}
-.farewell-particle{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:radial-gradient(circle,#fff8e8 0%,rgba(255,226,178,.72) 38%,rgba(255,213,155,0) 100%);box-shadow:0 0 8px rgba(255,222,170,.55),0 0 18px rgba(255,206,143,.2);opacity:0;animation:farewellDrift var(--travel) ease-in-out var(--delay) infinite}
-.farewell-letterbox{z-index:8;left:0;right:0;height:0;background:#030405;box-shadow:0 0 18px rgba(0,0,0,.28);animation:farewellBars var(--farewell-duration) cubic-bezier(.22,.72,.25,1) both}
-.farewell-letterbox-top{top:0}
-.farewell-letterbox-bottom{bottom:0}
-.farewell-caption{position:absolute;z-index:10;left:8%;bottom:13%;max-width:min(720px,82vw);display:flex;flex-direction:column;gap:12px;opacity:0;--caption-x:0%;transform:translate(var(--caption-x),14px);filter:blur(5px);animation:farewellCaption var(--farewell-duration) ease-in-out both;will-change:opacity,transform,filter}
-.farewell-name{margin:0;color:#fff5e7;font:400 clamp(25px,3.8vw,52px)/1.08 Georgia,'Times New Roman',serif;letter-spacing:.015em;text-shadow:0 3px 24px rgba(0,0,0,.8)}
-.farewell-epitaph{max-width:min(600px,78vw);margin:0;color:#f4e9d8;font:italic clamp(16px,1.8vw,23px)/1.55 Georgia,'Times New Roman',serif;text-shadow:0 2px 20px rgba(0,0,0,.9)}
-.farewell-melancholic .farewell-light{background:radial-gradient(ellipse,rgba(183,207,238,.17),rgba(91,126,174,.055) 38%,transparent 68%);filter:blur(19px)}
-.farewell-melancholic .farewell-rays{opacity:0!important}
-.farewell-melancholic .farewell-particle{background:radial-gradient(circle,rgba(231,240,255,.8),rgba(157,187,224,.24) 48%,transparent 72%);box-shadow:0 0 8px rgba(182,208,239,.22);animation-name:farewellAsh}
-.farewell-melancholic .farewell-caption{left:9%;bottom:12%;max-width:520px;gap:9px}
-.farewell-melancholic .farewell-name{order:2;color:rgba(231,237,246,.88);font-size:clamp(18px,2.1vw,27px);letter-spacing:.08em;font-variant:small-caps}
-.farewell-melancholic .farewell-epitaph{order:1;color:rgba(239,241,245,.94);font-size:clamp(18px,2vw,25px);font-style:italic}
-.farewell-heroic .farewell-light{width:min(68vw,900px);height:min(68vw,900px);background:radial-gradient(ellipse,rgba(255,224,151,.34),rgba(226,151,62,.12) 36%,transparent 70%);filter:blur(8px)}
-.farewell-heroic .farewell-rays{background:repeating-conic-gradient(from 202deg at 50% 43%,transparent 0deg 7deg,rgba(255,214,143,.11) 8deg 10deg,transparent 11deg 18deg)}
-.farewell-heroic .farewell-particle{background:radial-gradient(circle,#fff4cf 0%,rgba(255,174,72,.8) 42%,rgba(255,125,35,0) 100%);box-shadow:0 0 10px rgba(255,188,88,.7),0 0 22px rgba(255,132,42,.3);animation-name:farewellEmbers}
-.farewell-heroic .farewell-caption{left:50%;right:auto;bottom:12%;width:min(820px,86vw);max-width:86vw;align-items:center;text-align:center;--caption-x:-50%;gap:14px}
-.farewell-heroic .farewell-name{order:1;color:#fff0cf;font-size:clamp(34px,5.4vw,72px);letter-spacing:.055em;text-shadow:0 4px 35px rgba(0,0,0,.95)}
-.farewell-heroic .farewell-epitaph{order:2;max-width:680px;color:rgba(255,239,211,.94);font-size:clamp(16px,1.8vw,22px);font-style:normal;letter-spacing:.025em}
-.farewell-hopeful .farewell-light{top:36%;width:min(76vw,1000px);height:min(76vw,1000px);background:radial-gradient(ellipse,rgba(255,246,211,.4),rgba(255,213,145,.17) 34%,transparent 72%);filter:blur(10px)}
-.farewell-hopeful .farewell-rays{background:repeating-conic-gradient(from 205deg at 50% 38%,transparent 0deg 9deg,rgba(255,238,193,.09) 10deg 12deg,transparent 13deg 22deg);mask-image:radial-gradient(ellipse at 50% 38%,#000 3%,transparent 62%)}
-.farewell-hopeful .farewell-particle{background:radial-gradient(circle,#fff9dc 0%,rgba(255,226,162,.75) 40%,rgba(255,213,130,0) 100%);box-shadow:0 0 12px rgba(255,226,162,.55);animation-name:farewellAscend}
-.farewell-hopeful .farewell-caption{left:50%;right:auto;top:13%;bottom:auto;width:min(760px,84vw);max-width:84vw;align-items:center;text-align:center;--caption-x:-50%;gap:10px}
-.farewell-hopeful .farewell-epitaph{order:1;color:rgba(255,249,230,.96);font-size:clamp(20px,2.7vw,34px);line-height:1.4;font-style:normal}
-.farewell-hopeful .farewell-name{order:2;color:#fff5dc;font-size:clamp(17px,2vw,25px);letter-spacing:.14em;font-variant:small-caps}
-.farewell-tragic .farewell-light{top:48%;left:58%;width:min(46vw,640px);height:min(46vw,640px);background:radial-gradient(ellipse,rgba(174,69,61,.16),rgba(93,24,34,.07) 40%,transparent 70%);filter:blur(17px)}
-.farewell-tragic .farewell-rays{opacity:0!important}
-.farewell-tragic .farewell-particle{background:radial-gradient(circle,#ffe2d4 0%,rgba(213,83,70,.8) 40%,rgba(120,20,28,0) 100%);box-shadow:0 0 8px rgba(221,80,68,.55),0 0 18px rgba(125,24,33,.3);animation-name:farewellFall}
-.farewell-tragic .farewell-caption{left:auto;right:9%;bottom:16%;width:min(620px,76vw);max-width:76vw;align-items:flex-end;text-align:right;gap:10px}
-.farewell-tragic .farewell-epitaph{order:1;color:#f2deda;font-size:clamp(21px,3vw,39px);line-height:1.3;font-style:normal;max-width:620px}
-.farewell-tragic .farewell-name{order:2;color:rgba(236,205,199,.84);font-size:clamp(16px,1.8vw,23px);letter-spacing:.12em;font-variant:small-caps}
-@keyframes farewellLight{0%,8%{opacity:0;transform:translate(-50%,-50%) scale(.62)}35%{opacity:calc(var(--farewell-intensity) * 2.1);transform:translate(-50%,-50%) scale(1.08)}60%,82%{opacity:calc(var(--farewell-intensity) * 1.3);transform:translate(-50%,-50%) scale(.96)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2)}}
-@keyframes farewellRays{0%,12%{opacity:0;transform:rotate(-9deg) scale(.86)}38%,72%{opacity:calc(var(--farewell-intensity) * 1.7);transform:rotate(5deg) scale(1.04)}100%{opacity:0;transform:rotate(13deg) scale(1.12)}}
-@keyframes farewellDrift{0%{opacity:0;transform:translate3d(0,24px,0) scale(.55)}18%{opacity:calc(var(--farewell-intensity) * 2.2);transform:translate3d(0,0,0) scale(.85)}55%{opacity:calc(var(--farewell-intensity) * 1.4)}100%{opacity:0;transform:translate3d(var(--drift),-115px,0) scale(1.2)}}
-@keyframes farewellAsh{0%{opacity:0;transform:translate3d(0,-10px,0) scale(.5)}22%{opacity:calc(var(--farewell-intensity) * 1.1)}100%{opacity:0;transform:translate3d(calc(var(--drift) * 1.4),90px,0) scale(.9)}}
-@keyframes farewellEmbers{0%{opacity:0;transform:translate3d(0,35px,0) scale(.5)}18%{opacity:calc(var(--farewell-intensity) * 2.3)}58%{opacity:calc(var(--farewell-intensity) * 1.5)}100%{opacity:0;transform:translate3d(var(--drift),-180px,0) scale(1.3)}}
-@keyframes farewellAscend{0%{opacity:0;transform:translate3d(0,70px,0) scale(.45)}20%{opacity:calc(var(--farewell-intensity) * 1.8)}65%{opacity:calc(var(--farewell-intensity) * 1.2)}100%{opacity:0;transform:translate3d(calc(var(--drift) * .35),-230px,0) scale(1.15)}}
-@keyframes farewellFall{0%{opacity:0;transform:translate3d(0,-80px,0) scale(.55)}22%{opacity:calc(var(--farewell-intensity) * 1.6)}70%{opacity:calc(var(--farewell-intensity) * 1.1)}100%{opacity:0;transform:translate3d(calc(var(--drift) * .6),150px,0) scale(.8)}}
-@keyframes farewellBars{0%,8%{height:0}18%,84%{height:clamp(26px,4.5vh,54px)}100%{height:0}}
-@keyframes farewellCaption{0%{opacity:0;transform:translate(var(--caption-x),14px);filter:blur(5px)}9%,91%{opacity:1;transform:translate(var(--caption-x),0);filter:blur(0)}100%{opacity:0;transform:translate(var(--caption-x),-8px);filter:blur(2px)}}
-@media(max-width:760px){.cinematic-welcome{grid-template-columns:1fr}.cinematic-preview{min-height:170px}.cinematic-editor,.cinematic-editor-v2{grid-template-columns:1fr}.cinematic-editor-heading{align-items:start;gap:12px;flex-direction:column}.farewell-caption{left:5%;right:5%;bottom:11%;max-width:90vw}.farewell-caption p{max-width:90vw}.farewell-light{width:80vw;height:80vw}.farewell-heroic .farewell-caption,.farewell-hopeful .farewell-caption{left:50%;right:auto;max-width:90vw;width:90vw}.farewell-tragic .farewell-caption{right:5%;max-width:90vw;width:90vw}}
-
-
-/* DIREÇÃO DE CENA 0.17 — identidades visuais por tipo de sequência. */
-.cinematic-stop{width:100%;margin-top:8px;padding:11px 15px;border:1px solid rgba(202,116,106,.35);border-radius:4px;background:rgba(124,48,43,.12);color:#d9a39b;font:600 10px Inter,sans-serif;letter-spacing:1.2px;cursor:pointer;transition:background .2s,border-color .2s}
-.cinematic-stop:hover{background:rgba(124,48,43,.22);border-color:rgba(202,116,106,.7)}
-.cinematic-stop:disabled{opacity:.45;cursor:not-allowed}
-.cinematic-controls>label small{color:#7f786b;font-size:8px;letter-spacing:.7px}
-.scene-reveal .farewell-light{width:min(72vw,980px);height:min(72vw,980px);top:42%;background:radial-gradient(ellipse,rgba(226,220,192,.3),rgba(173,169,151,.11) 35%,transparent 70%);filter:blur(8px)}
-.scene-reveal .farewell-rays{opacity:1;background:repeating-conic-gradient(from 180deg at 50% 45%,transparent 0deg 5deg,rgba(242,230,196,.12) 6deg 8deg,transparent 9deg 15deg)}
-.scene-reveal .farewell-particle{animation-name:revealDust;background:radial-gradient(circle,#fff8e8,rgba(222,216,194,.5) 45%,transparent 75%);box-shadow:0 0 12px rgba(240,229,200,.45)}
-.scene-reveal .farewell-caption{left:50%;right:auto;top:12%;bottom:auto;width:min(780px,84vw);max-width:84vw;align-items:center;text-align:center;--caption-x:-50%}
-.scene-reveal .farewell-name{font-size:clamp(30px,4.8vw,62px);letter-spacing:.06em}
-.scene-reveal .farewell-epitaph{font-style:normal;font-size:clamp(15px,1.8vw,22px);letter-spacing:.04em}
-.scene-entrance .farewell-light{top:55%;width:min(56vw,760px);height:min(56vw,760px);background:radial-gradient(ellipse,rgba(255,220,151,.35),rgba(205,139,68,.12) 38%,transparent 70%);filter:blur(7px)}
-.scene-entrance .farewell-rays{background:repeating-conic-gradient(from 185deg at 50% 60%,transparent 0deg 7deg,rgba(255,218,160,.13) 8deg 10deg,transparent 11deg 18deg)}
-.scene-entrance .farewell-particle{animation-name:entranceEmbers;background:radial-gradient(circle,#fff0c8,rgba(240,158,75,.8) 40%,transparent 75%);box-shadow:0 0 12px rgba(245,164,83,.65)}
-.scene-entrance .farewell-caption{left:50%;right:auto;bottom:14%;width:min(860px,88vw);max-width:88vw;align-items:center;text-align:center;--caption-x:-50%}
-.scene-entrance .farewell-name{font-size:clamp(38px,6.5vw,82px);letter-spacing:.09em;text-shadow:0 5px 45px rgba(0,0,0,.95)}
-.scene-entrance .farewell-epitaph{font-style:normal;letter-spacing:.1em;text-transform:uppercase;font-size:clamp(11px,1.2vw,15px)}
-.scene-sacrifice .farewell-light{left:50%;top:50%;width:min(42vw,580px);height:min(42vw,580px);background:radial-gradient(ellipse,rgba(255,198,125,.28),rgba(194,78,51,.1) 40%,transparent 70%);filter:blur(9px)}
-.scene-sacrifice .farewell-rays{background:repeating-conic-gradient(from 195deg at 50% 50%,transparent 0deg 6deg,rgba(255,204,145,.1) 7deg 9deg,transparent 10deg 17deg)}
-.scene-sacrifice .farewell-particle{animation-name:sacrificeSparks;background:radial-gradient(circle,#fff5d8,rgba(255,140,66,.8) 42%,transparent 74%);box-shadow:0 0 11px rgba(255,139,73,.6)}
-.scene-sacrifice .farewell-caption{left:8%;right:auto;bottom:13%;width:min(700px,82vw);max-width:82vw;align-items:flex-start;text-align:left;--caption-x:0%}
-.scene-sacrifice .farewell-name{font-size:clamp(28px,4vw,54px)}
-.scene-sacrifice .farewell-epitaph{font-size:clamp(16px,2vw,24px);font-style:italic}
-.scene-memory .farewell-light{top:40%;width:min(64vw,860px);height:min(64vw,860px);background:radial-gradient(ellipse,rgba(249,225,174,.24),rgba(188,158,106,.08) 42%,transparent 72%);filter:blur(17px)}
-.scene-memory .farewell-rays{opacity:.5;filter:blur(24px);mask-image:radial-gradient(ellipse at 50% 40%,#000 5%,transparent 64%)}
-.scene-memory .farewell-particle{animation-name:memoryMotes;background:radial-gradient(circle,#fff9e7,rgba(234,212,168,.5) 48%,transparent 75%);box-shadow:0 0 10px rgba(238,216,174,.35)}
-.scene-memory .farewell-caption{left:50%;right:auto;bottom:11%;width:min(780px,86vw);max-width:86vw;align-items:center;text-align:center;--caption-x:-50%}
-.scene-memory .farewell-epitaph{font-size:clamp(20px,2.8vw,36px);line-height:1.45;font-style:italic}
-.scene-memory .farewell-name{font-size:clamp(14px,1.7vw,21px);letter-spacing:.16em;font-variant:small-caps}
-.scene-death .farewell-light{left:62%;top:48%;width:min(44vw,600px);height:min(44vw,600px);background:radial-gradient(ellipse,rgba(177,68,63,.17),rgba(81,24,35,.08) 42%,transparent 72%);filter:blur(19px)}
-.scene-death .farewell-rays{opacity:0!important}
-.scene-death .farewell-particle{animation-name:deathFall;background:radial-gradient(circle,#f5d9d2,rgba(174,68,68,.65) 45%,transparent 75%);box-shadow:0 0 9px rgba(180,70,70,.35)}
-.scene-death .farewell-caption{left:auto;right:8%;bottom:14%;width:min(660px,78vw);max-width:78vw;align-items:flex-end;text-align:right;--caption-x:0%}
-.scene-death .farewell-epitaph{font-size:clamp(22px,3.2vw,42px);line-height:1.32;font-style:normal}
-.scene-death .farewell-name{font-size:clamp(15px,1.7vw,22px);letter-spacing:.14em;font-variant:small-caps}
-@keyframes revealDust{0%{opacity:0;transform:translate3d(0,30px,0) scale(.4)}25%{opacity:calc(var(--farewell-intensity)*1.8)}100%{opacity:0;transform:translate3d(var(--drift),-170px,0) scale(1.3)}}
-@keyframes entranceEmbers{0%{opacity:0;transform:translate3d(0,45px,0) scale(.4)}22%{opacity:calc(var(--farewell-intensity)*2.4)}62%{opacity:calc(var(--farewell-intensity)*1.7)}100%{opacity:0;transform:translate3d(var(--drift),-220px,0) scale(1.4)}}
-@keyframes sacrificeSparks{0%{opacity:0;transform:translate3d(0,0,0) scale(.4)}15%{opacity:calc(var(--farewell-intensity)*2.4)}45%{opacity:calc(var(--farewell-intensity)*.9)}100%{opacity:0;transform:translate3d(calc(var(--drift)*1.7),-90px,0) scale(.6)}}
-@keyframes memoryMotes{0%{opacity:0;transform:translate3d(0,18px,0) scale(.3)}30%{opacity:calc(var(--farewell-intensity)*1.3)}70%{opacity:calc(var(--farewell-intensity)*.8)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.4),-130px,0) scale(1.1)}}
-@keyframes deathFall{0%{opacity:0;transform:translate3d(0,-70px,0) scale(.5)}22%{opacity:calc(var(--farewell-intensity)*1.5)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.5),190px,0) scale(.8)}}
-@media(max-width:760px){.scene-reveal .farewell-caption,.scene-entrance .farewell-caption,.scene-memory .farewell-caption{left:50%;right:auto;width:90vw;max-width:90vw}.scene-sacrifice .farewell-caption{left:5%;width:90vw;max-width:90vw}.scene-death .farewell-caption{right:5%;width:90vw;max-width:90vw}}
-
-
-/* CINEMÁTICO 0.18 — linguagem de cinema: planos, impacto e assinatura visual por cena. */
-.farewell-grade,.farewell-vignette,.farewell-flash,.farewell-shockwave,.farewell-streaks,.farewell-frame{position:absolute;inset:0;pointer-events:none}
-.farewell-grade{z-index:0;opacity:.8;mix-blend-mode:soft-light;background:linear-gradient(115deg,rgba(8,12,22,.24),transparent 48%,rgba(5,7,12,.18));animation:gradeBreath var(--farewell-duration) ease-in-out both}
-.farewell-vignette{z-index:5;opacity:0;background:radial-gradient(ellipse at 50% 46%,transparent 34%,rgba(0,0,0,.22) 72%,rgba(0,0,0,.58) 115%);animation:vignetteBuild var(--farewell-duration) ease-in-out both}
-.farewell-flash{z-index:7;opacity:0;background:radial-gradient(ellipse at 50% 48%,rgba(255,244,215,.82),rgba(255,207,139,.24) 30%,transparent 67%);mix-blend-mode:screen;animation:sceneFlash var(--farewell-duration) ease-out both}
-.farewell-shockwave{z-index:3;left:50%;top:48%;right:auto;bottom:auto;width:12vmin;height:12vmin;border:1px solid rgba(255,226,177,.65);border-radius:50%;transform:translate(-50%,-50%) scale(.1);opacity:0;box-shadow:0 0 34px rgba(255,196,117,.2),inset 0 0 25px rgba(255,225,180,.12);animation:shockwave var(--farewell-duration) cubic-bezier(.12,.72,.2,1) both}
-.farewell-streaks{z-index:4;opacity:0;background:repeating-linear-gradient(108deg,transparent 0 7%,rgba(230,236,255,.18) 7.08%,transparent 7.18% 13%);mask-image:linear-gradient(180deg,#000,transparent 82%);animation:streakPass var(--farewell-duration) ease-in-out both}
-.farewell-frame{z-index:9;inset:clamp(12px,2.2vw,34px);border:1px solid rgba(238,222,195,.12);opacity:0;box-shadow:inset 0 0 80px rgba(0,0,0,.12);animation:frameReveal var(--farewell-duration) ease both}
-.farewell-caption{max-width:min(760px,82vw)}
-.farewell-particle{animation-duration:calc(var(--travel)*.78)}
-.farewell-heroic .farewell-grade{background:linear-gradient(180deg,rgba(255,185,78,.12),transparent 55%,rgba(22,10,3,.25));mix-blend-mode:screen}
-.farewell-heroic .farewell-vignette{background:radial-gradient(ellipse at 50% 40%,transparent 42%,rgba(25,12,3,.3) 82%,rgba(0,0,0,.62) 115%);opacity:1}
-.farewell-heroic .farewell-flash{animation-name:heroicFlare}
-.farewell-heroic .farewell-shockwave{border-color:rgba(255,211,132,.72);box-shadow:0 0 60px rgba(255,178,70,.36),inset 0 0 30px rgba(255,231,179,.2)}
-.farewell-heroic .farewell-frame{border-color:rgba(255,214,153,.28);box-shadow:inset 0 0 80px rgba(100,50,12,.2)}
-.farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(34,56,85,.3),rgba(7,13,25,.18));mix-blend-mode:multiply}
-.farewell-melancholic .farewell-vignette{background:radial-gradient(ellipse at 48% 43%,transparent 28%,rgba(9,18,32,.38) 74%,rgba(1,4,12,.78) 115%);opacity:1}
-.farewell-melancholic .farewell-streaks{background:repeating-linear-gradient(104deg,transparent 0 3.5%,rgba(185,207,235,.14) 3.56%,transparent 3.64% 7%);animation-name:rainPass}
-.farewell-melancholic .farewell-frame{border-color:rgba(187,208,235,.12)}
-.farewell-hopeful .farewell-grade{background:linear-gradient(180deg,rgba(255,240,197,.18),transparent 56%,rgba(90,62,28,.08));mix-blend-mode:screen}
-.farewell-hopeful .farewell-vignette{background:radial-gradient(ellipse at 50% 35%,transparent 46%,rgba(77,56,28,.16) 88%,rgba(25,20,14,.36) 115%);opacity:1}
-.farewell-hopeful .farewell-flash{animation-name:hopeBloom;background:radial-gradient(ellipse at 50% 38%,rgba(255,249,219,.7),rgba(255,220,159,.2) 35%,transparent 72%)}
-.farewell-hopeful .farewell-frame{border-color:rgba(255,238,199,.18)}
-.farewell-tragic .farewell-grade{background:linear-gradient(125deg,rgba(64,8,18,.34),rgba(12,5,9,.16) 50%,rgba(82,14,18,.32));mix-blend-mode:multiply}
-.farewell-tragic .farewell-vignette{background:radial-gradient(ellipse at 58% 48%,transparent 20%,rgba(35,4,9,.48) 64%,rgba(0,0,0,.92) 115%);opacity:1}
-.farewell-tragic .farewell-flash{background:radial-gradient(ellipse at 58% 48%,rgba(255,180,148,.58),rgba(180,35,45,.22) 35%,transparent 70%);animation-name:tragicPulse}
-.farewell-tragic .farewell-frame{border-color:rgba(183,79,73,.24);box-shadow:inset 0 0 100px rgba(30,0,6,.3)}
-/* Cena: revelação — cortina de luz e descoberta. */
-.scene-reveal .farewell-flash{animation-name:revealFlash}
-.scene-reveal .farewell-shockwave{animation-name:revealRing}
-.scene-reveal .farewell-vignette{background:linear-gradient(90deg,rgba(0,0,0,.72),transparent 34%,transparent 66%,rgba(0,0,0,.72));animation-name:revealCurtain}
-.scene-reveal .farewell-streaks{opacity:.65;animation-name:streakPass}
-/* Cena: entrada — contraluz, impacto e expansão. */
-.scene-entrance .farewell-flash{animation-name:entranceFlash}
-.scene-entrance .farewell-shockwave{width:24vmin;height:24vmin;animation-name:entranceWave}
-.scene-entrance .farewell-vignette{background:radial-gradient(ellipse at 50% 55%,transparent 18%,rgba(0,0,0,.45) 72%,rgba(0,0,0,.82) 115%);opacity:1}
-.scene-entrance .farewell-frame{border-width:2px}
-/* Cena: sacrifício — pulso, estilhaços e queda de luz. */
-.scene-sacrifice .farewell-flash{animation-name:sacrificeFlash}
-.scene-sacrifice .farewell-shockwave{animation-name:sacrificeWave;border-color:rgba(255,163,97,.8)}
-.scene-sacrifice .farewell-vignette{background:radial-gradient(ellipse at 50% 50%,transparent 12%,rgba(20,5,4,.42) 58%,rgba(0,0,0,.9) 115%);opacity:1}
-/* Cena: memória — luz vazada e película antiga. */
-.scene-memory .farewell-grade{background:linear-gradient(115deg,rgba(180,126,58,.16),transparent 42%,rgba(38,24,12,.18));mix-blend-mode:screen}
-.scene-memory .farewell-flash{animation-name:memoryLeak;background:linear-gradient(112deg,transparent 8%,rgba(255,221,157,.22) 26%,transparent 47%,rgba(255,241,206,.12) 66%,transparent 82%)}
-.scene-memory .farewell-vignette{background:radial-gradient(ellipse,transparent 30%,rgba(38,26,15,.3) 100%);opacity:1}
-.scene-memory .farewell-shockwave{display:none}
-/* Cena: morte — colapso de luz e vazio final. */
-.scene-death .farewell-flash{animation-name:deathPulse;background:radial-gradient(ellipse at 62% 48%,rgba(198,78,68,.48),rgba(56,8,16,.18) 38%,transparent 72%)}
-.scene-death .farewell-vignette{background:radial-gradient(ellipse at 52% 46%,transparent 10%,rgba(21,2,8,.55) 58%,rgba(0,0,0,.96) 115%);opacity:1}
-.scene-death .farewell-shockwave{animation-name:deathCollapse;border-color:rgba(190,92,87,.42)}
-.scene-death .farewell-streaks{background:repeating-linear-gradient(180deg,transparent 0 8%,rgba(186,74,75,.13) 8.1%,transparent 8.2% 16%);animation-name:rainPass}
-@keyframes gradeBreath{0%,100%{opacity:.22}35%,70%{opacity:.88}}
-@keyframes vignetteBuild{0%,8%{opacity:0}28%,84%{opacity:1}100%{opacity:.18}}
-@keyframes sceneFlash{0%,8%,100%{opacity:0}14%{opacity:calc(var(--farewell-intensity)*1.2)}23%{opacity:0}48%{opacity:calc(var(--farewell-intensity)*.35)}58%{opacity:0}}
-@keyframes heroicFlare{0%,100%{opacity:0;transform:scale(.7)}14%{opacity:calc(var(--farewell-intensity)*1.5);transform:scale(1.2)}30%{opacity:calc(var(--farewell-intensity)*.2)}48%{opacity:calc(var(--farewell-intensity)*.65)}62%{opacity:0}}
-@keyframes hopeBloom{0%,100%{opacity:0;transform:scale(.75)}30%{opacity:calc(var(--farewell-intensity)*.7);transform:scale(1.05)}65%{opacity:calc(var(--farewell-intensity)*.48);transform:scale(1.2)}}
-@keyframes tragicPulse{0%,100%{opacity:0}18%{opacity:calc(var(--farewell-intensity)*.65)}24%{opacity:0}64%{opacity:calc(var(--farewell-intensity)*.35)}72%{opacity:0}}
-@keyframes revealFlash{0%,100%{opacity:0;transform:scale(.82)}38%{opacity:calc(var(--farewell-intensity)*1.5);transform:scale(1.12)}54%{opacity:0}}
-@keyframes revealRing{0%,24%{opacity:0;transform:translate(-50%,-50%) scale(.1)}42%{opacity:.85;transform:translate(-50%,-50%) scale(4.8)}72%,100%{opacity:0;transform:translate(-50%,-50%) scale(7)}}
-@keyframes revealCurtain{0%,20%{opacity:0}42%,65%{opacity:1}100%{opacity:.3}}
-@keyframes entranceFlash{0%,100%{opacity:0;transform:scale(.5)}20%{opacity:calc(var(--farewell-intensity)*1.7);transform:scale(1.25)}32%{opacity:0}52%{opacity:calc(var(--farewell-intensity)*.45)}65%{opacity:0}}
-@keyframes entranceWave{0%,15%{opacity:0;transform:translate(-50%,-50%) scale(.1)}28%{opacity:.9;transform:translate(-50%,-50%) scale(2.2)}55%,100%{opacity:0;transform:translate(-50%,-50%) scale(5.5)}}
-@keyframes sacrificeFlash{0%,100%{opacity:0}22%{opacity:calc(var(--farewell-intensity)*1.8)}27%{opacity:0}43%{opacity:calc(var(--farewell-intensity)*.85)}52%{opacity:0}}
-@keyframes sacrificeWave{0%,20%{opacity:0;transform:translate(-50%,-50%) scale(.1)}34%{opacity:1;transform:translate(-50%,-50%) scale(2.8)}58%,100%{opacity:0;transform:translate(-50%,-50%) scale(5.2)}}
-@keyframes memoryLeak{0%,100%{opacity:0;transform:translateX(-16%)}35%{opacity:.9;transform:translateX(0)}68%{opacity:.45;transform:translateX(12%)}}
-@keyframes deathPulse{0%,100%{opacity:0}25%{opacity:calc(var(--farewell-intensity)*.85)}32%{opacity:0}58%{opacity:calc(var(--farewell-intensity)*.22)}72%{opacity:0}}
-@keyframes deathCollapse{0%,20%{opacity:0;transform:translate(-50%,-50%) scale(4)}48%{opacity:.7;transform:translate(-50%,-50%) scale(.2)}68%,100%{opacity:0;transform:translate(-50%,-50%) scale(.05)}}
-@keyframes rainPass{0%,100%{opacity:0;transform:translateY(-4%)}28%,78%{opacity:.72;transform:translateY(4%)}}
-@keyframes streakPass{0%,100%{opacity:0;transform:translateX(-8%)}35%,72%{opacity:.65;transform:translateX(6%)}}
-@keyframes frameReveal{0%,12%,100%{opacity:0}28%,82%{opacity:1}}
-
-
-/* 0.19 — linguagem de cena em tela inteira, com o mapa ainda visível. */
-.farewell-blackout,.farewell-grade,.farewell-vignette,.farewell-flash,.farewell-shockwave,.farewell-streaks,.farewell-frame{position:absolute;inset:0;pointer-events:none}
-.farewell-blackout{z-index:6;background:#000;opacity:0;animation:blackoutBreath var(--farewell-duration) ease-in-out both}
-.farewell-grade{z-index:1;opacity:.7;mix-blend-mode:color;animation:gradePulse var(--farewell-duration) ease-in-out both}
-.farewell-vignette{z-index:5;opacity:0;background:radial-gradient(ellipse at 50% 46%,transparent 20%,rgba(0,0,0,.48) 66%,rgba(0,0,0,.96) 115%);animation:vignetteCreep var(--farewell-duration) ease-in-out both}
-.farewell-flash{z-index:7;opacity:0;mix-blend-mode:screen;background:radial-gradient(ellipse at 50% 50%,#fff6db,rgba(255,211,142,.4) 26%,transparent 67%);animation:impactFlash var(--farewell-duration) ease-out both}
-.farewell-shockwave{z-index:4;left:50%;top:50%;right:auto;bottom:auto;width:15vmin;height:15vmin;border:1px solid rgba(255,238,204,.75);border-radius:50%;opacity:0;transform:translate(-50%,-50%) scale(.1);box-shadow:0 0 45px rgba(255,208,135,.32),inset 0 0 25px rgba(255,228,180,.18);animation:impactRing var(--farewell-duration) cubic-bezier(.12,.72,.2,1) both}
-.farewell-streaks{z-index:3;inset:-30%;opacity:0;background:repeating-linear-gradient(108deg,transparent 0 6%,rgba(240,235,222,.24) 6.08%,transparent 6.2% 12%);mask-image:linear-gradient(180deg,#000,transparent 90%);animation:motionStreak var(--farewell-duration) ease-in-out both}
-.farewell-frame{z-index:9;inset:clamp(12px,2vw,30px);border:1px solid rgba(245,229,200,.24);opacity:0;box-shadow:inset 0 0 100px rgba(0,0,0,.3);animation:frameIn var(--farewell-duration) ease both}
-.farewell-caption{z-index:12}
-.farewell-heroic .farewell-blackout{animation:heroicCut var(--farewell-duration) ease-in-out both}
-.farewell-heroic .farewell-grade{background:linear-gradient(180deg,rgba(255,190,75,.36),transparent 46%,rgba(80,32,4,.32))}
-.farewell-heroic .farewell-flash{animation-name:heroicImpact}
-.farewell-heroic .farewell-shockwave{border-width:2px;border-color:rgba(255,214,144,.9);animation-name:heroicRing}
-.farewell-heroic .farewell-frame{border:2px solid rgba(255,214,144,.42);inset:4vh 3vw}
-.farewell-melancholic .farewell-blackout{animation:melancholyDrown var(--farewell-duration) ease-in-out both}
-.farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(28,54,92,.34),rgba(5,13,27,.52))}
-.farewell-melancholic .farewell-vignette{background:radial-gradient(ellipse at 48% 44%,transparent 12%,rgba(8,18,35,.55) 58%,rgba(0,3,10,.96) 115%)}
-.farewell-melancholic .farewell-streaks{background:repeating-linear-gradient(100deg,transparent 0 2.8%,rgba(190,211,239,.23) 2.86%,transparent 2.94% 5.8%);animation-name:rainCurtain}
-.farewell-melancholic .farewell-frame{border-color:rgba(180,204,233,.2);inset:8vh 7vw}
-.farewell-hopeful .farewell-blackout{animation:hopeOpen var(--farewell-duration) cubic-bezier(.2,.7,.2,1) both}
-.farewell-hopeful .farewell-grade{background:linear-gradient(0deg,rgba(255,225,156,.25),rgba(255,248,214,.15) 45%,rgba(255,255,235,.3))}
-.farewell-hopeful .farewell-flash{background:radial-gradient(ellipse at 50% 28%,rgba(255,255,233,.9),rgba(255,224,163,.3) 40%,transparent 76%);animation-name:sunriseBloom}
-.farewell-hopeful .farewell-shockwave{border-color:rgba(255,247,216,.65);animation-name:softBloom}
-.farewell-hopeful .farewell-frame{border-color:rgba(255,245,214,.38);inset:5vh 4vw}
-.farewell-tragic .farewell-blackout{animation:tragicBlackout var(--farewell-duration) cubic-bezier(.7,0,.3,1) both}
-.farewell-tragic .farewell-grade{background:linear-gradient(115deg,rgba(93,5,19,.5),rgba(10,3,9,.28) 50%,rgba(111,12,18,.45))}
-.farewell-tragic .farewell-flash{background:radial-gradient(ellipse at 58% 48%,rgba(255,178,145,.68),rgba(168,20,35,.28) 32%,transparent 72%);animation-name:tragicStrike}
-.farewell-tragic .farewell-shockwave{border-color:rgba(203,67,74,.75);animation-name:tragicCrush}
-.farewell-tragic .farewell-frame{border-color:rgba(177,58,66,.42);box-shadow:inset 0 0 140px rgba(38,0,7,.48)}
-.scene-reveal .farewell-blackout{animation:revealCurtainBlack var(--farewell-duration) ease both}
-.scene-reveal .farewell-flash{animation-name:revealDetonation}
-.scene-reveal .farewell-shockwave{animation-name:revealRings}
-.scene-reveal .farewell-vignette{background:linear-gradient(90deg,rgba(0,0,0,.92),transparent 24%,transparent 76%,rgba(0,0,0,.92));animation-name:revealShutters}
-.scene-reveal .farewell-frame{border-width:2px;inset:7vh 5vw}
-.scene-entrance .farewell-blackout{animation:entranceCurtain var(--farewell-duration) cubic-bezier(.2,.7,.2,1) both}
-.scene-entrance .farewell-flash{animation-name:entranceDetonation}
-.scene-entrance .farewell-shockwave{width:30vmin;height:30vmin;animation-name:entranceBlast}
-.scene-entrance .farewell-streaks{animation-name:entranceRush}
-.scene-entrance .farewell-vignette{background:radial-gradient(ellipse at 50% 58%,transparent 8%,rgba(0,0,0,.6) 65%,rgba(0,0,0,.96) 115%)}
-.scene-sacrifice .farewell-blackout{animation:sacrificeFall var(--farewell-duration) ease-in-out both}
-.scene-sacrifice .farewell-flash{animation-name:sacrificeBurst}
-.scene-sacrifice .farewell-shockwave{animation-name:sacrificeRupture}
-.scene-sacrifice .farewell-streaks{background:repeating-linear-gradient(45deg,transparent 0 8%,rgba(255,191,132,.22) 8.1%,transparent 8.2% 16%);animation-name:sacrificeShards}
-.scene-sacrifice .farewell-vignette{background:radial-gradient(ellipse at 50% 50%,transparent 5%,rgba(25,4,4,.62) 55%,rgba(0,0,0,.98) 115%)}
-.scene-memory .farewell-blackout{animation:memoryFade var(--farewell-duration) ease-in-out both}
-.scene-memory .farewell-grade{background:linear-gradient(120deg,rgba(174,117,48,.22),transparent 35%,rgba(255,231,181,.16) 68%,transparent)}
-.scene-memory .farewell-flash{background:linear-gradient(110deg,transparent 8%,rgba(255,228,173,.42) 32%,transparent 55%,rgba(255,243,208,.22) 72%,transparent 90%);animation-name:memoryFlicker}
-.scene-memory .farewell-shockwave{display:none}
-.scene-memory .farewell-streaks{background:repeating-linear-gradient(90deg,transparent 0 12%,rgba(255,228,179,.13) 12.1%,transparent 12.3% 24%);animation-name:memoryGate}
-.scene-death .farewell-blackout{animation:deathClose var(--farewell-duration) cubic-bezier(.65,0,.4,1) both}
-.scene-death .farewell-flash{background:radial-gradient(ellipse at 62% 48%,rgba(255,179,163,.6),rgba(102,10,25,.24) 36%,transparent 70%);animation-name:deathPulse}
-.scene-death .farewell-shockwave{animation-name:deathCollapse;border-color:rgba(190,70,78,.6)}
-.scene-death .farewell-vignette{background:radial-gradient(ellipse at 52% 46%,transparent 4%,rgba(30,0,8,.7) 52%,rgba(0,0,0,1) 115%)}
-.scene-death .farewell-streaks{background:repeating-linear-gradient(180deg,transparent 0 8%,rgba(185,74,83,.2) 8.1%,transparent 8.3% 16%);animation-name:deathRain}
-@keyframes blackoutBreath{0%,100%{opacity:0}9%{opacity:.78}16%{opacity:0}74%{opacity:.08}88%{opacity:0}}
-@keyframes gradePulse{0%,100%{opacity:0}20%,82%{opacity:1}}
-@keyframes vignetteCreep{0%,100%{opacity:0}18%,88%{opacity:1}}
-@keyframes impactFlash{0%,100%{opacity:0;transform:scale(.7)}12%{opacity:calc(var(--farewell-intensity)*1.7);transform:scale(1.1)}22%{opacity:0}52%{opacity:calc(var(--farewell-intensity)*.3)}62%{opacity:0}}
-@keyframes impactRing{0%,18%{opacity:0;transform:translate(-50%,-50%) scale(.1)}34%{opacity:.8;transform:translate(-50%,-50%) scale(3.5)}68%,100%{opacity:0;transform:translate(-50%,-50%) scale(7)}}
-@keyframes motionStreak{0%,100%{opacity:0;transform:translateX(-12%)}28%,66%{opacity:.7;transform:translateX(10%)}}
-@keyframes frameIn{0%,12%,100%{opacity:0}24%,84%{opacity:1}}
-@keyframes heroicCut{0%,100%{opacity:0}8%{opacity:.95}18%,82%{opacity:0}90%{opacity:.2}}
-@keyframes heroicImpact{0%,100%{opacity:0;transform:scale(.5)}14%{opacity:calc(var(--farewell-intensity)*2);transform:scale(1.25)}25%{opacity:.05}46%{opacity:calc(var(--farewell-intensity)*.8)}59%{opacity:0}}
-@keyframes heroicRing{0%,15%{opacity:0;transform:translate(-50%,-50%) scale(.1)}29%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}58%,100%{opacity:0;transform:translate(-50%,-50%) scale(6)}}
-@keyframes melancholyDrown{0%,100%{opacity:0}15%{opacity:.4}45%{opacity:.08}80%{opacity:.42}}
-@keyframes rainCurtain{0%,100%{opacity:0;transform:translateY(-12%)}22%,84%{opacity:.72;transform:translateY(12%)}}
-@keyframes hopeOpen{0%{opacity:.98}18%{opacity:.7}62%,100%{opacity:0}}
-@keyframes sunriseBloom{0%,100%{opacity:0;transform:scale(.6)}35%{opacity:calc(var(--farewell-intensity)*1.5);transform:scale(1.15)}72%{opacity:calc(var(--farewell-intensity)*.65);transform:scale(1.35)}}
-@keyframes softBloom{0%,100%{opacity:0;transform:translate(-50%,-50%) scale(.2)}55%{opacity:.6;transform:translate(-50%,-50%) scale(4.5)}}
-@keyframes tragicBlackout{0%,100%{opacity:0}18%{opacity:.6}35%{opacity:.1}66%{opacity:.82}88%{opacity:.96}}
-@keyframes tragicStrike{0%,100%{opacity:0}17%{opacity:calc(var(--farewell-intensity)*1.8)}23%{opacity:0}48%{opacity:calc(var(--farewell-intensity)*.55)}58%{opacity:0}}
-@keyframes tragicCrush{0%,18%{opacity:0;transform:translate(-50%,-50%) scale(5)}42%{opacity:.9;transform:translate(-50%,-50%) scale(.15)}70%,100%{opacity:0;transform:translate(-50%,-50%) scale(.02)}}
-@keyframes revealCurtainBlack{0%,100%{opacity:.96}28%{opacity:.78}48%,88%{opacity:0}}
-@keyframes revealDetonation{0%,100%{opacity:0}38%{opacity:calc(var(--farewell-intensity)*2)}48%{opacity:0}}
-@keyframes revealRings{0%,28%{opacity:0;transform:translate(-50%,-50%) scale(.1)}43%{opacity:1;transform:translate(-50%,-50%) scale(4)}72%,100%{opacity:0;transform:translate(-50%,-50%) scale(8)}}
-@keyframes revealShutters{0%,20%{opacity:1}42%,78%{opacity:.05}100%{opacity:.35}}
-@keyframes entranceCurtain{0%{opacity:.98}20%{opacity:.95}44%,100%{opacity:0}}
-@keyframes entranceDetonation{0%,100%{opacity:0}35%{opacity:calc(var(--farewell-intensity)*2.2)}44%{opacity:0}}
-@keyframes entranceBlast{0%,28%{opacity:0;transform:translate(-50%,-50%) scale(.05)}43%{opacity:1;transform:translate(-50%,-50%) scale(2)}70%,100%{opacity:0;transform:translate(-50%,-50%) scale(6)}}
-@keyframes entranceRush{0%,28%{opacity:0;transform:scale(1.3)}43%,62%{opacity:.8;transform:scale(.8)}100%{opacity:0;transform:scale(.6)}}
-@keyframes sacrificeFall{0%,100%{opacity:0}28%{opacity:.08}58%{opacity:.7}90%{opacity:.94}}
-@keyframes sacrificeBurst{0%,100%{opacity:0}30%{opacity:calc(var(--farewell-intensity)*2)}36%{opacity:0}48%{opacity:calc(var(--farewell-intensity)*.8)}56%{opacity:0}}
-@keyframes sacrificeRupture{0%,28%{opacity:0;transform:translate(-50%,-50%) scale(.05)}40%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}72%,100%{opacity:0;transform:translate(-50%,-50%) scale(6)}}
-@keyframes sacrificeShards{0%,100%{opacity:0;transform:rotate(0) scale(.8)}40%,62%{opacity:.8;transform:rotate(8deg) scale(1.1)}}
-@keyframes memoryFade{0%,100%{opacity:0}14%{opacity:.32}35%{opacity:.08}68%{opacity:.25}}
-@keyframes memoryFlicker{0%,100%{opacity:0;transform:translateX(-20%)}18%{opacity:.9}24%{opacity:.25}33%{opacity:.75}72%{opacity:.4;transform:translateX(20%)}}
-@keyframes memoryGate{0%,100%{opacity:0;transform:translateX(-8%)}25%,70%{opacity:.6;transform:translateX(8%)}}
-@keyframes deathClose{0%,100%{opacity:0}42%{opacity:.05}70%{opacity:.76}94%{opacity:1}}
-@keyframes deathPulse{0%,100%{opacity:0}36%{opacity:calc(var(--farewell-intensity)*1.4)}44%{opacity:0}62%{opacity:calc(var(--farewell-intensity)*.2)}72%{opacity:0}}
-@keyframes deathCollapse{0%,28%{opacity:0;transform:translate(-50%,-50%) scale(5)}52%{opacity:.9;transform:translate(-50%,-50%) scale(.12)}78%,100%{opacity:0;transform:translate(-50%,-50%) scale(.01)}}
-@keyframes deathRain{0%,100%{opacity:0;transform:translateY(-8%)}42%,86%{opacity:.55;transform:translateY(8%)}}
-@media(prefers-reduced-motion:reduce){.farewell-scene *{animation-duration:1ms!important;animation-iteration-count:1!important}}
-
-
-/* 0.20 — realismo atmosférico: sem grafismos abstratos, sem HUD. */
-.farewell-shockwave,.farewell-streaks,.farewell-frame,.farewell-rays{display:none!important}
-.farewell-scene{background:transparent!important}
-.farewell-blackout{z-index:1!important;animation:cinemaExposure var(--farewell-duration) cubic-bezier(.4,0,.2,1) both!important}
-.farewell-grade{z-index:2!important;mix-blend-mode:soft-light!important;opacity:.8!important;animation:cinemaGrade var(--farewell-duration) ease-in-out both!important}
-.farewell-vignette{z-index:5!important;inset:-5%!important;background:radial-gradient(ellipse at 50% 45%,transparent 25%,rgba(0,0,0,.2) 62%,rgba(0,0,0,.78) 100%)!important;animation:cinemaVignette var(--farewell-duration) ease-in-out both!important}
-.farewell-light{z-index:3!important;filter:blur(34px)!important;mix-blend-mode:screen!important;opacity:0;animation:cinemaPracticalLight var(--farewell-duration) ease-in-out both!important}
-.farewell-haze{position:absolute;z-index:3;inset:-18%;pointer-events:none;opacity:0;filter:blur(32px);background:radial-gradient(ellipse at 22% 68%,rgba(194,190,173,.12),transparent 43%),radial-gradient(ellipse at 76% 34%,rgba(204,194,171,.1),transparent 48%),linear-gradient(105deg,transparent 12%,rgba(204,199,184,.075) 46%,transparent 76%);animation:cinemaHaze var(--farewell-duration) ease-in-out both}
-.farewell-light-leak{position:absolute;z-index:4;inset:-15%;pointer-events:none;opacity:0;mix-blend-mode:screen;filter:blur(38px);background:linear-gradient(112deg,transparent 22%,rgba(255,231,188,.14) 43%,rgba(255,245,219,.08) 50%,transparent 70%);animation:cinemaLeak var(--farewell-duration) ease-in-out both}
-.farewell-grain{position:absolute;z-index:8;inset:0;pointer-events:none;opacity:.055;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");background-size:180px 180px;mix-blend-mode:soft-light}
-.farewell-particles{z-index:4!important;opacity:.48!important}
-.farewell-particle{box-shadow:0 0 5px rgba(230,220,200,.22)!important;filter:blur(.35px)}
-.farewell-letterbox{z-index:9!important;background:#050505!important;box-shadow:none!important;animation:cinemaLetterbox var(--farewell-duration) cubic-bezier(.2,.65,.25,1) both!important}
-.farewell-caption{z-index:11!important;text-shadow:0 2px 28px rgba(0,0,0,.95);animation:cinemaCaption var(--farewell-duration) ease both!important}
-.farewell-name{font-weight:400!important;text-shadow:0 3px 28px rgba(0,0,0,.95)!important}
-.farewell-epitaph{text-shadow:0 2px 24px rgba(0,0,0,.95)!important}
-.farewell-heroic .farewell-grade{background:linear-gradient(180deg,rgba(255,185,92,.12),transparent 48%,rgba(52,28,13,.22))!important}
-.farewell-heroic .farewell-light{background:radial-gradient(ellipse,rgba(255,219,158,.28),rgba(224,157,87,.09) 40%,transparent 74%)!important;filter:blur(42px)!important}
-.farewell-heroic .farewell-haze{background:radial-gradient(ellipse at 50% 40%,rgba(255,214,157,.12),transparent 48%),linear-gradient(110deg,transparent 25%,rgba(255,222,177,.07) 48%,transparent 70%)}
-.farewell-heroic .farewell-particle{animation-name:cinemaEmber!important;opacity:.4}
-.farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(35,55,83,.17),rgba(5,13,24,.32))!important}
-.farewell-melancholic .farewell-light{background:radial-gradient(ellipse,rgba(177,199,225,.13),rgba(91,119,155,.04) 44%,transparent 76%)!important}
-.farewell-melancholic .farewell-haze{background:linear-gradient(180deg,rgba(126,151,179,.08),transparent 38%,rgba(5,12,22,.12)),radial-gradient(ellipse at 25% 80%,rgba(145,168,194,.1),transparent 50%)}
-.farewell-melancholic .farewell-particle{animation-name:cinemaDrift!important;opacity:.24}
-.farewell-hopeful .farewell-grade{background:linear-gradient(0deg,rgba(255,220,151,.12),rgba(255,244,211,.07) 52%,rgba(255,251,230,.14))!important}
-.farewell-hopeful .farewell-light{background:radial-gradient(ellipse,rgba(255,245,211,.28),rgba(255,219,157,.1) 38%,transparent 74%)!important}
-.farewell-hopeful .farewell-haze{background:linear-gradient(105deg,transparent 15%,rgba(255,238,199,.12) 48%,transparent 78%),radial-gradient(ellipse at 50% 22%,rgba(255,243,210,.1),transparent 55%)}
-.farewell-hopeful .farewell-particle{animation-name:cinemaDrift!important;opacity:.3}
-.farewell-tragic .farewell-grade{background:linear-gradient(115deg,rgba(63,15,22,.22),rgba(8,5,9,.28) 55%,rgba(75,17,22,.2))!important}
-.farewell-tragic .farewell-light{background:radial-gradient(ellipse,rgba(191,91,78,.12),rgba(87,24,32,.05) 42%,transparent 74%)!important}
-.farewell-tragic .farewell-haze{background:radial-gradient(ellipse at 58% 52%,rgba(126,36,43,.12),transparent 50%),linear-gradient(90deg,rgba(0,0,0,.12),transparent 35%,rgba(0,0,0,.2))}
-.farewell-tragic .farewell-particle{animation-name:cinemaFall!important;opacity:.25}
-.scene-reveal .farewell-blackout{animation:revealExposure var(--farewell-duration) ease-in-out both!important}
+.cinematic-overlay .farewell-scene{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;background:transparent!important;color:#f3eee4;isolation:isolate;contain:strict}
+.farewell-blackout,.farewell-grade,.farewell-light,.farewell-haze,.farewell-vignette,.farewell-particles,.farewell-grain,.farewell-letterbox{position:absolute;inset:0;pointer-events:none}
+.farewell-blackout{z-index:1;background:#050607;opacity:0;animation:sceneExposure var(--farewell-duration) ease-in-out both}
+.farewell-grade{z-index:2;opacity:0;mix-blend-mode:soft-light;animation:sceneGrade var(--farewell-duration) ease-in-out both}
+.farewell-light{z-index:3;inset:-20%;opacity:0;filter:blur(58px);mix-blend-mode:screen;transform:scale(.94);animation:sceneLight var(--farewell-duration) ease-in-out both}
+.farewell-haze{z-index:4;inset:-16%;opacity:0;filter:blur(48px);background:radial-gradient(ellipse at 20% 70%,rgba(205,199,185,.08),transparent 48%),radial-gradient(ellipse at 78% 30%,rgba(205,199,185,.07),transparent 52%);animation:sceneHaze var(--farewell-duration) ease-in-out both}
+.farewell-vignette{z-index:5;opacity:0;background:radial-gradient(ellipse at 50% 48%,transparent 28%,rgba(0,0,0,.18) 64%,rgba(0,0,0,.72) 112%);animation:sceneVignette var(--farewell-duration) ease-in-out both}
+.farewell-particles{z-index:6;overflow:hidden;opacity:.26}
+.farewell-particle{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:rgba(230,224,211,.7);filter:blur(.65px);opacity:0;animation:sceneDust var(--travel) linear var(--delay) infinite}
+.farewell-grain{z-index:7;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");background-size:180px 180px;mix-blend-mode:soft-light}
+.farewell-letterbox{z-index:8;inset:auto 0;height:0;background:#030405;box-shadow:none;animation:sceneLetterbox var(--farewell-duration) cubic-bezier(.2,.65,.25,1) both}
+.farewell-letterbox-top{top:0;bottom:auto}
+.farewell-letterbox-bottom{bottom:0;top:auto}
+.farewell-caption{position:absolute;z-index:9;left:8%;bottom:12%;max-width:min(720px,82vw);display:flex;flex-direction:column;gap:9px;opacity:0;transform:translateY(8px);filter:blur(1.5px);animation:sceneCaption var(--farewell-duration) ease both;text-shadow:0 2px 24px rgba(0,0,0,.9)}
+.farewell-epitaph{margin:0;color:rgba(247,241,229,.96);font:italic 400 clamp(20px,2.5vw,34px)/1.38 Georgia,'Times New Roman',serif;letter-spacing:.005em}
+.farewell-byline{margin:0;color:rgba(235,226,209,.68);font:400 11px/1.5 Georgia,'Times New Roman',serif;letter-spacing:.16em;text-transform:uppercase}
+.farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(39,57,78,.2),rgba(8,15,26,.32))}
+.farewell-melancholic .farewell-light{background:radial-gradient(ellipse at 50% 44%,rgba(178,200,225,.16),rgba(107,132,164,.055) 42%,transparent 72%)}
+.farewell-melancholic .farewell-haze{background:radial-gradient(ellipse at 30% 72%,rgba(152,174,199,.1),transparent 48%),radial-gradient(ellipse at 76% 24%,rgba(119,144,173,.08),transparent 55%)}
+.farewell-melancholic .farewell-particle{background:rgba(202,215,231,.6);animation-name:sceneDustDown}
+.farewell-heroic .farewell-grade{background:linear-gradient(180deg,rgba(112,75,34,.12),rgba(31,19,8,.16))}
+.farewell-heroic .farewell-light{background:radial-gradient(ellipse at 50% 34%,rgba(255,218,157,.22),rgba(226,165,91,.08) 38%,transparent 72%)}
+.farewell-heroic .farewell-haze{background:radial-gradient(ellipse at 48% 40%,rgba(255,218,165,.1),transparent 48%),radial-gradient(ellipse at 18% 84%,rgba(153,104,52,.08),transparent 46%)}
+.farewell-heroic .farewell-particle{background:rgba(255,205,133,.7);animation-name:sceneEmber}
+.farewell-heroic .farewell-caption{left:50%;bottom:11%;width:min(820px,86vw);max-width:86vw;align-items:center;text-align:center;transform:translate(-50%,8px)}
+.farewell-heroic .farewell-epitaph{font-style:normal;font-size:clamp(23px,3.2vw,43px);color:#fff0d4}
+.farewell-heroic .farewell-byline{color:rgba(255,230,192,.7)}
+.farewell-hopeful .farewell-grade{background:linear-gradient(0deg,rgba(158,119,57,.08),rgba(255,239,202,.11) 56%,rgba(255,247,225,.17))}
+.farewell-hopeful .farewell-light{background:radial-gradient(ellipse at 50% 24%,rgba(255,246,217,.25),rgba(255,223,166,.1) 42%,transparent 74%)}
+.farewell-hopeful .farewell-haze{background:radial-gradient(ellipse at 50% 20%,rgba(255,242,208,.14),transparent 52%),radial-gradient(ellipse at 80% 72%,rgba(222,188,132,.07),transparent 46%)}
+.farewell-hopeful .farewell-particle{background:rgba(255,236,193,.65);animation-name:sceneDustUp}
+.farewell-hopeful .farewell-caption{left:50%;bottom:13%;width:min(760px,84vw);max-width:84vw;align-items:center;text-align:center;transform:translate(-50%,8px)}
+.farewell-hopeful .farewell-epitaph{font-style:normal;font-size:clamp(22px,2.8vw,37px);color:#fff6df}
+.farewell-tragic .farewell-grade{background:linear-gradient(115deg,rgba(47,18,22,.24),rgba(7,6,9,.3) 58%,rgba(54,17,22,.22))}
+.farewell-tragic .farewell-light{background:radial-gradient(ellipse at 58% 50%,rgba(159,83,76,.1),rgba(73,27,34,.04) 44%,transparent 72%)}
+.farewell-tragic .farewell-haze{background:radial-gradient(ellipse at 58% 54%,rgba(108,43,49,.1),transparent 52%)}
+.farewell-tragic .farewell-particle{background:rgba(209,164,151,.55);animation-name:sceneDustDown}
+.farewell-tragic .farewell-vignette{background:radial-gradient(ellipse at 50% 45%,transparent 18%,rgba(18,5,9,.32) 60%,rgba(0,0,0,.88) 112%)}
+.farewell-tragic .farewell-caption{left:auto;right:8%;bottom:14%;align-items:flex-end;text-align:right}
+.farewell-tragic .farewell-epitaph{font-style:normal;color:rgba(245,222,216,.94);font-size:clamp(22px,2.8vw,38px)}
+.scene-reveal .farewell-blackout{animation:revealExposure var(--farewell-duration) ease-in-out both}
 .scene-reveal .farewell-haze{animation:revealHaze var(--farewell-duration) ease-in-out both}
-.scene-entrance .farewell-blackout{animation:entranceExposure var(--farewell-duration) ease-in-out both!important}
-.scene-entrance .farewell-light-leak{animation:entranceLeak var(--farewell-duration) ease-in-out both}
-.scene-sacrifice .farewell-blackout{animation:sacrificeExposure var(--farewell-duration) ease-in-out both!important}
-.scene-sacrifice .farewell-light-leak{background:radial-gradient(ellipse at 50% 50%,rgba(255,221,173,.2),transparent 56%);animation:sacrificeLight var(--farewell-duration) ease-in-out both}
-.scene-memory .farewell-blackout{animation:memoryExposure var(--farewell-duration) ease-in-out both!important}
-.scene-memory .farewell-haze{background:linear-gradient(110deg,transparent 5%,rgba(255,227,176,.12) 35%,transparent 62%,rgba(255,237,201,.08) 80%,transparent);animation:memoryLight var(--farewell-duration) ease-in-out both}
-.scene-death .farewell-blackout{animation:deathExposure var(--farewell-duration) ease-in-out both!important}
-.scene-death .farewell-vignette{background:radial-gradient(ellipse at 52% 46%,transparent 14%,rgba(20,3,8,.42) 58%,rgba(0,0,0,.92) 110%)!important}
-@keyframes cinemaExposure{0%,100%{opacity:0}8%{opacity:.38}18%{opacity:0}76%{opacity:.08}88%{opacity:0}}
-@keyframes cinemaGrade{0%,100%{opacity:0}18%,86%{opacity:1}}
-@keyframes cinemaVignette{0%,100%{opacity:0}20%,90%{opacity:1}}
-@keyframes cinemaPracticalLight{0%,100%{opacity:0;transform:translate(-50%,-50%) scale(.88)}22%{opacity:calc(var(--farewell-intensity)*.8);transform:translate(-50%,-50%) scale(1)}58%,82%{opacity:calc(var(--farewell-intensity)*.58);transform:translate(-50%,-50%) scale(1.08)}}
-@keyframes cinemaHaze{0%,100%{opacity:0;transform:translate3d(-2%,1%,0) scale(.96)}24%,82%{opacity:.82;transform:translate3d(2%,-1%,0) scale(1.04)}}
-@keyframes cinemaLeak{0%,100%{opacity:0;transform:translateX(-12%)}34%{opacity:calc(var(--farewell-intensity)*.6);transform:translateX(0)}72%{opacity:calc(var(--farewell-intensity)*.25);transform:translateX(12%)}}
-@keyframes cinemaLetterbox{0%,7%{height:0}18%,88%{height:clamp(20px,3.6vh,42px)}100%{height:0}}
-@keyframes cinemaCaption{0%{opacity:0;filter:blur(2px);transform:translate(var(--caption-x),8px)}15%,88%{opacity:1;filter:blur(0);transform:translate(var(--caption-x),0)}100%{opacity:0;filter:blur(1px);transform:translate(var(--caption-x),-4px)}}
-@keyframes cinemaEmber{0%{opacity:0;transform:translate3d(0,18px,0) scale(.6)}25%{opacity:calc(var(--farewell-intensity)*.8)}100%{opacity:0;transform:translate3d(var(--drift),-110px,0) scale(1)}}
-@keyframes cinemaDrift{0%{opacity:0;transform:translate3d(0,10px,0) scale(.65)}25%{opacity:calc(var(--farewell-intensity)*.5)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.5),80px,0) scale(.9)}}
-@keyframes cinemaFall{0%{opacity:0;transform:translate3d(0,-18px,0) scale(.6)}25%{opacity:calc(var(--farewell-intensity)*.55)}100%{opacity:0;transform:translate3d(calc(var(--drift)*.3),95px,0) scale(.75)}}
-@keyframes revealExposure{0%,100%{opacity:.68}22%{opacity:.58}52%,90%{opacity:0}}
-@keyframes revealHaze{0%,100%{opacity:0;transform:scale(1.1)}28%{opacity:.3}58%,82%{opacity:1;transform:scale(.98)}}
-@keyframes entranceExposure{0%{opacity:.88}24%{opacity:.82}55%,100%{opacity:0}}
-@keyframes entranceLeak{0%,100%{opacity:0;transform:translateX(-18%)}40%{opacity:.65;transform:translateX(0)}68%{opacity:.2;transform:translateX(12%)}}
-@keyframes sacrificeExposure{0%,100%{opacity:0}30%{opacity:.08}62%{opacity:.42}90%{opacity:.7}}
-@keyframes sacrificeLight{0%,100%{opacity:0;transform:scale(.8)}34%{opacity:.7;transform:scale(1.08)}48%{opacity:.12}66%{opacity:.38}}
-@keyframes memoryExposure{0%,100%{opacity:0}18%{opacity:.24}44%{opacity:.08}72%{opacity:.2}}
-@keyframes memoryLight{0%,100%{opacity:0;transform:translateX(-4%)}24%{opacity:.65}56%{opacity:.22}82%{opacity:.5;transform:translateX(5%)}}
-@keyframes deathExposure{0%,100%{opacity:0}42%{opacity:.06}72%{opacity:.5}96%{opacity:.88}}
+.scene-entrance .farewell-blackout{animation:entranceExposure var(--farewell-duration) ease-in-out both}
+.scene-entrance .farewell-light{animation:entranceLight var(--farewell-duration) ease-in-out both}
+.scene-sacrifice .farewell-blackout{animation:sacrificeExposure var(--farewell-duration) ease-in-out both}
+.scene-sacrifice .farewell-light{animation:sacrificeLight var(--farewell-duration) ease-in-out both}
+.scene-memory .farewell-blackout{animation:memoryExposure var(--farewell-duration) ease-in-out both}
+.scene-memory .farewell-haze{animation:memoryHaze var(--farewell-duration) ease-in-out both}
+.scene-death .farewell-blackout{animation:deathExposure var(--farewell-duration) ease-in-out both}
+.scene-death .farewell-vignette{background:radial-gradient(ellipse at 50% 45%,transparent 12%,rgba(18,4,9,.46) 56%,rgba(0,0,0,.96) 112%)}
+@keyframes sceneExposure{0%,100%{opacity:0}7%{opacity:.42}17%{opacity:0}80%{opacity:.06}92%{opacity:0}}
+@keyframes sceneGrade{0%,100%{opacity:0}18%,88%{opacity:1}}
+@keyframes sceneLight{0%,100%{opacity:0;transform:scale(.92)}22%{opacity:calc(var(--farewell-intensity)*.58);transform:scale(1)}64%,84%{opacity:calc(var(--farewell-intensity)*.42);transform:scale(1.06)}}
+@keyframes sceneHaze{0%,100%{opacity:0;transform:translate3d(-1%,.5%,0) scale(.98)}24%,84%{opacity:.72;transform:translate3d(1%,-.5%,0) scale(1.02)}}
+@keyframes sceneVignette{0%,100%{opacity:0}20%,90%{opacity:1}}
+@keyframes sceneDust{0%{opacity:0;transform:translate3d(0,0,0)}18%,72%{opacity:.4}100%{opacity:0;transform:translate3d(var(--drift),-24px,0)}}
+@keyframes sceneDustDown{0%{opacity:0;transform:translate3d(0,-12px,0)}22%,72%{opacity:.38}100%{opacity:0;transform:translate3d(var(--drift),36px,0)}}
+@keyframes sceneDustUp{0%{opacity:0;transform:translate3d(0,18px,0)}20%,72%{opacity:.38}100%{opacity:0;transform:translate3d(var(--drift),-42px,0)}}
+@keyframes sceneEmber{0%{opacity:0;transform:translate3d(0,12px,0)}20%,65%{opacity:.45}100%{opacity:0;transform:translate3d(var(--drift),-54px,0)}}
+@keyframes sceneLetterbox{0%,7%{height:0}18%,89%{height:clamp(16px,2.4vh,28px)}100%{height:0}}
+@keyframes sceneCaption{0%{opacity:0;transform:translateY(8px);filter:blur(1.5px)}14%,88%{opacity:1;transform:translateY(0);filter:blur(0)}100%{opacity:0;transform:translateY(-4px);filter:blur(1px)}}
+@keyframes revealExposure{0%,100%{opacity:.76}30%{opacity:.7}58%,90%{opacity:0}}
+@keyframes revealHaze{0%,100%{opacity:0;transform:scale(1.04)}34%{opacity:.18}62%,84%{opacity:.8;transform:scale(.99)}}
+@keyframes entranceExposure{0%{opacity:.88}28%{opacity:.82}58%,100%{opacity:0}}
+@keyframes entranceLight{0%,100%{opacity:0;transform:scale(.86)}44%{opacity:calc(var(--farewell-intensity)*.75);transform:scale(1.08)}74%{opacity:calc(var(--farewell-intensity)*.38);transform:scale(1.14)}}
+@keyframes sacrificeExposure{0%,100%{opacity:0}34%{opacity:.08}68%{opacity:.44}92%{opacity:.68}}
+@keyframes sacrificeLight{0%,100%{opacity:0;transform:scale(.9)}42%{opacity:calc(var(--farewell-intensity)*.65);transform:scale(1.1)}56%{opacity:.12}76%{opacity:.34}}
+@keyframes memoryExposure{0%,100%{opacity:0}18%{opacity:.22}46%{opacity:.06}76%{opacity:.18}}
+@keyframes memoryHaze{0%,100%{opacity:0;transform:translateX(-1%)}26%{opacity:.52}60%{opacity:.2}82%{opacity:.46;transform:translateX(1%)}}
+@keyframes deathExposure{0%,100%{opacity:0}46%{opacity:.04}74%{opacity:.5}98%{opacity:.9}}
 @media(prefers-reduced-motion:reduce){.farewell-scene *{animation-duration:1ms!important;animation-iteration-count:1!important}}
