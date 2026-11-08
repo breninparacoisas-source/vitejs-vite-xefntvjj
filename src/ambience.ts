@@ -10,6 +10,17 @@ type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number }
 
 let activePreset: AmbiencePreset = 'off';
 
+function refreshAudioPanel(): void {
+  const enable = document.querySelector<HTMLButtonElement>('#ambience-audio-enable');
+  const status = document.querySelector<HTMLElement>('#ambience-audio-status');
+  if (!enable || !status) return;
+  const available = ['forest', 'tavern', 'dungeon'].includes(activePreset);
+  enable.disabled = !available || Boolean(audio);
+  if (!audio) enable.textContent = 'ATIVAR ÁUDIO';
+  if (!available && !audio) status.textContent = 'Escolha um ambiente para liberar a paisagem sonora.';
+  else if (available && !audio) status.textContent = 'Ambiente pronto. Ative o áudio neste dispositivo.';
+}
+
 function validPayload(value: unknown): value is AmbiencePayload {
   if (!value || typeof value !== 'object') return false;
   const data = value as Partial<AmbiencePayload>;
@@ -44,6 +55,7 @@ export function initializeAmbienceBackground(): void {
     if (!validPayload(event.data)) return;
     activePreset = event.data.preset;
     if (activePreset === 'off') stopAudio();
+    refreshAudioPanel();
     void openAmbience(event.data.preset).catch((error) => {
       console.error('Falha ao atualizar AMBIENCE:', error);
     });
@@ -52,6 +64,7 @@ export function initializeAmbienceBackground(): void {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
     if (saved && ['forest', 'tavern', 'dungeon', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
+      refreshAudioPanel();
       if (activePreset === 'off') return openAmbience('off');
       return openAmbience(activePreset);
     }
@@ -137,6 +150,7 @@ export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM:
           activePreset = preset;
           if (preset === 'off') { stopAudio(); await openAmbience('off'); }
           else await openAmbience(preset);
+          refreshAudioPanel();
           await OBR.room.setMetadata({ [METADATA_KEY]: { preset, updatedAt: payload.createdAt } });
           await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
           OBR.notification.show(preset === 'off' ? 'Ambientação desligada.' : 'Ambientação enviada para a sala.');
