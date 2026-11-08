@@ -147,9 +147,12 @@ async function fireEffect(
 
 async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
   try {
-    const images = await OBR.assets.downloadImages(false, '');
+    const images = await OBR.assets.downloadImages(false, '', 'ATTACHMENT');
     const chosen = images[0];
-    if (!chosen) return;
+    if (!chosen) {
+      OBR.notification.show('Nenhuma imagem foi selecionada na biblioteca.');
+      return;
+    }
 
     if (!chosen.image.mime.startsWith('image/')) {
       OBR.notification.show('O arquivo escolhido não é uma imagem compatível.');
@@ -192,7 +195,7 @@ async function uploadAppearancePng(file: File, root: HTMLElement): Promise<void>
     const safeFile = new File([bytes], file.name, { type: 'image/png' });
     const upload = buildImageUpload(safeFile).build();
     await OBR.assets.uploadImages([upload], 'ATTACHMENT');
-    OBR.notification.show('PNG enviado para sua biblioteca. Selecione-o para usar na aparição.');
+    OBR.notification.show('Upload concluído. Agora escolha o PNG na janela da biblioteca que será aberta.');
     await chooseAppearanceImage(root);
   } catch (error) {
     console.error('Erro ao enviar PNG:', error);
