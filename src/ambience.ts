@@ -4,9 +4,12 @@ import './ambience.css';
 const CHANNEL = 'com.arton.engine/ambience/v1';
 const MODAL_ID = 'com.arton.engine/ambience/overlay';
 const METADATA_KEY = 'com.arton.engine/ambience';
+const SFX_CHANNEL = 'com.arton.engine/soundboard/v1';
 
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; settings?: AmbienceSettings; createdAt: number };
+type SfxId = 'sword'|'impact'|'arrow'|'spell'|'portal'|'heal'|'roar'|'growl'|'thunder'|'explosion'|'door'|'footsteps';
+type SfxPayload = { version: 1; id: SfxId; createdAt: number };
 
 type AmbienceSettings = { intensity: number; brightness: number; motion: number };
 const DEFAULT_SETTINGS: AmbienceSettings = { intensity: 70, brightness: 0, motion: 65 };
@@ -114,6 +117,7 @@ export function initializeAmbienceBackground(): void {
 }
 
 export function initializeAmbiencePanel(): void {
+  OBR.broadcast.onMessage(SFX_CHANNEL, (event) => receiveSfx(event.data));
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     activePreset = event.data.preset;
@@ -159,8 +163,79 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     '</section>',
     '<section class="ambience-customizer"><div class="ambience-customizer-heading"><div><span class="ambience-eyebrow">AJUSTE FINO</span><h3>Personalize a atmosfera</h3><p>Os ajustes são aplicados a todos na sala. O volume de áudio continua individual.</p></div><div class="ambience-customizer-actions"><button type="button" id="ambience-reset-settings" ' + disabled + '>RESTAURAR PADRÃO</button><button type="button" id="ambience-apply-settings" class="ambience-apply-settings" ' + disabled + '>APLICAR AJUSTES</button></div></div><div class="ambience-setting-grid"><label class="ambience-setting"><span><strong>Intensidade</strong><output id="ambience-intensity-value">' + ambienceSettings.intensity + '%</output></span><small>Força dos efeitos visuais</small><input id="ambience-intensity" type="range" min="0" max="100" value="' + ambienceSettings.intensity + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Clareza</strong><output id="ambience-brightness-value">' + (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness + '</output></span><small>Clarear ou escurecer a cena</small><input id="ambience-brightness" type="range" min="-40" max="40" value="' + ambienceSettings.brightness + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Movimento</strong><output id="ambience-motion-value">' + ambienceSettings.motion + '%</output></span><small>Velocidade dos efeitos animados</small><input id="ambience-motion" type="range" min="0" max="100" value="' + ambienceSettings.motion + '" ' + disabled + '></label></div><p class="ambience-customizer-note">Ajustes em tempo real: escolha o nível de presença visual sem alterar a imagem original do mapa.</p></section>',
     '<section class="ambience-audio-settings"><div class="ambience-audio-copy"><span class="ambience-eyebrow">MESA DE SOM</span><h3>Paisagem sonora</h3><p>O som é reproduzido neste dispositivo. Ative uma vez para liberar a reprodução no navegador.</p><p id="ambience-audio-status">' + (activePreset === 'off' ? 'Escolha um ambiente para liberar a paisagem sonora.' : 'Ambiente pronto. Ative o áudio neste dispositivo.') + '</p></div><div class="ambience-audio-controls"><button id="ambience-audio-enable" ' + (activePreset === 'off' ? 'disabled' : '') + '>ATIVAR ÁUDIO</button><label for="ambience-volume"><span>VOLUME</span><output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" class="ambience-mute" disabled>SILENCIAR NESTE DISPOSITIVO</button></div></section>',
-    '<p class="ambience-footnote">' + status + ' Os efeitos visuais são sobrepostos ao mapa e não recebem cliques.</p>',
+    '<section class="soundboard"><div class="soundboard-heading"><div><span class="ambience-eyebrow">SOUNDBOARD</span><h3>Efeitos sonoros pontuais</h3><p>Dispare sons no momento exato. O efeito é enviado aos participantes da sala.</p></div><div class="soundboard-audio-access"><button id="sfx-audio-enable" type="button">LIBERAR EFEITOS</button><span id="sfx-audio-status">Libere o áudio neste dispositivo para ouvir os efeitos.</span></div></div><div class="soundboard-volume"><label for="sfx-volume">VOLUME DOS EFEITOS <output id="sfx-volume-value">75%</output></label><input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.75" disabled></div><div class="soundboard-category"><h4>Combate</h4><div class="soundboard-grid"><button data-sfx="sword" ' + (!connected || !isGM ? 'disabled' : '') + '>Choque de espadas</button><button data-sfx="impact" ' + (!connected || !isGM ? 'disabled' : '') + '>Impacto pesado</button><button data-sfx="arrow" ' + (!connected || !isGM ? 'disabled' : '') + '>Flecha disparada</button></div></div><div class="soundboard-category"><h4>Magia</h4><div class="soundboard-grid"><button data-sfx="spell" ' + (!connected || !isGM ? 'disabled' : '') + '>Conjuração arcana</button><button data-sfx="portal" ' + (!connected || !isGM ? 'disabled' : '') + '>Portal dimensional</button><button data-sfx="heal" ' + (!connected || !isGM ? 'disabled' : '') + '>Energia restauradora</button></div></div><div class="soundboard-category"><h4>Criaturas</h4><div class="soundboard-grid"><button data-sfx="roar" ' + (!connected || !isGM ? 'disabled' : '') + '>Rugido monstruoso</button><button data-sfx="growl" ' + (!connected || !isGM ? 'disabled' : '') + '>Rosnado grave</button></div></div><div class="soundboard-category"><h4>Ambiente e tensão</h4><div class="soundboard-grid"><button data-sfx="thunder" ' + (!connected || !isGM ? 'disabled' : '') + '>Trovão próximo</button><button data-sfx="explosion" ' + (!connected || !isGM ? 'disabled' : '') + '>Explosão</button><button data-sfx="door" ' + (!connected || !isGM ? 'disabled' : '') + '>Portão rangendo</button><button data-sfx="footsteps" ' + (!connected || !isGM ? 'disabled' : '') + '>Passos pesados</button></div></div><p class="soundboard-footnote">Somente o mestre dispara efeitos. Cada participante controla o próprio volume.</p></section>',
   ].join('');;
+}
+
+
+let sfxContext: AudioContext | undefined;
+let sfxMaster: GainNode | undefined;
+let sfxVolume = 0.75;
+let sfxEnabled = false;
+const SFX_IDS: SfxId[] = ['sword','impact','arrow','spell','portal','heal','roar','growl','thunder','explosion','door','footsteps'];
+function noiseBurst(ctx: AudioContext, out: AudioNode, duration: number, frequency: number, volume: number, filter: BiquadFilterType = 'lowpass'): void {
+  const length = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1,length,ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/length,2.1);
+  const source=ctx.createBufferSource(), band=ctx.createBiquadFilter(), gain=ctx.createGain();
+  source.buffer=buffer; band.type=filter; band.frequency.value=frequency; gain.gain.value=volume;
+  source.connect(band).connect(gain).connect(out); source.start();
+}
+function tone(ctx: AudioContext,out: AudioNode,hz: number,duration: number,volume: number,endHz?: number,type: OscillatorType='sine',delay=0): void {
+  const osc=ctx.createOscillator(), gain=ctx.createGain(), start=ctx.currentTime+delay;
+  osc.type=type; osc.frequency.setValueAtTime(hz,start);
+  if(endHz) osc.frequency.exponentialRampToValueAtTime(Math.max(1,endHz),start+duration);
+  gain.gain.setValueAtTime(.0001,start); gain.gain.exponentialRampToValueAtTime(volume,start+.025);
+  gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+  osc.connect(gain).connect(out); osc.start(start); osc.stop(start+duration+.03);
+}
+function playSfx(id: SfxId): void {
+  if(!sfxEnabled||!sfxContext||!sfxMaster||sfxContext.state!=='running') return;
+  const x=sfxContext,y=sfxMaster;
+  switch(id){
+    case 'sword': noiseBurst(x,y,.32,2100,.32,'highpass'); tone(x,y,920,.46,.16,310,'triangle'); tone(x,y,1460,.2,.08,760); break;
+    case 'impact': noiseBurst(x,y,.4,480,.5); tone(x,y,105,.48,.4,35); break;
+    case 'arrow': noiseBurst(x,y,.38,2700,.23,'bandpass'); tone(x,y,700,.25,.07,160); break;
+    case 'spell': tone(x,y,220,.72,.18,1300); tone(x,y,480,.6,.1,1600,'triangle',.08); tone(x,y,950,.5,.07,520,'sine',.18); noiseBurst(x,y,.5,3600,.07,'highpass'); break;
+    case 'portal': tone(x,y,78,1.7,.16,34,'sawtooth'); tone(x,y,300,1.4,.1,900); tone(x,y,620,1.1,.07,150,'triangle',.12); noiseBurst(x,y,1.3,720,.12,'bandpass'); break;
+    case 'heal': [523,659,784,1047].forEach((hz,i)=>tone(x,y,hz,.8,.12,hz*1.01,'sine',i*.12)); break;
+    case 'roar': tone(x,y,90,1.1,.28,40,'sawtooth'); tone(x,y,135,.9,.18,55,'triangle',.04); noiseBurst(x,y,1,800,.25); break;
+    case 'growl': tone(x,y,65,.85,.23,32,'sawtooth'); tone(x,y,92,.7,.12,45,'triangle',.08); noiseBurst(x,y,.7,390,.16); break;
+    case 'thunder': noiseBurst(x,y,2.1,180,.5); tone(x,y,52,2.2,.38,24,'triangle'); break;
+    case 'explosion': noiseBurst(x,y,1,680,.65); tone(x,y,120,.85,.45,22); break;
+    case 'door': noiseBurst(x,y,1.1,350,.28,'bandpass'); tone(x,y,112,.8,.12,75,'sawtooth'); tone(x,y,70,.5,.16,40,'triangle',.3); break;
+    case 'footsteps': [0,.38,.78].forEach((d,i)=>{tone(x,y,i===1?75:90,.18,.2,36,'sine',d);noiseBurst(x,y,.1,240,.13);}); break;
+  }
+}
+function enableSfxAudio(): void {
+  if(!sfxContext||sfxContext.state==='closed'){sfxContext=new AudioContext();sfxMaster=sfxContext.createGain();sfxMaster.gain.value=sfxVolume;sfxMaster.connect(sfxContext.destination);}
+  void sfxContext.resume().then(()=>{
+    sfxEnabled=sfxContext?.state==='running';
+    const status=document.querySelector<HTMLElement>('#sfx-audio-status'), volume=document.querySelector<HTMLInputElement>('#sfx-volume'), button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
+    if(status)status.textContent=sfxEnabled?'Efeitos liberados neste dispositivo.':'O navegador não liberou o áudio. Tente novamente.';
+    if(volume)volume.disabled=!sfxEnabled;
+    if(button)button.textContent=sfxEnabled?'EFEITOS LIBERADOS':'LIBERAR EFEITOS';
+  }).catch(error=>console.error('Falha ao liberar soundboard:',error));
+}
+function receiveSfx(value: unknown): void {
+  if(!value||typeof value!=='object')return;
+  const p=value as Partial<SfxPayload>;
+  if(p.version!==1||!SFX_IDS.includes(p.id as SfxId)||typeof p.createdAt!=='number'||Math.abs(Date.now()-p.createdAt)>12000)return;
+  playSfx(p.id as SfxId);
+}
+function bindSoundboard(root: HTMLElement, connected: boolean, isGM: boolean): void {
+  const enable=root.querySelector<HTMLButtonElement>('#sfx-audio-enable'), volume=root.querySelector<HTMLInputElement>('#sfx-volume'), output=root.querySelector<HTMLOutputElement>('#sfx-volume-value'), status=root.querySelector<HTMLElement>('#sfx-audio-status');
+  if(!enable||!volume||!output||!status)return;
+  enable.textContent=sfxEnabled?'EFEITOS LIBERADOS':'LIBERAR EFEITOS'; enable.addEventListener('click',enableSfxAudio);
+  volume.disabled=!sfxEnabled; volume.value=String(sfxVolume); output.textContent=Math.round(sfxVolume*100)+'%';
+  volume.addEventListener('input',()=>{sfxVolume=Number(volume.value);output.textContent=Math.round(sfxVolume*100)+'%';if(sfxMaster&&sfxContext)sfxMaster.gain.setTargetAtTime(sfxVolume,sfxContext.currentTime,.06);});
+  root.querySelectorAll<HTMLButtonElement>('[data-sfx]').forEach(button=>button.addEventListener('click',()=>{
+    if(!connected||!isGM||!sfxEnabled){if(!sfxEnabled)status.textContent='Libere os efeitos neste dispositivo antes de disparar sons.';return;}
+    const id=button.dataset.sfx as SfxId;if(!SFX_IDS.includes(id))return;
+    const payload:SfxPayload={version:1,id,createdAt:Date.now()}; playSfx(id);
+    void OBR.broadcast.sendMessage(SFX_CHANNEL,payload,{destination:'REMOTE'}).catch(error=>{console.error('Falha ao enviar efeito sonoro:',error);status.textContent='Não foi possível enviar o efeito para a sala.';});
+  }));
 }
 
 function bindLocalAudioControls(root: HTMLElement): void {
@@ -264,6 +339,7 @@ function bindAmbienceCustomizer(root: HTMLElement, connected: boolean, isGM: boo
 export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM: boolean): void {
   bindLocalAudioControls(root);
   bindAmbienceCustomizer(root, connected, isGM);
+  bindSoundboard(root, connected, isGM);
   root.querySelectorAll<HTMLButtonElement>('[data-ambience]').forEach((button) => {
     button.addEventListener('click', () => {
       if (!connected || !isGM) return;
