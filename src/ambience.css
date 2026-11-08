@@ -203,3 +203,23 @@ html:has(.ambience-overlay),body:has(.ambience-overlay),body:has(.ambience-overl
 .ambience-overlay-snow .ambience-edge{background:radial-gradient(ellipse at center,transparent 24%,rgba(222,237,245,.24) 100%)!important;opacity:1}
 @keyframes stormCloudMass{from{transform:translate3d(-2%,0,0) scale(1.08);filter:brightness(.82)}to{transform:translate3d(2%,1%,0) scale(1.16);filter:brightness(1.08)}}
 @keyframes snowSquall{from{transform:translate3d(-4%,0,0) scale(1.04);opacity:.55}to{transform:translate3d(4%,2%,0) scale(1.16);opacity:1}}
+
+/* Personalização final do AMBIENCE */
+.ambience-customizer{margin-top:26px;padding:24px 26px 20px;border:1px solid rgba(198,165,104,.2);border-radius:8px;background:linear-gradient(125deg,#20211c,#181a17)}
+.ambience-customizer-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}
+.ambience-customizer-heading h3{margin:8px 0 5px;color:#e8e0d1;font:500 20px var(--heading)}
+.ambience-customizer-heading p,.ambience-customizer-note{margin:0;color:#969083;font-size:11px;line-height:1.6}
+.ambience-customizer-heading button{padding:9px 12px;border:1px solid rgba(198,165,104,.28);border-radius:4px;background:transparent;color:#c9b17e;font-size:8px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.ambience-customizer-heading button:disabled{opacity:.4;cursor:not-allowed}
+.ambience-setting-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.ambience-setting{display:flex;flex-direction:column;min-width:0}
+.ambience-setting>span{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#e5ddcf}
+.ambience-setting strong{font-size:12px;font-weight:600}
+.ambience-setting output{color:#d1b77f;font-size:11px;font-variant-numeric:tabular-nums}
+.ambience-setting small{margin-top:6px;color:#898579;font-size:10px}
+.ambience-setting input{width:100%;margin:15px 0 0;accent-color:#c6a568;cursor:pointer}
+.ambience-customizer-note{margin-top:19px;padding-top:14px;border-top:1px solid rgba(198,165,104,.1);font-size:10px}
+.ambience-overlay{filter:brightness(calc(1 + var(--ambience-brightness,0)))}
+.ambience-overlay .ambience-atmosphere,.ambience-overlay .ambience-clouds,.ambience-overlay .ambience-grain,.ambience-overlay .ambience-edge{opacity:var(--ambience-intensity,.7)}
+.ambience-overlay .ambience-atmosphere,.ambience-overlay .ambience-clouds,.ambience-overlay .ambience-grain{animation-duration:calc(var(--ambience-motion, .65) * 20s + 1s)}
+@media(max-width:700px){.ambience-setting-grid{grid-template-columns:1fr;gap:18px}.ambience-customizer{padding:20px}.ambience-customizer-heading{flex-direction:column}}
