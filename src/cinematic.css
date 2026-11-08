@@ -59,7 +59,7 @@
 .farewell-letterbox{z-index:8;inset:auto 0;height:0;background:#030405;box-shadow:none;animation:sceneLetterbox var(--farewell-duration) cubic-bezier(.2,.65,.25,1) both}
 .farewell-letterbox-top{top:0;bottom:auto}
 .farewell-letterbox-bottom{bottom:0;top:auto}
-.farewell-caption{position:absolute;z-index:9;left:8%;bottom:12%;max-width:min(720px,82vw);display:flex;flex-direction:column;gap:9px;opacity:0;transform:translateY(8px);filter:blur(1.5px);animation:sceneCaption var(--farewell-duration) ease both;text-shadow:0 2px 24px rgba(0,0,0,.9)}
+.farewell-caption{position:absolute;z-index:9;left:8%;bottom:12%;max-width:min(720px,82vw);display:flex;flex-direction:column;gap:9px;opacity:0;--caption-x:0%;transform:translate(var(--caption-x),8px);filter:blur(1.5px);animation:sceneCaption var(--farewell-duration) ease both;text-shadow:0 2px 24px rgba(0,0,0,.9)}
 .farewell-epitaph{margin:0;color:rgba(247,241,229,.96);font:italic 400 clamp(20px,2.5vw,34px)/1.38 Georgia,'Times New Roman',serif;letter-spacing:.005em}
 .farewell-byline{margin:0;color:rgba(235,226,209,.68);font:400 11px/1.5 Georgia,'Times New Roman',serif;letter-spacing:.16em;text-transform:uppercase}
 .farewell-melancholic .farewell-grade{background:linear-gradient(180deg,rgba(39,57,78,.2),rgba(8,15,26,.32))}
@@ -70,14 +70,14 @@
 .farewell-heroic .farewell-light{background:radial-gradient(ellipse at 50% 34%,rgba(255,218,157,.22),rgba(226,165,91,.08) 38%,transparent 72%)}
 .farewell-heroic .farewell-haze{background:radial-gradient(ellipse at 48% 40%,rgba(255,218,165,.1),transparent 48%),radial-gradient(ellipse at 18% 84%,rgba(153,104,52,.08),transparent 46%)}
 .farewell-heroic .farewell-particle{background:rgba(255,205,133,.7);animation-name:sceneEmber}
-.farewell-heroic .farewell-caption{left:50%;bottom:11%;width:min(820px,86vw);max-width:86vw;align-items:center;text-align:center;transform:translate(-50%,8px)}
+.farewell-heroic .farewell-caption{left:50%;bottom:11%;width:min(820px,86vw);max-width:86vw;align-items:center;text-align:center;--caption-x:-50%}
 .farewell-heroic .farewell-epitaph{font-style:normal;font-size:clamp(23px,3.2vw,43px);color:#fff0d4}
 .farewell-heroic .farewell-byline{color:rgba(255,230,192,.7)}
 .farewell-hopeful .farewell-grade{background:linear-gradient(0deg,rgba(158,119,57,.08),rgba(255,239,202,.11) 56%,rgba(255,247,225,.17))}
 .farewell-hopeful .farewell-light{background:radial-gradient(ellipse at 50% 24%,rgba(255,246,217,.25),rgba(255,223,166,.1) 42%,transparent 74%)}
 .farewell-hopeful .farewell-haze{background:radial-gradient(ellipse at 50% 20%,rgba(255,242,208,.14),transparent 52%),radial-gradient(ellipse at 80% 72%,rgba(222,188,132,.07),transparent 46%)}
 .farewell-hopeful .farewell-particle{background:rgba(255,236,193,.65);animation-name:sceneDustUp}
-.farewell-hopeful .farewell-caption{left:50%;bottom:13%;width:min(760px,84vw);max-width:84vw;align-items:center;text-align:center;transform:translate(-50%,8px)}
+.farewell-hopeful .farewell-caption{left:50%;bottom:13%;width:min(760px,84vw);max-width:84vw;align-items:center;text-align:center;--caption-x:-50%}
 .farewell-hopeful .farewell-epitaph{font-style:normal;font-size:clamp(22px,2.8vw,37px);color:#fff6df}
 .farewell-tragic .farewell-grade{background:linear-gradient(115deg,rgba(47,18,22,.24),rgba(7,6,9,.3) 58%,rgba(54,17,22,.22))}
 .farewell-tragic .farewell-light{background:radial-gradient(ellipse at 58% 50%,rgba(159,83,76,.1),rgba(73,27,34,.04) 44%,transparent 72%)}
@@ -106,7 +106,7 @@
 @keyframes sceneDustUp{0%{opacity:0;transform:translate3d(0,18px,0)}20%,72%{opacity:.38}100%{opacity:0;transform:translate3d(var(--drift),-42px,0)}}
 @keyframes sceneEmber{0%{opacity:0;transform:translate3d(0,12px,0)}20%,65%{opacity:.45}100%{opacity:0;transform:translate3d(var(--drift),-54px,0)}}
 @keyframes sceneLetterbox{0%,7%{height:0}18%,89%{height:clamp(16px,2.4vh,28px)}100%{height:0}}
-@keyframes sceneCaption{0%{opacity:0;transform:translateY(8px);filter:blur(1.5px)}14%,88%{opacity:1;transform:translateY(0);filter:blur(0)}100%{opacity:0;transform:translateY(-4px);filter:blur(1px)}}
+@keyframes sceneCaption{0%{opacity:0;transform:translate(var(--caption-x),8px);filter:blur(1.5px)}14%,88%{opacity:1;transform:translate(var(--caption-x),0);filter:blur(0)}100%{opacity:0;transform:translate(var(--caption-x),-4px);filter:blur(1px)}}
 @keyframes revealExposure{0%,100%{opacity:.76}30%{opacity:.7}58%,90%{opacity:0}}
 @keyframes revealHaze{0%,100%{opacity:0;transform:scale(1.04)}34%{opacity:.18}62%,84%{opacity:.8;transform:scale(.99)}}
 @keyframes entranceExposure{0%{opacity:.88}28%{opacity:.82}58%,100%{opacity:0}}
