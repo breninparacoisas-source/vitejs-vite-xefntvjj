@@ -102,44 +102,61 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       originalViewport = { position, scale };
     }
     if (runId !== activeRun) return;
+
     const focus = payload.focusBounds;
     const context = payload.establishingBounds;
-    const detail = expandBounds(focus, 0.42);
     const close = expandBounds(focus, 0.72);
-    const portrait = expandBounds(focus, 1.05);
-    const medium = expandBounds(context, 0.9);
-    const wide = expandBounds(context, 1.65);
-    const veryWide = expandBounds(context, 2.35);
-    const empty = offsetBounds(expandBounds(context, 1.4), payload.kind === 'death' || payload.kind === 'sacrifice' ? 0.3 : -0.28, 0.08);
-    const displaced = offsetBounds(expandBounds(context, 1.05), 0.34, -0.08);
-    const duration = payload.durationMs;
-    const beat = (ratio: number, min: number) => Math.max(min, duration * ratio);
-    const move = async (bounds: Bounds, hold: number) => {
-      if (runId !== activeRun) return false;
-      await OBR.viewport.animateToBounds(bounds);
-      if (runId !== activeRun) return false;
-      await wait(hold);
-      return runId === activeRun;
-    };
-    const play = async (shots: Array<[Bounds, number]>) => {
-      for (const [bounds, hold] of shots) if (!await move(bounds, hold)) return false;
-      return true;
-    };
-    let shots: Array<[Bounds, number]>;
+    const intimate = expandBounds(focus, 0.92);
+    const medium = expandBounds(context, 0.92);
+    const wide = expandBounds(context, 1.42);
+    const veryWide = expandBounds(context, 1.85);
+
+    // Cada plano tem um instante previsto dentro da duração total.
+    // A câmera permanece no último enquadramento até o encerramento da sequência.
+    let shots: Array<{ bounds: Bounds; at: number }>;
     switch (payload.kind) {
-      case 'reveal': shots = [[veryWide, beat(.07,900)],[displaced,beat(.12,1200)],[close,beat(.18,1600)],[detail,beat(.12,1100)],[wide,beat(.12,1200)]]; break;
-      case 'entrance': shots = [[empty,beat(.12,1500)],[veryWide,beat(.08,900)],[portrait,beat(.17,1600)],[detail,beat(.13,1200)],[medium,beat(.1,1000)]]; break;
-      case 'sacrifice': shots = [[wide,beat(.09,1000)],[medium,beat(.1,1100)],[detail,beat(.2,1900)],[close,beat(.1,1100)],[empty,beat(.17,1500)]]; break;
-      case 'memory': shots = [[detail,beat(.12,1300)],[portrait,beat(.1,1100)],[veryWide,beat(.2,1900)],[medium,beat(.1,1000)],[close,beat(.14,1300)]]; break;
-      case 'death': shots = [[wide,beat(.08,900)],[medium,beat(.12,1300)],[portrait,beat(.12,1300)],[detail,beat(.2,1900)],[empty,beat(.18,1600)]]; break;
+      case 'reveal':
+        shots = [{ bounds: veryWide, at: .08 }, { bounds: medium, at: .29 }, { bounds: intimate, at: .56 }, { bounds: close, at: .76 }];
+        break;
+      case 'entrance':
+        shots = [{ bounds: wide, at: .08 }, { bounds: medium, at: .28 }, { bounds: close, at: .54 }, { bounds: intimate, at: .76 }];
+        break;
+      case 'sacrifice':
+        shots = [{ bounds: wide, at: .08 }, { bounds: intimate, at: .31 }, { bounds: close, at: .56 }, { bounds: medium, at: .76 }];
+        break;
+      case 'memory':
+        shots = [{ bounds: intimate, at: .08 }, { bounds: close, at: .29 }, { bounds: wide, at: .56 }, { bounds: medium, at: .76 }];
+        break;
+      case 'death':
+        shots = [{ bounds: wide, at: .08 }, { bounds: intimate, at: .3 }, { bounds: close, at: .57 }, { bounds: medium, at: .76 }];
+        break;
       default:
-        if (payload.style === 'melancholic') shots = [[wide,beat(.14,1400)],[medium,beat(.12,1200)],[close,beat(.22,2100)],[empty,beat(.16,1500)]];
-        else if (payload.style === 'heroic') shots = [[detail,beat(.08,900)],[portrait,beat(.12,1200)],[medium,beat(.14,1400)],[veryWide,beat(.2,1900)],[close,beat(.1,1000)]];
-        else if (payload.style === 'hopeful') shots = [[close,beat(.1,1000)],[portrait,beat(.12,1200)],[medium,beat(.14,1400)],[veryWide,beat(.2,1900)]];
-        else shots = [[veryWide,beat(.08,900)],[displaced,beat(.1,1000)],[portrait,beat(.12,1200)],[detail,beat(.2,1900)],[empty,beat(.16,1500)]];
+        if (payload.style === 'melancholic') {
+          shots = [{ bounds: wide, at: .08 }, { bounds: medium, at: .3 }, { bounds: intimate, at: .57 }, { bounds: medium, at: .76 }];
+        } else if (payload.style === 'heroic') {
+          shots = [{ bounds: close, at: .08 }, { bounds: intimate, at: .29 }, { bounds: medium, at: .55 }, { bounds: wide, at: .76 }];
+        } else if (payload.style === 'hopeful') {
+          shots = [{ bounds: intimate, at: .08 }, { bounds: medium, at: .3 }, { bounds: wide, at: .58 }, { bounds: veryWide, at: .78 }];
+        } else {
+          shots = [{ bounds: wide, at: .08 }, { bounds: medium, at: .3 }, { bounds: close, at: .56 }, { bounds: intimate, at: .76 }];
+        }
     }
-    if (!await play(shots)) return;
-    if (runId === activeRun && originalViewport) {
+
+    const startedAt = Date.now();
+    for (const shot of shots) {
+      if (runId !== activeRun) return;
+      await OBR.viewport.animateToBounds(shot.bounds);
+      if (runId !== activeRun) return;
+      const targetElapsed = payload.durationMs * shot.at;
+      const remaining = targetElapsed - (Date.now() - startedAt);
+      if (remaining > 0) await wait(remaining);
+    }
+
+    const remainingScene = payload.durationMs - (Date.now() - startedAt);
+    if (remainingScene > 0) await wait(remainingScene);
+    if (runId !== activeRun) return;
+
+    if (originalViewport) {
       const saved = originalViewport;
       await OBR.viewport.animateTo(saved);
       if (runId === activeRun) originalViewport = undefined;
@@ -147,8 +164,11 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
     if (runId === activeRun && originalViewport) {
-      try { await OBR.viewport.animateTo(originalViewport); } catch (restoreError) { console.error('Não foi possível restaurar a câmera:', restoreError); }
-      originalViewport = undefined;
+      const saved = originalViewport;
+      try { await OBR.viewport.animateTo(saved); } catch (restoreError) {
+        console.error('Não foi possível restaurar a câmera:', restoreError);
+      }
+      if (runId === activeRun) originalViewport = undefined;
     }
   }
 }
@@ -198,9 +218,8 @@ async function openScene(payload: CinematicPayload): Promise<void> {
 }
 
 async function resolveFocus(root: HTMLElement, mode: FocusMode): Promise<Bounds> {
-  const [viewportWidth, viewportHeight, scale, position] = await Promise.all([
-    OBR.viewport.getWidth(), OBR.viewport.getHeight(),
-    OBR.viewport.getScale(), OBR.viewport.getPosition(),
+  const [viewportWidth, viewportHeight, scale] = await Promise.all([
+    OBR.viewport.getWidth(), OBR.viewport.getHeight(), OBR.viewport.getScale(),
   ]);
   const worldWidth = viewportWidth / Math.max(scale, 0.05);
   const worldHeight = viewportHeight / Math.max(scale, 0.05);
@@ -222,12 +241,17 @@ async function resolveFocus(root: HTMLElement, mode: FocusMode): Promise<Bounds>
     return expandBounds(pointBounds, 1, worldWidth * 0.22, worldHeight * 0.22);
   }
 
+  // getPosition representa a transformação da câmera, não o centro visível.
+  // Convertemos o centro da tela para coordenadas do mapa.
+  const center = await OBR.viewport.inverseTransformPoint({
+    x: viewportWidth / 2,
+    y: viewportHeight / 2,
+  });
   const centerBounds: Bounds = {
-    min: position, max: position, width: 1, height: 1, center: position,
+    min: center, max: center, width: 1, height: 1, center,
   };
   return expandBounds(centerBounds, 1, worldWidth * 0.22, worldHeight * 0.22);
 }
-
 async function resolveEstablishingBounds(focusBounds: Bounds): Promise<Bounds> {
   const characters = await OBR.scene.items.getItems((item) =>
     item.visible && item.layer === 'CHARACTER'
@@ -437,7 +461,7 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
 
 export function renderCinematicOverlay(root: HTMLElement): void {
   const params = new URLSearchParams(window.location.search);
-  const character = escapeHtml((params.get('character') || 'Uma despedida').slice(0, 80));
+  const character = escapeHtml((params.get('character') || 'Uma lembrança').slice(0, 80));
   const epitaph = escapeHtml((params.get('epitaph') || '').slice(0, 240));
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
   const kind = isKind(params.get('kind')) ? params.get('kind') as CinematicKind : 'farewell';
@@ -449,14 +473,14 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   root.className = 'cinematic-overlay';
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;isolation:isolate!important;';
 
-  const particles = Array.from({ length: 44 }, (_, index) => {
-    const seed = (index * 37 + 13) % 101;
+  const particles = Array.from({ length: 18 }, (_, index) => {
+    const seed = (index * 43 + 17) % 97;
     const x = (seed * 7.31) % 100;
     const y = (seed * 13.17) % 100;
-    const delay = -((seed * 0.19) % 12);
-    const travel = 7 + (seed % 9);
-    const size = 1 + (seed % 4) * 0.55;
-    const drift = -34 + (seed % 69);
+    const delay = -((seed * 0.37) % 18);
+    const travel = 15 + (seed % 11);
+    const size = 0.8 + (seed % 3) * 0.35;
+    const drift = -18 + (seed % 37);
     return '<i class="farewell-particle" style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;--delay:' + delay.toFixed(2) + 's;--travel:' + travel.toFixed(1) + 's;--size:' + size.toFixed(1) + 'px;--drift:' + drift + 'px"></i>';
   }).join('');
 
@@ -464,18 +488,15 @@ export function renderCinematicOverlay(root: HTMLElement): void {
     '<main class="farewell-scene farewell-' + style + ' scene-' + kind + '" style="--farewell-duration:' + duration + 's;--farewell-intensity:' + intensity + '">',
     '<div class="farewell-blackout" aria-hidden="true"></div>',
     '<div class="farewell-grade" aria-hidden="true"></div>',
-    '<div class="farewell-vignette" aria-hidden="true"></div>',
-    '<div class="farewell-flash" aria-hidden="true"></div>',
     '<div class="farewell-light" aria-hidden="true"></div>',
     '<div class="farewell-haze" aria-hidden="true"></div>',
-    '<div class="farewell-light-leak" aria-hidden="true"></div>',
-    '<div class="farewell-grain" aria-hidden="true"></div>',
+    '<div class="farewell-vignette" aria-hidden="true"></div>',
     '<div class="farewell-particles" aria-hidden="true">' + particles + '</div>',
+    '<div class="farewell-grain" aria-hidden="true"></div>',
     '<div class="farewell-letterbox farewell-letterbox-top"></div>',
     '<div class="farewell-letterbox farewell-letterbox-bottom"></div>',
     '<div class="farewell-caption">',
-    epitaph ? '<p class="farewell-epitaph">“' + epitaph + '”</p>' : '',
-    '<h1 class="farewell-name">' + character + '</h1>',
+    epitaph ? '<p class="farewell-epitaph">' + epitaph + '</p><p class="farewell-byline">' + character + '</p>' : '<p class="farewell-epitaph">' + character + '</p>',
     '</div></main>',
   ].join('');
 }
