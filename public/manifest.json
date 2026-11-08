@@ -1,6 +1,6 @@
 {
   "name": "ARTON ENGINE",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "manifest_version": 1,
   "description": "Central de controle e imersão para campanhas de RPG.",
   "author": "ARTON ENGINE",
@@ -11,5 +11,11 @@
     "popover": "/",
     "width": 850,
     "height": 700
-  }
+  },
+  "permissions": [
+    {
+      "name": "autoplay",
+      "reason": "Permitir que jogadores ouçam os efeitos sonoros e trilhas enviados pelo Mestre no background persistente da extensão."
+    }
+  ]
 }
