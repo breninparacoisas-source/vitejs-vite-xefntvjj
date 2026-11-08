@@ -87,13 +87,6 @@ function unionBounds(a: Bounds, b: Bounds): Bounds {
   return { min, max, width, height, center: { x: min.x + width / 2, y: min.y + height / 2 } };
 }
 
-function offsetBounds(bounds: Bounds, xFactor: number, yFactor: number): Bounds {
-  const dx = bounds.width * xFactor;
-  const dy = bounds.height * yFactor;
-  const min = { x: bounds.min.x + dx, y: bounds.min.y + dy };
-  const max = { x: bounds.max.x + dx, y: bounds.max.y + dy };
-  return { min, max, width: bounds.width, height: bounds.height, center: { x: bounds.center.x + dx, y: bounds.center.y + dy } };
-}
 
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
   try {
