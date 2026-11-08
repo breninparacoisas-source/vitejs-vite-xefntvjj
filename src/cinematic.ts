@@ -40,6 +40,7 @@ const GRADE_PROFILES: Record<CinematicStyle, GradeProfile> = {
 
 const CINEMATIC_OVERLAY_SHADER = \`
 uniform vec2 size;
+uniform mat3 view;
 uniform float time;
 uniform float startTime;
 uniform float duration;
@@ -51,7 +52,8 @@ uniform float particles;
 uniform float grain;
 uniform float flash;
 half4 main(float2 coord) {
-  vec2 uv = coord / size;
+  vec2 screenCoord = (vec3(coord, 1.0) * view).xy;
+  vec2 uv = screenCoord / size;
   float phase = clamp((time - startTime) / duration, 0.0, 1.0);
   float envelope = smoothstep(0.0, 0.09, phase) * (1.0 - smoothstep(0.88, 1.0, phase));
   float edge = length((uv - vec2(0.5,0.5)) * vec2(1.0,0.86));
