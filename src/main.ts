@@ -3,6 +3,7 @@ import './style.css';
 import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
 import { bindAmbienceActions, initializeAmbienceBackground, initializeAmbiencePanel, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
+import { bindCinematicActions, initializeCinematicBackground, renderCinematicOverlay, renderCinematicPanel } from './cinematic';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -22,6 +23,10 @@ const pages = {
   ambience: {
     title: 'AMBIENCE',
     subtitle: 'Crie uma atmosfera contínua com efeitos visuais e paisagens sonoras.',
+  },
+  cinematic: {
+    title: 'CINEMÁTICO',
+    subtitle: 'Conduza momentos importantes da narrativa com ritmo e atmosfera.',
   },
   cenas: {
     title: 'Cenas',
@@ -140,6 +145,9 @@ function render() {
           <button data-page="ambience" class="${currentPage === 'ambience' ? 'active' : ''}">
             AMBIENCE
           </button>
+          <button data-page="cinematic" class="${currentPage === 'cinematic' ? 'active' : ''}">
+            CINEMÁTICO
+          </button>
           <button data-page="cenas" class="${currentPage === 'cenas' ? 'active' : ''}">
             <span class="nav-icon">◉</span> Cenas
           </button>
@@ -203,11 +211,13 @@ function render() {
   bindCentralActions();
   bindShowtimeActions(app!, connected, isGM);
   bindAmbienceActions(app!, connected, isGM);
+  bindCinematicActions(app!, connected, isGM);
 }
 
 function renderPage(): string {
   if (currentPage === 'eventos') return renderShowtimePanel(connected, isGM);
   if (currentPage === 'ambience') return renderAmbiencePanel(connected, isGM);
+  if (currentPage === 'cinematic') return renderCinematicPanel(connected, isGM);
 
   if (currentPage === 'central') {
     const active = session.active;
@@ -469,10 +479,11 @@ const runtimeParams = new URLSearchParams(window.location.search);
 const isShowtimeBackground = runtimeParams.get('background') === '1';
 const isShowtimeOverlay = runtimeParams.get('showtime') === '1';
 const isAmbienceOverlay = runtimeParams.get('ambience') === '1';
+const isCinematicOverlay = runtimeParams.get('cinematic') === '1';
 
 if (OBR.isAvailable && isShowtimeBackground) {
-  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); });
-} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay) {
+  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); initializeCinematicBackground(); });
+} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay && !isCinematicOverlay) {
   OBR.onReady(async () => {
     initializeAmbiencePanel();
     connected = true;
@@ -506,4 +517,5 @@ if (OBR.isAvailable && isShowtimeBackground) {
 
 if (isShowtimeOverlay) renderShowtimeOverlay(app!);
 else if (isAmbienceOverlay) renderAmbienceOverlay(app!);
+else if (isCinematicOverlay) renderCinematicOverlay(app!);
 else if (!isShowtimeBackground) render();
