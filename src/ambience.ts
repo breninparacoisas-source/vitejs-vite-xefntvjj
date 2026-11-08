@@ -8,7 +8,7 @@ const SFX_CHANNEL = 'com.arton.engine/soundboard/v1';
 
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; settings?: AmbienceSettings; createdAt: number };
-type SfxId = 'sword'|'impact'|'arrow'|'spell'|'portal'|'heal'|'roar'|'growl'|'thunder'|'explosion'|'door'|'footsteps';
+type SfxId = 'sword'|'impact'|'arrow'|'spell'|'portal'|'heal'|'roar'|'growl'|'thunder'|'explosion'|'door'|'footsteps'|'unlock';
 type SfxPayload = { version: 1; id: SfxId; createdAt: number };
 
 type AmbienceSettings = { intensity: number; brightness: number; motion: number };
@@ -91,6 +91,7 @@ async function openAmbience(preset: AmbiencePreset, settings: AmbienceSettings =
 }
 
 export function initializeAmbienceBackground(): void {
+  OBR.broadcast.onMessage(SFX_CHANNEL, (event) => receiveSfx(event.data));
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     if (activePreset !== event.data.preset && audio) stopAudio();
@@ -117,7 +118,6 @@ export function initializeAmbienceBackground(): void {
 }
 
 export function initializeAmbiencePanel(): void {
-  OBR.broadcast.onMessage(SFX_CHANNEL, (event) => receiveSfx(event.data));
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     activePreset = event.data.preset;
@@ -208,8 +208,9 @@ function playSfx(id: SfxId): void {
     case 'footsteps': [0,.38,.78].forEach((d,i)=>{tone(x,y,i===1?75:90,.18,.2,36,'sine',d);noiseBurst(x,y,.1,240,.13);}); break;
   }
 }
-function enableSfxAudio(): void {
+function enableSfxAudio(notifyBackground = true): void {
   if(!sfxContext||sfxContext.state==='closed'){sfxContext=new AudioContext();sfxMaster=sfxContext.createGain();sfxMaster.gain.value=sfxVolume;sfxMaster.connect(sfxContext.destination);}
+  if (notifyBackground) void OBR.broadcast.sendMessage(SFX_CHANNEL,{version:1,id:'unlock',createdAt:Date.now()},{destination:'LOCAL'}).catch(()=>{});
   void sfxContext.resume().then(()=>{
     sfxEnabled=sfxContext?.state==='running';
     const status=document.querySelector<HTMLElement>('#sfx-audio-status'), volume=document.querySelector<HTMLInputElement>('#sfx-volume'), button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
@@ -221,7 +222,9 @@ function enableSfxAudio(): void {
 function receiveSfx(value: unknown): void {
   if(!value||typeof value!=='object')return;
   const p=value as Partial<SfxPayload>;
-  if(p.version!==1||!SFX_IDS.includes(p.id as SfxId)||typeof p.createdAt!=='number'||Math.abs(Date.now()-p.createdAt)>12000)return;
+  if(p.version!==1||typeof p.id!=='string'||typeof p.createdAt!=='number'||Math.abs(Date.now()-p.createdAt)>12000)return;
+  if(p.id==='unlock'){enableSfxAudio(false);return;}
+  if(!SFX_IDS.includes(p.id as SfxId))return;
   playSfx(p.id as SfxId);
 }
 function bindSoundboard(root: HTMLElement, connected: boolean, isGM: boolean): void {
