@@ -11,7 +11,7 @@ type Point = { x: number; y: number };
 type Bounds = { min: Point; max: Point; width: number; height: number; center: Point };
 
 type CinematicPayload = {
-  version: 4;
+  version: 5;
   id: string;
   kind: CinematicKind;
   character: string;
@@ -55,7 +55,7 @@ function isBounds(value: unknown): value is Bounds {
 function validPayload(value: unknown): value is CinematicPayload {
   if (!value || typeof value !== 'object') return false;
   const data = value as Partial<CinematicPayload>;
-  return data.version === 4 && isKind(data.kind)
+  return data.version === 5 && isKind(data.kind)
     && typeof data.id === 'string'
     && typeof data.character === 'string'
     && typeof data.epitaph === 'string'
@@ -87,6 +87,14 @@ function unionBounds(a: Bounds, b: Bounds): Bounds {
   return { min, max, width, height, center: { x: min.x + width / 2, y: min.y + height / 2 } };
 }
 
+function offsetBounds(bounds: Bounds, xFactor: number, yFactor: number): Bounds {
+  const dx = bounds.width * xFactor;
+  const dy = bounds.height * yFactor;
+  const min = { x: bounds.min.x + dx, y: bounds.min.y + dy };
+  const max = { x: bounds.max.x + dx, y: bounds.max.y + dy };
+  return { min, max, width: bounds.width, height: bounds.height, center: { x: bounds.center.x + dx, y: bounds.center.y + dy } };
+}
+
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
   try {
     if (!originalViewport) {
@@ -94,72 +102,61 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       originalViewport = { position, scale };
     }
     if (runId !== activeRun) return;
-    const intimate = expandBounds(payload.focusBounds, 0.72);
-    const wide = expandBounds(payload.establishingBounds, 1.55);
-    const context = payload.establishingBounds;
-    const longHold = Math.max(1800, payload.durationMs * 0.42);
-    const shortHold = Math.max(900, payload.durationMs * 0.16);
-    const move = async (bounds: Bounds, hold = 0) => {
+
+    const focus = payload.focusBounds;
+    const group = payload.establishingBounds;
+    const intimate = expandBounds(focus, 0.56);
+    const close = expandBounds(focus, 0.88);
+    const medium = expandBounds(focus, 1.45);
+    const wide = expandBounds(group, 1.9);
+    const ensemble = expandBounds(unionBounds(group, focus), 1.18);
+    const emptySpace = offsetBounds(expandBounds(group, 1.45), payload.style === 'tragic' ? 0.18 : -0.12, 0.02);
+    const base = payload.durationMs;
+    const shortHold = Math.max(700, base * 0.075);
+    const mediumHold = Math.max(1200, base * 0.14);
+    const longHold = Math.max(2200, base * 0.27);
+
+    const move = async (bounds: Bounds, hold: number) => {
       if (runId !== activeRun) return false;
       await OBR.viewport.animateToBounds(bounds);
       if (runId !== activeRun) return false;
-      if (hold) await wait(hold);
+      await wait(hold);
       return runId === activeRun;
     };
 
-    switch (payload.kind) {
-      case 'reveal':
-        if (!await move(wide, shortHold)) return;
-        if (!await move(context, shortHold)) return;
-        if (!await move(payload.focusBounds, longHold)) return;
-        if (!await move(wide, shortHold)) return;
-        break;
-      case 'entrance':
-        if (!await move(wide, shortHold)) return;
-        if (!await move(intimate, longHold)) return;
-        if (!await move(context, shortHold)) return;
-        if (!await move(payload.focusBounds, shortHold)) return;
-        break;
-      case 'sacrifice':
-        if (!await move(context, shortHold)) return;
-        if (!await move(payload.focusBounds, shortHold)) return;
-        if (!await move(intimate, longHold)) return;
-        if (!await move(context, shortHold)) return;
-        break;
-      case 'memory':
-        if (!await move(payload.focusBounds, shortHold)) return;
-        if (!await move(wide, longHold)) return;
-        if (!await move(context, shortHold)) return;
-        break;
-      case 'death':
-        if (!await move(context, shortHold)) return;
-        if (!await move(payload.focusBounds, shortHold)) return;
-        if (!await move(intimate, longHold)) return;
-        if (!await move(wide, shortHold)) return;
-        break;
-      default:
-        if (payload.style === 'melancholic') {
-          if (!await move(context, shortHold)) return;
-          if (!await move(payload.focusBounds, longHold)) return;
-          if (!await move(wide, shortHold)) return;
-        } else if (payload.style === 'heroic') {
-          if (!await move(payload.focusBounds, shortHold)) return;
-          if (!await move(context, longHold)) return;
-          if (!await move(intimate, shortHold)) return;
-        } else if (payload.style === 'hopeful') {
-          if (!await move(context, shortHold)) return;
-          if (!await move(payload.focusBounds, shortHold)) return;
-          if (!await move(wide, longHold)) return;
-        } else {
-          if (!await move(context, shortHold)) return;
-          if (!await move(payload.focusBounds, shortHold)) return;
-          if (!await move(intimate, longHold)) return;
-          if (!await move(context, shortHold)) return;
-        }
+    const play = async (shots: Array<[Bounds, number]>) => {
+      for (const [bounds, hold] of shots) {
+        if (!await move(bounds, hold)) return false;
+      }
+      return true;
+    };
+
+    let shots: Array<[Bounds, number]>;
+    if (payload.kind === 'reveal') {
+      shots = [[wide, shortHold], [offsetBounds(ensemble, 0.12, 0), mediumHold], [close, longHold], [ensemble, mediumHold]];
+    } else if (payload.kind === 'entrance') {
+      shots = [[wide, mediumHold], [offsetBounds(medium, 0, 0.12), shortHold], [intimate, longHold], [medium, mediumHold]];
+    } else if (payload.kind === 'sacrifice') {
+      shots = [[ensemble, shortHold], [close, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
+    } else if (payload.kind === 'memory') {
+      shots = [[close, shortHold], [medium, mediumHold], [wide, longHold], [emptySpace, mediumHold]];
+    } else if (payload.kind === 'death') {
+      shots = [[wide, shortHold], [medium, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
+    } else if (payload.style === 'melancholic') {
+      shots = [[ensemble, mediumHold], [close, longHold], [emptySpace, mediumHold]];
+    } else if (payload.style === 'heroic') {
+      shots = [[intimate, shortHold], [medium, mediumHold], [wide, longHold], [close, mediumHold]];
+    } else if (payload.style === 'hopeful') {
+      shots = [[close, shortHold], [medium, mediumHold], [wide, longHold], [ensemble, mediumHold]];
+    } else {
+      shots = [[wide, shortHold], [close, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
     }
+
+    if (!await play(shots)) return;
     if (runId === activeRun && originalViewport) {
-      await OBR.viewport.animateTo(originalViewport);
-      originalViewport = undefined;
+      const saved = originalViewport;
+      await OBR.viewport.animateTo(saved);
+      if (runId === activeRun) originalViewport = undefined;
     }
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
@@ -171,7 +168,6 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
     }
   }
 }
-
 async function stopCinematic(): Promise<void> {
   activeRun += 1;
   if (closeTimer !== undefined) window.clearTimeout(closeTimer);
@@ -199,6 +195,7 @@ async function openScene(payload: CinematicPayload): Promise<void> {
   url.searchParams.set('style', payload.style);
   url.searchParams.set('intensity', String(payload.intensity));
   url.searchParams.set('duration', String(payload.durationMs / 1000));
+  url.searchParams.set('sceneIntensity', String(payload.intensity));
 
   try { await OBR.modal.close(MODAL_ID); } catch { /* Cena anterior inexistente. */ }
   await OBR.modal.open({
@@ -213,7 +210,7 @@ async function openScene(payload: CinematicPayload): Promise<void> {
       console.warn('Falha ao fechar a cena CINEMÁTICA:', error);
     }
     closeTimer = undefined;
-  }, payload.durationMs + 1800);
+  }, payload.durationMs + 9000);
 }
 
 async function resolveFocus(root: HTMLElement, mode: FocusMode): Promise<Bounds> {
@@ -359,7 +356,7 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
 
         <div class="cinematic-control-range">
           <label for="cinematic-intensity">INTENSIDADE DOS EFEITOS <output id="cinematic-intensity-value">24%</output></label>
-          <input id="cinematic-intensity" type="range" min="0.08" max="0.42" step="0.02" value="0.24">
+          <input id="cinematic-intensity" type="range" min="0.18" max="0.72" step="0.03" value="0.48">
           <small>Controla a intensidade da iluminação e das partículas sem cobrir o mapa.</small>
         </div>
         <div class="cinematic-control-range">
@@ -430,13 +427,13 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
       const focusBounds = await resolveFocus(root, focusMode);
       const establishingBounds = await resolveEstablishingBounds(focusBounds);
       const payload: CinematicPayload = {
-        version: 4,
+        version: 5,
         id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9),
         kind: (kindSelect?.value || 'farewell') as CinematicKind,
         character: character.slice(0, 80),
         epitaph: epitaph.slice(0, 240),
         style: (root.querySelector<HTMLSelectElement>('#cinematic-style')?.value || 'melancholic') as CinematicStyle,
-        intensity: Math.max(0.08, Math.min(0.42, Number(intensity?.value) || 0.24)),
+        intensity: Math.max(0.18, Math.min(0.72, Number(intensity?.value) || 0.48)),
         durationMs: Math.max(16, Math.min(40, Number(duration?.value) || 24)) * 1000,
         focusBounds,
         establishingBounds,
@@ -461,14 +458,14 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
   const kind = isKind(params.get('kind')) ? params.get('kind') as CinematicKind : 'farewell';
   const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24));
-  const intensity = Math.max(0.08, Math.min(0.42, Number(params.get('intensity')) || 0.24));
+  const intensity = Math.max(0.18, Math.min(0.72, Number(params.get('intensity')) || 0.48));
 
   document.documentElement.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.className = 'cinematic-overlay';
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;isolation:isolate!important;';
 
-  const particles = Array.from({ length: 26 }, (_, index) => {
+  const particles = Array.from({ length: 44 }, (_, index) => {
     const seed = (index * 37 + 13) % 101;
     const x = (seed * 7.31) % 100;
     const y = (seed * 13.17) % 100;
