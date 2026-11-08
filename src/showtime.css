@@ -104,3 +104,60 @@
 .showtime-prophecy .omen-fragment{z-index:35!important;display:block!important;visibility:visible!important;opacity:.72!important;animation:none!important}
 .omen-whisper-caption{z-index:60!important;display:block!important;visibility:visible!important}
 @keyframes echoVisibleFloat{0%,100%{transform:translate(-50%,-50%) scale(.96);filter:blur(1px)}50%{transform:translate(-50%,-50%) scale(1.04);filter:blur(0)}}
+
+
+/* SHOWTIME 0.4.2 — direção visual cinematográfica */
+.showtime-rupture{isolation:isolate}
+.rupture-vignette{position:absolute;inset:-10%;z-index:1;background:radial-gradient(ellipse at center,transparent 22%,rgba(3,2,7,.38) 72%,rgba(2,1,5,.82) 115%);animation:ruptureVignette 1.4s ease-out both}
+.rupture-atmosphere{position:absolute;inset:-30%;z-index:0;background:radial-gradient(ellipse at 50% 46%,rgba(190,65,83,calc(var(--rupture-intensity)*.23)),transparent 24%),radial-gradient(ellipse at 48% 48%,rgba(77,48,103,.23),transparent 52%);filter:blur(34px);animation:rupturePressure 5s ease-in-out infinite alternate}
+.rupture-tear{position:absolute;z-index:3;inset:-8% 0;width:100%;height:116%;display:grid;place-items:center;filter:drop-shadow(0 0 18px rgba(204,94,111,.25))}
+.rupture-tear svg{width:min(100vw,100vh);height:min(100vw,100vh);overflow:visible}
+.tear-shadow{fill:none;stroke:rgba(4,2,9,.92);stroke-width:27;stroke-linecap:round;stroke-linejoin:bevel;filter:blur(10px);stroke-dasharray:1600;stroke-dashoffset:1600;animation:tearOpen 1.2s cubic-bezier(.2,.7,.15,1) .15s forwards}
+.tear-core{fill:none;stroke:url(#tearGlow);stroke-width:5;stroke-linecap:round;stroke-linejoin:bevel;filter:drop-shadow(0 0 8px rgba(244,190,169,.9));stroke-dasharray:1600;stroke-dashoffset:1600;animation:tearOpen 1.2s cubic-bezier(.2,.7,.15,1) .15s forwards}
+.tear-branch{fill:none;stroke:rgba(220,151,158,.68);stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 7px rgba(194,98,122,.8));stroke-dasharray:600;stroke-dashoffset:600;animation:tearOpen .9s ease .65s forwards}
+.rupture-shards{position:absolute;z-index:4;inset:0;pointer-events:none}
+.rupture-shards i{position:absolute;display:block;width:clamp(30px,7vw,100px);height:clamp(55px,13vw,170px);background:linear-gradient(135deg,rgba(237,189,179,.32),rgba(111,65,103,.06) 58%,transparent);border:1px solid rgba(223,164,166,.28);clip-path:polygon(48% 0,100% 76%,58% 100%,0 29%);filter:drop-shadow(0 0 12px rgba(175,82,108,.35));animation:shardDrift 7s ease-in-out infinite alternate}
+.rupture-shards i:nth-child(1){top:13%;left:18%;transform:rotate(22deg);animation-delay:-1s}.rupture-shards i:nth-child(2){top:25%;right:16%;transform:rotate(76deg);animation-delay:-3s}.rupture-shards i:nth-child(3){bottom:15%;left:27%;transform:rotate(140deg);animation-delay:-2s}.rupture-shards i:nth-child(4){right:29%;bottom:18%;transform:rotate(210deg);animation-delay:-4s}.rupture-shards i:nth-child(5){top:43%;left:8%;transform:rotate(35deg);animation-delay:-5s}.rupture-shards i:nth-child(6){top:11%;right:34%;transform:rotate(170deg);animation-delay:-2.5s}
+.rupture-copy{z-index:8!important;bottom:clamp(35px,8vh,85px)!important;max-width:min(850px,88vw);margin:auto;padding:18px 24px;border-top:1px solid rgba(221,165,156,.32);background:linear-gradient(90deg,transparent,rgba(8,5,12,.52),transparent);animation:ruptureCopyIn 1s ease .55s both}
+.rupture-kicker{display:block;margin-bottom:12px;color:#d5a5a0;font:700 9px Arial,sans-serif;letter-spacing:.38em}
+.rupture-copy h1{font-family:Georgia,serif!important;font-size:clamp(26px,4.3vw,52px)!important;font-weight:400!important;letter-spacing:.025em;text-shadow:0 0 28px rgba(190,91,111,.45),0 3px 20px #000!important}
+.rupture-copy p{max-width:720px;margin:0 auto;color:#e4d2ce!important;font:italic clamp(14px,1.8vw,21px) Georgia,serif!important;line-height:1.6;text-shadow:0 2px 16px #000!important}
+@keyframes tearOpen{to{stroke-dashoffset:0}}
+@keyframes ruptureVignette{from{opacity:0}to{opacity:1}}
+@keyframes rupturePressure{from{transform:scale(.92);opacity:.45}to{transform:scale(1.12);opacity:1}}
+@keyframes shardDrift{from{translate:0 12px;opacity:.18}to{translate:0 -16px;opacity:.7}}
+@keyframes ruptureCopyIn{from{opacity:0;transform:translateY(18px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+
+/* Alucinação: sussurros com profundidade, deriva e falhas de presença */
+.showtime-hallucination .omen-atmosphere{background:radial-gradient(ellipse at 50% 50%,rgba(105,83,158,.12),transparent 50%),radial-gradient(ellipse at 10% 90%,rgba(90,42,93,.12),transparent 38%)}
+.showtime-hallucination .omen-whisper{max-width:min(38vw,440px);font-family:Georgia,serif;text-shadow:0 0 18px rgba(157,132,214,.55),0 2px 14px #000;animation:hallucinationGlitch var(--float-duration) ease-in-out var(--delay) infinite!important}
+@keyframes hallucinationGlitch{0%,100%{opacity:0;filter:blur(7px);transform:translate3d(0,12px,0) rotate(var(--rot)) scale(.92)}14%,31%{opacity:var(--whisper-alpha);filter:blur(0)}36%{opacity:.08;filter:blur(3px);transform:translate3d(calc(var(--dx)*.2),calc(var(--dy)*.2),0) rotate(calc(var(--rot)*-1)) scale(1.03)}42%,68%{opacity:var(--whisper-alpha)}76%{opacity:.18;filter:blur(5px)}}
+
+/* Ecos: propagação sequencial, como uma resposta atravessando o espaço */
+.showtime-echo .omen-echo{font-size:clamp(17px,2.5vw,31px);max-width:min(48vw,560px);text-shadow:0 0 24px rgba(153,132,204,.68),0 3px 15px #000;animation:echoPropagation var(--float-duration) ease-in-out var(--delay) infinite!important}
+@keyframes echoPropagation{0%,100%{opacity:0;filter:blur(8px);transform:translate(-50%,-50%) scale(.78)}18%,54%{opacity:var(--whisper-alpha);filter:blur(0);transform:translate(-50%,-50%) scale(1)}72%{opacity:.14;filter:blur(3px);transform:translate(-50%,-50%) scale(1.12)}}
+
+/* Profecia: uma visão composta, com versos revelados em sequência */
+.showtime-prophecy{background:radial-gradient(ellipse at center,rgba(105,78,151,.18),transparent 58%)}
+.showtime-prophecy .omen-atmosphere{background:radial-gradient(ellipse at center,rgba(177,151,214,.18),transparent 34%),radial-gradient(ellipse at 50% 100%,rgba(65,49,105,.2),transparent 55%);opacity:1}
+.prophecy-vision{position:absolute;z-index:45;inset:0;display:grid;place-items:center;padding:5vh 5vw;overflow:hidden}
+.prophecy-aura{position:absolute;width:min(78vw,78vh);aspect-ratio:1;border:1px solid rgba(205,184,232,.12);border-radius:50%;box-shadow:0 0 100px rgba(131,103,182,.12),inset 0 0 90px rgba(151,125,196,.08);animation:prophecyAura 12s ease-in-out infinite alternate}
+.prophecy-aura:before,.prophecy-aura:after{content:"";position:absolute;inset:8%;border:1px solid rgba(214,196,236,.1);border-radius:50%}
+.prophecy-aura:after{inset:17%;border-color:rgba(214,196,236,.08)}
+.prophecy-frame{position:relative;width:min(850px,90vw);max-height:88vh;overflow:visible;padding:clamp(24px,5vh,52px) clamp(22px,5vw,64px);text-align:center;border-top:1px solid rgba(218,198,237,.5);border-bottom:1px solid rgba(218,198,237,.34);background:linear-gradient(90deg,transparent,rgba(10,7,19,.55) 12%,rgba(10,7,19,.68) 50%,rgba(10,7,19,.55) 88%,transparent);box-shadow:0 0 75px rgba(101,77,147,.12);animation:prophecyFrameIn 1.1s ease both}
+.prophecy-frame:before,.prophecy-frame:after{content:"";position:absolute;left:50%;width:1px;height:clamp(18px,5vh,52px);background:linear-gradient(transparent,rgba(225,207,243,.72),transparent);transform:translateX(-50%)}
+.prophecy-frame:before{top:0;transform:translate(-50%,-100%)}.prophecy-frame:after{bottom:0;transform:translate(-50%,100%)}
+.prophecy-overline{display:block;color:#c9b6e1;font:700 9px Arial,sans-serif;letter-spacing:.42em;text-transform:uppercase;opacity:.82}
+.prophecy-frame h1{margin:17px 0 20px;color:#f0e8f8;font:400 clamp(23px,3.8vw,43px) Georgia,serif;line-height:1.2;text-shadow:0 0 35px rgba(183,155,222,.55),0 3px 16px #000}
+.prophecy-rule{width:clamp(80px,16vw,170px);height:1px;margin:0 auto 24px;background:linear-gradient(90deg,transparent,rgba(222,205,241,.8),transparent)}
+.prophecy-main{max-width:740px;margin:0 auto;color:#fff;font:italic clamp(21px,3.1vw,36px) Georgia,serif;line-height:1.45;text-shadow:0 0 26px rgba(182,154,220,.55),0 2px 16px #000;animation:prophecyTextIn 1.4s ease .35s both}
+.prophecy-verses{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.7vh,17px);margin:clamp(20px,3vh,34px) auto 0}
+.prophecy-verse{display:block;max-width:720px;color:rgba(220,207,237,.88);font:italic clamp(13px,1.8vw,20px) Georgia,serif;line-height:1.45;text-shadow:0 2px 12px #000;opacity:0;filter:blur(7px);animation:verseReveal .9s ease var(--verse-delay) forwards}
+.prophecy-verse:nth-child(odd){color:rgba(235,221,246,.94)}
+.prophecy-foot{display:block;margin-top:clamp(20px,3vh,34px);color:rgba(190,172,213,.55);font:700 8px Arial,sans-serif;letter-spacing:.3em;opacity:0;animation:verseReveal 1s ease 5.5s forwards}
+@keyframes prophecyAura{from{transform:scale(.94) rotate(-8deg);opacity:.45}to{transform:scale(1.04) rotate(8deg);opacity:1}}
+@keyframes prophecyFrameIn{from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(8px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes prophecyTextIn{from{opacity:0;filter:blur(16px);letter-spacing:.12em}to{opacity:1;filter:blur(0);letter-spacing:0}}
+@keyframes verseReveal{to{opacity:1;filter:blur(0)}}
+@media(max-width:650px){.prophecy-frame{padding:22px 16px}.prophecy-frame h1{margin:10px 0 14px}.prophecy-verses{gap:7px}.prophecy-verse{font-size:13px}.prophecy-foot{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.rupture-atmosphere,.rupture-vignette,.tear-shadow,.tear-core,.tear-branch,.rupture-shards i,.rupture-copy,.prophecy-aura,.prophecy-frame,.prophecy-main,.prophecy-verse,.prophecy-foot{animation:none!important;opacity:1!important;filter:none!important;stroke-dashoffset:0!important}.showtime-hallucination .omen-whisper,.showtime-echo .omen-echo{animation:none!important;opacity:var(--whisper-alpha)!important}}
