@@ -1,0 +1,57 @@
+/* AMBIENCE — camadas ambientais transparentes sobre o mapa */
+.ambience-intro{padding:34px 38px;margin-bottom:34px;border:1px solid var(--border-strong);border-radius:5px;background:radial-gradient(ellipse at 82% 30%,rgba(89,116,75,.18),transparent 45%),linear-gradient(110deg,#1c1d17,#191916)}
+.ambience-intro>div{max-width:720px}.ambience-eyebrow,.ambience-section-heading>div>span{color:var(--gold);font-size:9px;font-weight:700;letter-spacing:2px}
+.ambience-intro h3{margin:14px 0 10px;font:500 clamp(24px,3vw,34px) var(--heading);color:var(--text)}
+.ambience-intro p{max-width:680px;color:var(--muted);font-size:13px;line-height:1.8}
+.ambience-status{margin-top:22px;color:#a8b39a;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.ambience-section-heading{display:flex;justify-content:space-between;align-items:end;margin:30px 0 16px}
+.ambience-section-heading h3{margin:7px 0 0;font:500 21px var(--heading);color:var(--text)}
+.ambience-section-heading small{color:var(--muted);font-size:9px;letter-spacing:1px}
+.ambience-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.ambience-preset{min-width:0;min-height:220px;padding:0;overflow:hidden;text-align:left;background:#1b1b17;border:1px solid var(--border);border-radius:5px;color:var(--text);cursor:pointer;transition:border-color .2s,transform .2s}
+.ambience-preset:hover:not(:disabled){border-color:var(--gold-dim);transform:translateY(-2px)}
+.ambience-preset:disabled{opacity:.5;cursor:not-allowed}
+.ambience-preset-preview{display:block;height:112px;position:relative;overflow:hidden}
+.ambience-forest .ambience-preset-preview{background:radial-gradient(ellipse at 50% 120%,#8a9a6a 0,transparent 34%),linear-gradient(115deg,#101b18,#293c2e 48%,#101916)}
+.ambience-tavern .ambience-preset-preview{background:radial-gradient(ellipse at 68% 65%,rgba(239,159,68,.75),transparent 25%),linear-gradient(110deg,#241710,#68401f 55%,#1b1511)}
+.ambience-dungeon .ambience-preset-preview{background:radial-gradient(ellipse at 50% 75%,rgba(112,105,91,.25),transparent 35%),linear-gradient(110deg,#101114,#292b2b 55%,#111214)}
+.ambience-preset-preview:before,.ambience-preset-preview:after{content:"";position:absolute;inset:0;pointer-events:none}
+.ambience-forest .ambience-preset-preview:before{background:repeating-linear-gradient(102deg,transparent 0 18%,rgba(3,9,7,.8) 19% 22%,transparent 23% 34%);filter:blur(5px)}
+.ambience-tavern .ambience-preset-preview:before{background:radial-gradient(ellipse at 68% 70%,rgba(255,194,106,.4),transparent 28%);animation:ambienceFire 3s ease-in-out infinite alternate}
+.ambience-dungeon .ambience-preset-preview:before{background:repeating-linear-gradient(0deg,transparent 0 28px,rgba(0,0,0,.32) 29px 31px)}
+.ambience-preset-copy{display:block;padding:15px 16px 5px}
+.ambience-preset-copy strong{display:block;font:500 17px var(--heading)}
+.ambience-preset-copy small{display:block;margin-top:7px;min-height:34px;color:var(--muted);font-size:11px;line-height:1.5}
+.ambience-preset-action{display:block;padding:12px 16px;color:var(--gold-light);font-size:9px;font-weight:700;letter-spacing:1.4px}
+.ambience-controls-row{display:flex;align-items:center;gap:18px;margin-top:18px}
+.ambience-stop{padding:11px 15px;border:1px solid rgba(173,111,97,.38);border-radius:4px;background:transparent;color:#c68f81;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.ambience-stop:disabled{opacity:.45;cursor:not-allowed}
+.ambience-footnote{color:var(--muted);font-size:11px;line-height:1.5}
+.ambience-note{margin-top:36px;padding:20px 22px;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,.018)}
+.ambience-note h4{margin:0 0 10px;color:var(--gold-light);font:500 15px var(--heading)}
+.ambience-note p{margin:7px 0;color:var(--muted);font-size:11px;line-height:1.7}
+.ambience-overlay{position:fixed;inset:0;overflow:hidden;pointer-events:none;background:transparent}
+.ambience-atmosphere,.ambience-grain,.ambience-edge{position:absolute;inset:0;pointer-events:none}
+.ambience-overlay-forest .ambience-atmosphere{background:radial-gradient(ellipse at 48% 105%,rgba(91,130,81,.19),transparent 48%),linear-gradient(180deg,rgba(5,13,10,.12),transparent 35%,rgba(5,12,9,.22));animation:forestMist 15s ease-in-out infinite alternate}
+.ambience-overlay-tavern .ambience-atmosphere{background:radial-gradient(ellipse at 83% 88%,rgba(255,154,65,.22),transparent 34%),linear-gradient(180deg,rgba(47,25,12,.06),rgba(30,16,8,.12));animation:ambienceFire 4s ease-in-out infinite alternate}
+.ambience-overlay-dungeon .ambience-atmosphere{background:radial-gradient(ellipse at 50% 50%,transparent 22%,rgba(3,5,7,.35) 100%),linear-gradient(180deg,rgba(8,10,13,.12),rgba(0,0,0,.2));animation:dungeonBreath 10s ease-in-out infinite alternate}
+.ambience-overlay-forest .ambience-grain{background:repeating-linear-gradient(105deg,transparent 0 12%,rgba(177,196,164,.035) 12.2% 12.35%,transparent 12.6% 24%);filter:blur(7px);animation:forestDrift 28s linear infinite}
+.ambience-overlay-tavern .ambience-grain{background:radial-gradient(ellipse at 76% 80%,rgba(255,195,116,.12),transparent 24%);animation:ambienceFire 2.8s ease-in-out infinite alternate}
+.ambience-overlay-dungeon .ambience-grain{background:radial-gradient(ellipse at 25% 30%,rgba(171,179,187,.08),transparent 18%),radial-gradient(ellipse at 78% 75%,rgba(118,127,139,.06),transparent 22%);animation:dungeonBreath 8s ease-in-out infinite alternate}
+.ambience-edge{background:radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.22) 100%);opacity:.7}
+.ambience-audio-panel{position:absolute;z-index:5;left:22px;bottom:22px;width:min(290px,calc(100vw - 36px));padding:16px 18px;background:rgba(13,14,13,.88);border:1px solid rgba(198,165,104,.3);border-radius:5px;color:#e8e1d3;pointer-events:auto;backdrop-filter:blur(12px);box-shadow:0 8px 35px rgba(0,0,0,.3)}
+.ambience-audio-heading{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ambience-audio-heading strong{font:600 12px var(--heading);letter-spacing:1.3px;color:#e2c58b}
+.ambience-audio-heading span{font:700 8px Arial,sans-serif;letter-spacing:1.5px;color:#a6a08f}
+.ambience-audio-panel p{margin:10px 0 12px;color:#aaa495;font:11px/1.5 Arial,sans-serif}
+.ambience-audio-panel button{width:100%;padding:10px;border:1px solid rgba(198,165,104,.45);border-radius:3px;background:rgba(198,165,104,.12);color:#e2c58b;font:700 9px Arial,sans-serif;letter-spacing:1.2px;cursor:pointer}
+.ambience-audio-panel button:disabled{opacity:.5;cursor:not-allowed}
+.ambience-audio-panel label{display:flex;justify-content:space-between;margin:13px 0 6px;color:#aaa495;font:700 8px Arial,sans-serif;letter-spacing:1px}
+.ambience-audio-panel input{width:100%;accent-color:#c6a568}
+.ambience-audio-panel #ambience-audio-mute{margin-top:10px;background:transparent;border-color:rgba(198,165,104,.18);color:#b8b0a1}
+@keyframes forestMist{from{transform:translateX(-2%) scale(1);opacity:.55}to{transform:translateX(2%) scale(1.08);opacity:1}}
+@keyframes forestDrift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+@keyframes ambienceFire{from{filter:brightness(.82);opacity:.55}to{filter:brightness(1.18);opacity:1}}
+@keyframes dungeonBreath{from{transform:scale(.98);opacity:.55}to{transform:scale(1.04);opacity:1}}
+@media(max-width:760px){.ambience-presets{grid-template-columns:1fr}.ambience-preset{min-height:185px}.ambience-preset-preview{height:90px}.ambience-controls-row{align-items:flex-start;flex-direction:column}.ambience-section-heading small{display:none}.ambience-intro{padding:25px 22px}}
+@media(prefers-reduced-motion:reduce){.ambience-overlay *,.ambience-preset-preview:before{animation:none!important}}
