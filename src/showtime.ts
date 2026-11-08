@@ -147,7 +147,7 @@ async function fireEffect(
 
 async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
   try {
-    const images = await OBR.assets.downloadImages(false, '', 'ATTACHMENT');
+    const images = await OBR.assets.downloadImages(false, '');
     const chosen = images[0];
     if (!chosen) return;
 
