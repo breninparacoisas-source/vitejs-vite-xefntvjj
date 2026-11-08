@@ -1,4 +1,4 @@
-import OBR, { buildEffect } from '@owlbear-rodeo/sdk';
+import OBR from '@owlbear-rodeo/sdk';
 import type { ViewportTransform } from '@owlbear-rodeo/sdk';
 import './cinematic.css';
 
@@ -6,9 +6,11 @@ const CHANNEL = 'com.arton.engine/cinematic/v1';
 const MODAL_ID = 'com.arton.engine/cinematic/scene';
 type CinematicStyle = 'melancholic' | 'heroic' | 'hopeful' | 'tragic';
 type FocusMode = 'center' | 'selected' | 'custom';
+type Point = { x: number; y: number };
+type Bounds = { min: Point; max: Point; width: number; height: number; center: Point };
 
 type CinematicPayload = {
-  version: 2;
+  version: 3;
   id: string;
   kind: 'farewell';
   character: string;
@@ -16,13 +18,13 @@ type CinematicPayload = {
   style: CinematicStyle;
   intensity: number;
   durationMs: number;
-  focus: { x: number; y: number };
+  focusBounds: Bounds;
+  establishingBounds: Bounds;
   createdAt: number;
 };
 
 let closeTimer: number | undefined;
 let activeRun = 0;
-let activeEffectId: string | undefined;
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -36,68 +38,47 @@ function isStyle(value: unknown): value is CinematicStyle {
   return value === 'melancholic' || value === 'heroic' || value === 'hopeful' || value === 'tragic';
 }
 
+function isBounds(value: unknown): value is Bounds {
+  if (!value || typeof value !== 'object') return false;
+  const b = value as Bounds;
+  return !!b.min && !!b.max && !!b.center
+    && [b.min.x, b.min.y, b.max.x, b.max.y, b.width, b.height, b.center.x, b.center.y].every(Number.isFinite)
+    && b.width > 0 && b.height > 0;
+}
+
 function validPayload(value: unknown): value is CinematicPayload {
   if (!value || typeof value !== 'object') return false;
   const data = value as Partial<CinematicPayload>;
-  return data.version === 2 && data.kind === 'farewell'
+  return data.version === 3 && data.kind === 'farewell'
     && typeof data.id === 'string'
     && typeof data.character === 'string'
     && typeof data.epitaph === 'string'
     && isStyle(data.style)
     && typeof data.intensity === 'number' && Number.isFinite(data.intensity)
     && typeof data.durationMs === 'number' && Number.isFinite(data.durationMs)
-    && !!data.focus && Number.isFinite(data.focus.x) && Number.isFinite(data.focus.y)
+    && isBounds(data.focusBounds) && isBounds(data.establishingBounds)
     && typeof data.createdAt === 'number'
     && Date.now() - data.createdAt < 60_000 && data.createdAt <= Date.now() + 5_000;
 }
 
-function shaderForStyle(style: CinematicStyle, intensity: number) {
-  const tints: Record<CinematicStyle, { x: number; y: number; z: number }> = {
-    melancholic: { x: 0.24, y: 0.29, z: 0.38 },
-    heroic: { x: 0.46, y: 0.31, z: 0.12 },
-    hopeful: { x: 0.43, y: 0.39, z: 0.22 },
-    tragic: { x: 0.30, y: 0.08, z: 0.09 },
+function expandBounds(bounds: Bounds, factor: number, minimumWidth = 0, minimumHeight = 0): Bounds {
+  const width = Math.max(bounds.width * factor, minimumWidth);
+  const height = Math.max(bounds.height * factor, minimumHeight);
+  const halfW = width / 2;
+  const halfH = height / 2;
+  return {
+    min: { x: bounds.center.x - halfW, y: bounds.center.y - halfH },
+    max: { x: bounds.center.x + halfW, y: bounds.center.y + halfH },
+    width, height, center: bounds.center,
   };
-  const effect = buildEffect()
-    .name('ARTON ENGINE · CINEMÁTICO')
-    .effectType('VIEWPORT')
-    .sksl(`
-      uniform vec2 size;
-      uniform mat3 view;
-      uniform vec3 tint;
-      uniform float strength;
-      half4 main(float2 coord) {
-        vec2 viewCoord = (vec3(coord, 1) * view).xy;
-        vec2 p = viewCoord / size;
-        p = p * 2.0 - 1.0;
-        float edge = smoothstep(0.18, 1.25, length(p));
-        float veil = smoothstep(0.95, 0.18, length(p)) * 0.10;
-        float alpha = clamp(edge * strength * 0.36 + veil * strength, 0.0, 0.42);
-        return half4(tint, alpha);
-      }
-    `)
-    .uniforms([
-      { name: 'tint', value: tints[style] },
-      { name: 'strength', value: intensity },
-    ])
-    .locked(true)
-    .disableHit(true)
-    .build();
-  return effect;
 }
 
-async function applySceneEffect(payload: CinematicPayload, runId: number): Promise<void> {
-  try {
-    const effect = shaderForStyle(payload.style, payload.intensity);
-    activeEffectId = effect.id;
-    await OBR.scene.local.addItems([effect]);
-    if (runId !== activeRun) {
-      await OBR.scene.local.deleteItems([effect.id]).catch(() => undefined);
-    }
-  } catch (error) {
-    activeEffectId = undefined;
-    console.warn('Shader CINEMÁTICO indisponível nesta sessão; mantendo a direção de câmera e a composição:', error);
-  }
+function unionBounds(a: Bounds, b: Bounds): Bounds {
+  const min = { x: Math.min(a.min.x, b.min.x), y: Math.min(a.min.y, b.min.y) };
+  const max = { x: Math.max(a.max.x, b.max.x), y: Math.max(a.max.y, b.max.y) };
+  const width = Math.max(1, max.x - min.x);
+  const height = Math.max(1, max.y - min.y);
+  return { min, max, width, height, center: { x: min.x + width / 2, y: min.y + height / 2 } };
 }
 
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
@@ -107,35 +88,28 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
     original = { position, scale };
     if (runId !== activeRun) return;
 
-    const styleZoom: Record<CinematicStyle, number> = {
-      melancholic: 1.48, heroic: 1.62, hopeful: 1.42, tragic: 1.72,
-    };
-    const closeScale = Math.min(3.5, Math.max(0.15, scale * styleZoom[payload.style]));
-    const openingScale = Math.min(3.0, Math.max(0.15, scale * 1.12));
-
-    // A câmera primeiro abandona o enquadramento original e conduz o olhar ao foco.
-    await OBR.viewport.animateTo({ position: payload.focus, scale: openingScale });
+    // Ato I: plano de contexto. O enquadramento mostra o grupo e o espaço ao redor.
+    await OBR.viewport.animateToBounds(payload.establishingBounds);
     if (runId !== activeRun) return;
-    await wait(450);
-    await OBR.viewport.animateTo({ position: payload.focus, scale: closeScale });
+    await wait(1500);
+
+    // Ato II: aproximação. O alvo é enquadrado pelos limites reais dos itens, não por zoom arbitrário.
+    await OBR.viewport.animateToBounds(payload.focusBounds);
     if (runId !== activeRun) return;
 
-    const holdMs = Math.max(2500, payload.durationMs - 8500);
-    if (payload.style === 'tragic') {
-      await wait(Math.min(1200, holdMs * 0.18));
-      if (runId !== activeRun) return;
-      await OBR.viewport.animateTo({
-        position: { x: payload.focus.x + (original.position.x - payload.focus.x) * 0.08, y: payload.focus.y + (original.position.y - payload.focus.y) * 0.08 },
-        scale: closeScale * 0.96,
-      });
-      await wait(Math.max(0, holdMs - 1200));
-    } else {
-      await wait(holdMs);
-    }
+    // Ato III: permanência. O tempo de silêncio varia conforme o tom escolhido.
+    const revealHold = payload.style === 'tragic' ? 900 : payload.style === 'heroic' ? 1700 : 1300;
+    const focusHold = Math.max(1800, payload.durationMs - 6500 - revealHold);
+    await wait(focusHold);
     if (runId !== activeRun) return;
 
-    // O retorno usa o transform individual salvo no início, sem resetar a visão do jogador.
-    await OBR.viewport.animateTo(original);
+    // Ato IV: o que permanece. A câmera revela novamente o espaço e os companheiros.
+    await OBR.viewport.animateToBounds(payload.establishingBounds);
+    if (runId !== activeRun) return;
+    await wait(revealHold);
+
+    // Cada participante retorna exatamente ao enquadramento que tinha antes da cena.
+    if (runId === activeRun) await OBR.viewport.animateTo(original);
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
     if (original && runId === activeRun) {
@@ -143,17 +117,12 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
         console.error('Não foi possível restaurar a câmera:', restoreError);
       }
     }
-  } finally {
   }
 }
 
 async function openScene(payload: CinematicPayload): Promise<void> {
   const runId = ++activeRun;
   if (closeTimer !== undefined) window.clearTimeout(closeTimer);
-  if (activeEffectId) {
-    await OBR.scene.local.deleteItems([activeEffectId]).catch(() => undefined);
-    activeEffectId = undefined;
-  }
 
   const url = new URL('/', window.location.origin);
   url.searchParams.set('cinematic', '1');
@@ -170,42 +139,59 @@ async function openScene(payload: CinematicPayload): Promise<void> {
     hideBackdrop: true, hidePaper: true, disablePointerEvents: true,
   });
 
-  void applySceneEffect(payload, runId);
   void runCameraSequence(payload, runId);
-
   closeTimer = window.setTimeout(async () => {
     if (runId !== activeRun) return;
     try { await OBR.modal.close(MODAL_ID); } catch (error) {
       console.warn('Falha ao fechar a cena CINEMÁTICA:', error);
     }
-    if (activeEffectId) {
-      await OBR.scene.local.deleteItems([activeEffectId]).catch((error) => {
-        console.warn('Falha ao remover shader CINEMÁTICO:', error);
-      });
-      activeEffectId = undefined;
-    }
     closeTimer = undefined;
-  }, payload.durationMs + 500);
+  }, payload.durationMs + 1800);
 }
 
-async function resolveFocus(root: HTMLElement, mode: FocusMode): Promise<{ x: number; y: number }> {
+async function resolveFocus(root: HTMLElement, mode: FocusMode): Promise<Bounds> {
+  const [viewportWidth, viewportHeight, scale, position] = await Promise.all([
+    OBR.viewport.getWidth(), OBR.viewport.getHeight(),
+    OBR.viewport.getScale(), OBR.viewport.getPosition(),
+  ]);
+  const worldWidth = viewportWidth / Math.max(scale, 0.05);
+  const worldHeight = viewportHeight / Math.max(scale, 0.05);
+
+  if (mode === 'selected') {
+    const selection = await OBR.player.getSelection();
+    if (!selection?.length) throw new Error('Selecione o personagem ou objeto que será o foco da cena.');
+    const bounds = await OBR.scene.items.getItemBounds(selection);
+    return expandBounds(bounds as Bounds, 2.8, worldWidth * 0.16, worldHeight * 0.16);
+  }
+
   if (mode === 'custom') {
     const x = Number(root.querySelector<HTMLInputElement>('#cinematic-focus-x')?.value);
     const y = Number(root.querySelector<HTMLInputElement>('#cinematic-focus-y')?.value);
     if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('Informe coordenadas X e Y válidas.');
-    return { x, y };
-  }
-  if (mode === 'selected') {
-    const selection = await OBR.player.getSelection();
-    if (!selection?.length) throw new Error('Selecione ao menos um personagem ou objeto no mapa.');
-    const items = await OBR.scene.items.getItems(selection);
-    if (!items.length) throw new Error('Não encontrei os elementos selecionados na cena.');
-    return {
-      x: items.reduce((sum, item) => sum + item.position.x, 0) / items.length,
-      y: items.reduce((sum, item) => sum + item.position.y, 0) / items.length,
+    const pointBounds: Bounds = {
+      min: { x, y }, max: { x, y }, width: 1, height: 1, center: { x, y },
     };
+    return expandBounds(pointBounds, 1, worldWidth * 0.22, worldHeight * 0.22);
   }
-  return OBR.viewport.getPosition();
+
+  const centerBounds: Bounds = {
+    min: position, max: position, width: 1, height: 1, center: position,
+  };
+  return expandBounds(centerBounds, 1, worldWidth * 0.22, worldHeight * 0.22);
+}
+
+async function resolveEstablishingBounds(focusBounds: Bounds): Promise<Bounds> {
+  const characters = await OBR.scene.items.getItems((item) =>
+    item.visible && item.layer === 'CHARACTER'
+  );
+  if (!characters.length) return expandBounds(focusBounds, 2.1);
+
+  try {
+    const groupBounds = await OBR.scene.items.getItemBounds(characters.map((item) => item.id));
+    return expandBounds(unionBounds(groupBounds as Bounds, focusBounds), 1.35);
+  } catch {
+    return expandBounds(focusBounds, 2.1);
+  }
 }
 
 export function initializeCinematicBackground(): void {
@@ -224,34 +210,34 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
     ? 'Conecte a extensão a uma sala do Owlbear para conduzir a cena.'
     : !isGM
       ? 'Somente o mestre pode conduzir uma cena cinematográfica.'
-      : 'A câmera e o tratamento visual serão executados individualmente para cada participante.';
+      : 'O Owlbear enquadra os itens reais da cena. Cada jogador recupera sua própria visão ao final.';
 
   return `
     <section class="cinematic-welcome">
       <div class="cinematic-welcome-copy">
-        <span class="cinematic-kicker">DIREÇÃO DE CENA · SEQUÊNCIA 01</span>
-        <h3>O mapa também conta<br><em>o último adeus.</em></h3>
-        <p>Uma coreografia de câmera em quatro tempos: aproximação, foco, permanência e retorno. O enquadramento original de cada jogador é restaurado no encerramento.</p>
+        <span class="cinematic-kicker">DIREÇÃO DE CENA · SEQUÊNCIA 02</span>
+        <h3>Não é um efeito.<br><em>É um olhar dirigido.</em></h3>
+        <p>A câmera conta a despedida: primeiro revela o lugar e quem está presente, depois se aproxima do foco e, por fim, mostra o que permanece.</p>
       </div>
       <div class="cinematic-preview" aria-hidden="true">
         <div class="cinematic-preview-light"></div>
         <div class="cinematic-preview-horizon"></div>
-        <div class="cinematic-preview-caption">O ÚLTIMO ADEUS</div>
+        <div class="cinematic-preview-caption">O QUE PERMANECE</div>
       </div>
     </section>
 
     <div class="cinematic-editor-heading">
       <div><span>01 / DESPEDIDA</span><h3>Dirigir a cena</h3></div>
-      <small>CÂMERA · ATMOSFERA · RITMO</small>
+      <small>PLANO DE CONTEXTO · FOCO · PLANO FINAL</small>
     </div>
 
     <section class="cinematic-editor cinematic-editor-v2">
       <div class="cinematic-editor-description">
         <div class="cinematic-act-list">
-          <div><span>ATO I · APROXIMAÇÃO</span><strong>O mundo se recolhe</strong><p>A câmera deixa o enquadramento atual e conduz o olhar ao ponto escolhido.</p></div>
-          <div><span>ATO II · FOCO</span><strong>O instante permanece</strong><p>O enquadramento fecha no personagem; a atmosfera é aplicada diretamente à viewport.</p></div>
-          <div><span>ATO III · DESPEDIDA</span><strong>O significado da perda</strong><p>O tratamento visual muda conforme o tom emocional da cena.</p></div>
-          <div><span>ATO IV · RETORNO</span><strong>O mundo continua</strong><p>Câmera, shader e composição são retirados ao final.</p></div>
+          <div><span>ATO I · O LUGAR</span><strong>Antes da última palavra</strong><p>A câmera abre no grupo de personagens visíveis, preservando o espaço que compartilham.</p></div>
+          <div><span>ATO II · O FOCO</span><strong>O mundo se estreita</strong><p>O enquadramento se aproxima dos limites reais do personagem, objeto ou ponto escolhido.</p></div>
+          <div><span>ATO III · O INSTANTE</span><strong>Deixe a cena respirar</strong><p>O tempo de permanência sustenta a emoção. O texto aparece discretamente, sem cobrir o mapa.</p></div>
+          <div><span>ATO IV · O QUE FICA</span><strong>A ausência ocupa o espaço</strong><p>A câmera recua para revelar novamente o grupo e então devolve a visão original de cada jogador.</p></div>
         </div>
       </div>
       <div class="cinematic-controls">
@@ -263,16 +249,16 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
 
         <label for="cinematic-style">TOM DA DESPEDIDA</label>
         <select id="cinematic-style">
-          <option value="melancholic">Melancólica — perda, silêncio e luz fria</option>
-          <option value="heroic">Heroica — sacrifício e encerramento grandioso</option>
+          <option value="melancholic">Melancólica — perda e silêncio</option>
+          <option value="heroic">Heroica — sacrifício e legado</option>
           <option value="hopeful">Esperançosa — partida e continuidade</option>
-          <option value="tragic">Trágica — tensão e ruptura abrupta</option>
+          <option value="tragic">Trágica — ruptura e vazio</option>
         </select>
 
-        <label for="cinematic-focus">PONTO FOCAL DA CÂMERA</label>
+        <label for="cinematic-focus">FOCO DA CÂMERA</label>
         <select id="cinematic-focus">
-          <option value="center">Centro da visão atual</option>
           <option value="selected">Personagem / objeto selecionado</option>
+          <option value="center">Centro da visão atual</option>
           <option value="custom">Coordenadas no mapa</option>
         </select>
         <div class="cinematic-coordinate-fields">
@@ -281,20 +267,20 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         </div>
 
         <div class="cinematic-control-range">
-          <label for="cinematic-intensity">INTENSIDADE <output id="cinematic-intensity-value">65%</output></label>
-          <input id="cinematic-intensity" type="range" min="0.25" max="0.85" step="0.05" value="0.65">
-          <small>Controla a presença do tratamento gráfico na viewport.</small>
+          <label for="cinematic-intensity">VINHETA <output id="cinematic-intensity-value">24%</output></label>
+          <input id="cinematic-intensity" type="range" min="0.08" max="0.42" step="0.02" value="0.24">
+          <small>Tratamento discreto nas bordas. O mapa continua sendo o protagonista.</small>
         </div>
         <div class="cinematic-control-range">
           <label for="cinematic-duration">DURAÇÃO <output id="cinematic-duration-value">24 s</output></label>
           <input id="cinematic-duration" type="range" min="16" max="40" step="1" value="24">
-          <small>Inclui aproximação, permanência e retorno da câmera.</small>
+          <small>Controla o tempo de permanência entre a aproximação e o plano final.</small>
         </div>
         <button class="cinematic-launch" data-cinematic-launch="farewell" ${disabled}>INICIAR DESPEDIDA</button>
         <p class="cinematic-status">${status}</p>
       </div>
     </section>
-    <p class="cinematic-footnote">A câmera é controlada localmente em cada cliente. Nenhum token ou dado da campanha é alterado.</p>
+    <p class="cinematic-footnote">A coreografia usa os limites dos itens existentes na cena. Nenhum token ou dado da campanha é alterado.</p>
   `;
 }
 
@@ -333,18 +319,20 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
     const button = root.querySelector<HTMLButtonElement>('[data-cinematic-launch="farewell"]');
     if (button) button.disabled = true;
     try {
-      const focusMode = (focusSelect?.value || 'center') as FocusMode;
-      const focus = await resolveFocus(root, focusMode);
+      const focusMode = (focusSelect?.value || 'selected') as FocusMode;
+      const focusBounds = await resolveFocus(root, focusMode);
+      const establishingBounds = await resolveEstablishingBounds(focusBounds);
       const payload: CinematicPayload = {
-        version: 2,
+        version: 3,
         id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9),
         kind: 'farewell',
         character: character.slice(0, 80),
         epitaph: epitaph.slice(0, 240),
         style: (root.querySelector<HTMLSelectElement>('#cinematic-style')?.value || 'melancholic') as CinematicStyle,
-        intensity: Math.max(0.25, Math.min(0.85, Number(intensity?.value) || 0.65)),
+        intensity: Math.max(0.08, Math.min(0.42, Number(intensity?.value) || 0.24)),
         durationMs: Math.max(16, Math.min(40, Number(duration?.value) || 24)) * 1000,
-        focus,
+        focusBounds,
+        establishingBounds,
         createdAt: Date.now(),
       };
       await openScene(payload);
@@ -364,7 +352,7 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const character = escapeHtml((params.get('character') || 'Uma despedida').slice(0, 80));
   const epitaph = escapeHtml((params.get('epitaph') || '').slice(0, 240));
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
-  const intensity = Math.max(0.25, Math.min(0.85, Number(params.get('intensity')) || 0.65));
+  const intensity = Math.max(0.08, Math.min(0.42, Number(params.get('intensity')) || 0.24));
   const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24)) / 1000;
 
   document.documentElement.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
@@ -374,9 +362,6 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
   root.innerHTML = `
     <main class="farewell-scene farewell-${style}" style="--farewell-intensity:${intensity};--farewell-duration:${duration}s">
-      <div class="farewell-camera">
-        <div class="farewell-light-beam"></div><div class="farewell-haze"></div><div class="farewell-horizon"></div>
-      </div>
       <div class="farewell-vignette"></div>
       <div class="farewell-caption">
         <span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>
@@ -384,7 +369,6 @@ export function renderCinematicOverlay(root: HTMLElement): void {
         ${epitaph ? '<p>' + epitaph + '</p>' : ''}
         <span class="farewell-rule"></span>
       </div>
-      <div class="farewell-progress"></div>
     </main>
   `;
 }
