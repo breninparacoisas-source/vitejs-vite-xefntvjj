@@ -53,6 +53,8 @@ async function openAmbience(preset: AmbiencePreset): Promise<void> {
 export function initializeAmbienceBackground(): void {
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
+    if (activePreset !== event.data.preset && audio) stopAudio();
+    if (activePreset !== event.data.preset && audio) stopAudio();
     activePreset = event.data.preset;
     if (activePreset === 'off') stopAudio();
     refreshAudioPanel();
@@ -164,6 +166,7 @@ export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM:
       void (async () => {
         const payload: AmbiencePayload = { version: 1, preset, createdAt: Date.now() };
         try {
+          if (activePreset !== preset && audio) stopAudio();
           activePreset = preset;
           if (preset === 'off') { stopAudio(); await openAmbience('off'); }
           else await openAmbience(preset);
