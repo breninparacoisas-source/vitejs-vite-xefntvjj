@@ -5,7 +5,7 @@ const CHANNEL = 'com.arton.engine/ambience/v1';
 const MODAL_ID = 'com.arton.engine/ambience/overlay';
 const METADATA_KEY = 'com.arton.engine/ambience';
 
-export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'off';
+export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number };
 
 let activePreset: AmbiencePreset = 'off';
@@ -16,7 +16,7 @@ function refreshAudioPanel(): void {
   const volume = document.querySelector<HTMLInputElement>('#ambience-volume');
   const mute = document.querySelector<HTMLButtonElement>('#ambience-audio-mute');
   if (!enable || !status || !volume || !mute) return;
-  const available = ['forest', 'tavern', 'dungeon'].includes(activePreset);
+  const available = ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'].includes(activePreset);
   enable.disabled = !available || Boolean(audio);
   enable.textContent = audio ? 'ÁUDIO ATIVO' : 'ATIVAR ÁUDIO';
   volume.disabled = !audio;
@@ -30,7 +30,7 @@ function validPayload(value: unknown): value is AmbiencePayload {
   if (!value || typeof value !== 'object') return false;
   const data = value as Partial<AmbiencePayload>;
   return data.version === 1
-    && ['forest', 'tavern', 'dungeon', 'off'].includes(data.preset || '')
+    && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(data.preset || '')
     && typeof data.createdAt === 'number'
     && Date.now() - data.createdAt < 120_000
     && data.createdAt <= Date.now() + 5_000;
@@ -59,7 +59,6 @@ export function initializeAmbienceBackground(): void {
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     if (activePreset !== event.data.preset && audio) stopAudio();
-    if (activePreset !== event.data.preset && audio) stopAudio();
     activePreset = event.data.preset;
     if (activePreset === 'off') stopAudio();
     refreshAudioPanel();
@@ -69,7 +68,7 @@ export function initializeAmbienceBackground(): void {
   });
   void OBR.room.getMetadata().then((metadata) => {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
-    if (saved && ['forest', 'tavern', 'dungeon', 'off'].includes(saved.preset || '')) {
+    if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
       refreshAudioPanel();
       if (activePreset === 'off') return openAmbience('off');
@@ -89,7 +88,7 @@ export function initializeAmbiencePanel(): void {
   });
   void OBR.room.getMetadata().then((metadata) => {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
-    if (saved && ['forest', 'tavern', 'dungeon', 'off'].includes(saved.preset || '')) {
+    if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
       if (activePreset === 'off') stopAudio();
       refreshAudioPanel();
@@ -108,6 +107,14 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     { id: 'forest', title: 'Floresta', description: 'Vento entre as árvores, insetos e vida distante.' },
     { id: 'tavern', title: 'Taverna', description: 'Calor de lareira, crepitar de madeira e murmúrio acolhedor.' },
     { id: 'dungeon', title: 'Masmorra', description: 'Ressonância subterrânea, correntes de ar e tensão grave.' },
+    { id: 'city', title: 'Cidade', description: 'Movimento distante, vozes indistintas e o ruído das ruas.' },
+    { id: 'storm', title: 'Tempestade', description: 'Chuva intensa, vento forte e trovões ao longe.' },
+    { id: 'desert', title: 'Deserto', description: 'Vento seco, areia em movimento e vastidão silenciosa.' },
+    { id: 'snow', title: 'Nevasca', description: 'Rajadas geladas, vento cortante e um silêncio amplo.' },
+    { id: 'swamp', title: 'Pântano', description: 'Insetos, água parada e bolhas sob a vegetação.' },
+    { id: 'coast', title: 'Litoral', description: 'Ondas ritmadas, brisa marítima e espuma na areia.' },
+    { id: 'battlefield', title: 'Campo de batalha', description: 'Tensão distante, impactos abafados e ecos de guerra.' },
+    { id: 'abyss', title: 'Abismo', description: 'Pressão profunda, frequências dissonantes e vazio.' },
   ];
   return [
     '<section class="ambience-intro"><div><span class="ambience-eyebrow">ATMOSFERA CONTÍNUA</span><h3>O cenário também pode ser sentido.</h3><p>Escolha um ambiente para transformar a atmosfera da mesa. A camada visual fica sobre o mapa sem bloquear os comandos, enquanto cada jogador controla o próprio áudio.</p><div class="ambience-status">AMBIENTE COMPARTILHADO · ÁUDIO INDIVIDUAL</div></div></section>',
@@ -130,7 +137,7 @@ function bindLocalAudioControls(root: HTMLElement): void {
   if (!enable || !volume || !value || !status || !mute) return;
 
   enable.addEventListener('click', async () => {
-    if (!['forest', 'tavern', 'dungeon'].includes(activePreset)) {
+    if (!['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'].includes(activePreset)) {
       status.textContent = 'O mestre ainda não escolheu um ambiente.';
       return;
     }
@@ -153,7 +160,7 @@ function bindLocalAudioControls(root: HTMLElement): void {
   });
   mute.addEventListener('click', () => {
     stopAudio();
-    enable.disabled = !['forest', 'tavern', 'dungeon'].includes(activePreset);
+    enable.disabled = !['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'].includes(activePreset);
     enable.textContent = 'ATIVAR ÁUDIO';
     volume.disabled = true;
     mute.disabled = true;
@@ -167,7 +174,7 @@ export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM:
     button.addEventListener('click', () => {
       if (!connected || !isGM) return;
       const preset = button.dataset.ambience as AmbiencePreset;
-      if (!['forest', 'tavern', 'dungeon', 'off'].includes(preset)) return;
+      if (!['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(preset)) return;
       void (async () => {
         const payload: AmbiencePayload = { version: 1, preset, createdAt: Date.now() };
         try {
@@ -280,13 +287,126 @@ function startAudio(preset: AmbiencePreset, volume: number): void {
     airGain.gain.value = 0.045;
     airNoise.start();
     audio.sources.push(airNoise, air, airGain);
+  } else if (preset === 'city') {
+    filter.type = 'bandpass'; filter.frequency.value = 520; filter.Q.value = 0.45;
+    noiseGain.gain.value = 0.11;
+    addDrone(context, master, 118, 0.008, 'triangle');
+    const murmur = () => {
+      if (!audio || audio.context !== context) return;
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      const band = context.createBiquadFilter();
+      band.type = 'bandpass'; band.frequency.value = 280 + Math.random() * 700; band.Q.value = 0.8;
+      osc.type = 'sawtooth'; osc.frequency.value = 65 + Math.random() * 45;
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.006 + Math.random() * 0.006, context.currentTime + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.8);
+      osc.connect(band).connect(gain).connect(master);
+      osc.start(); osc.stop(context.currentTime + 1.9);
+    };
+    audio.timers.push(window.setInterval(murmur, 900));
+  } else if (preset === 'storm') {
+    filter.type = 'highpass'; filter.frequency.value = 850;
+    noiseGain.gain.value = 0.17;
+    addDrone(context, master, 42, 0.025);
+    const thunder = () => {
+      if (!audio || audio.context !== context) return;
+      const rumble = context.createOscillator();
+      const gain = context.createGain();
+      const low = context.createBiquadFilter();
+      low.type = 'lowpass'; low.frequency.value = 110;
+      rumble.type = 'triangle'; rumble.frequency.value = 38 + Math.random() * 24;
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.055, context.currentTime + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 2.8);
+      rumble.connect(low).connect(gain).connect(master);
+      rumble.start(); rumble.stop(context.currentTime + 2.9);
+    };
+    audio.timers.push(window.setInterval(thunder, 7200 + Math.random() * 5000));
+  } else if (preset === 'desert') {
+    filter.type = 'lowpass'; filter.frequency.value = 460;
+    noiseGain.gain.value = 0.16;
+    addDrone(context, master, 64, 0.012, 'triangle');
+    const sweep = context.createOscillator();
+    const sweepGain = context.createGain();
+    sweep.type = 'sine'; sweep.frequency.value = 0.07;
+    sweepGain.gain.value = 120;
+    sweep.connect(sweepGain).connect(filter.frequency);
+    sweep.start();
+    audio.sources.push(sweep, sweepGain);
+  } else if (preset === 'snow') {
+    filter.type = 'highpass'; filter.frequency.value = 1250;
+    noiseGain.gain.value = 0.12;
+    addDrone(context, master, 156, 0.009);
+    const gust = context.createOscillator();
+    const gustGain = context.createGain();
+    gust.frequency.value = 0.035; gustGain.gain.value = 0.07;
+    gust.connect(gustGain).connect(noiseGain.gain);
+    gust.start();
+    audio.sources.push(gust, gustGain);
+  } else if (preset === 'swamp') {
+    filter.type = 'lowpass'; filter.frequency.value = 1050;
+    noiseGain.gain.value = 0.09;
+    addDrone(context, master, 55, 0.018);
+    const bubble = () => {
+      if (!audio || audio.context !== context) return;
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(95 + Math.random() * 90, context.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(38 + Math.random() * 25, context.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.025, context.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
+      osc.connect(gain).connect(master);
+      osc.start(); osc.stop(context.currentTime + 0.42);
+    };
+    audio.timers.push(window.setInterval(bubble, 1100 + Math.random() * 700));
+  } else if (preset === 'coast') {
+    filter.type = 'lowpass'; filter.frequency.value = 680;
+    noiseGain.gain.value = 0.035;
+    const waves = context.createOscillator();
+    const waveGain = context.createGain();
+    waves.frequency.value = 0.075; waveGain.gain.value = 0.13;
+    waves.connect(waveGain).connect(noiseGain.gain);
+    waves.start();
+    audio.sources.push(waves, waveGain);
+    addDrone(context, master, 82, 0.006);
+  } else if (preset === 'battlefield') {
+    filter.type = 'lowpass'; filter.frequency.value = 300;
+    noiseGain.gain.value = 0.14;
+    addDrone(context, master, 46, 0.025);
+    const impact = () => {
+      if (!audio || audio.context !== context) return;
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(100 + Math.random() * 60, context.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(35, context.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.65);
+      osc.connect(gain).connect(master);
+      osc.start(); osc.stop(context.currentTime + 0.7);
+    };
+    audio.timers.push(window.setInterval(impact, 2400 + Math.random() * 1800));
+  } else if (preset === 'abyss') {
+    filter.type = 'lowpass'; filter.frequency.value = 150;
+    noiseGain.gain.value = 0.055;
+    addDrone(context, master, 31, 0.035);
+    addDrone(context, master, 46.2, 0.018, 'triangle');
+    addDrone(context, master, 69.3, 0.008, 'sawtooth');
+    const pulse = context.createOscillator();
+    const pulseGain = context.createGain();
+    pulse.frequency.value = 0.045; pulseGain.gain.value = 0.035;
+    pulse.connect(pulseGain).connect(master.gain);
+    pulse.start();
+    audio.sources.push(pulse, pulseGain);
   }
 }
 
 export function renderAmbienceOverlay(root: HTMLElement): void {
   const params = new URLSearchParams(window.location.search);
   const preset = params.get('preset') as AmbiencePreset;
-  if (!['forest', 'tavern', 'dungeon'].includes(preset)) return;
+  if (!['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'].includes(preset)) return;
 
   document.documentElement.style.background = 'transparent';
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
