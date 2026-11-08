@@ -102,20 +102,18 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       originalViewport = { position, scale };
     }
     if (runId !== activeRun) return;
-
     const focus = payload.focusBounds;
-    const group = payload.establishingBounds;
-    const intimate = expandBounds(focus, 0.56);
-    const close = expandBounds(focus, 0.88);
-    const medium = expandBounds(focus, 1.45);
-    const wide = expandBounds(group, 1.9);
-    const ensemble = expandBounds(unionBounds(group, focus), 1.18);
-    const emptySpace = offsetBounds(expandBounds(group, 1.45), payload.style === 'tragic' ? 0.18 : -0.12, 0.02);
-    const base = payload.durationMs;
-    const shortHold = Math.max(700, base * 0.075);
-    const mediumHold = Math.max(1200, base * 0.14);
-    const longHold = Math.max(2200, base * 0.27);
-
+    const context = payload.establishingBounds;
+    const detail = expandBounds(focus, 0.42);
+    const close = expandBounds(focus, 0.72);
+    const portrait = expandBounds(focus, 1.05);
+    const medium = expandBounds(context, 0.9);
+    const wide = expandBounds(context, 1.65);
+    const veryWide = expandBounds(context, 2.35);
+    const empty = offsetBounds(expandBounds(context, 1.4), payload.kind === 'death' || payload.kind === 'sacrifice' ? 0.3 : -0.28, 0.08);
+    const displaced = offsetBounds(expandBounds(context, 1.05), 0.34, -0.08);
+    const duration = payload.durationMs;
+    const beat = (ratio: number, min: number) => Math.max(min, duration * ratio);
     const move = async (bounds: Bounds, hold: number) => {
       if (runId !== activeRun) return false;
       await OBR.viewport.animateToBounds(bounds);
@@ -123,35 +121,23 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       await wait(hold);
       return runId === activeRun;
     };
-
     const play = async (shots: Array<[Bounds, number]>) => {
-      for (const [bounds, hold] of shots) {
-        if (!await move(bounds, hold)) return false;
-      }
+      for (const [bounds, hold] of shots) if (!await move(bounds, hold)) return false;
       return true;
     };
-
     let shots: Array<[Bounds, number]>;
-    if (payload.kind === 'reveal') {
-      shots = [[wide, shortHold], [offsetBounds(ensemble, 0.12, 0), mediumHold], [close, longHold], [ensemble, mediumHold]];
-    } else if (payload.kind === 'entrance') {
-      shots = [[wide, mediumHold], [offsetBounds(medium, 0, 0.12), shortHold], [intimate, longHold], [medium, mediumHold]];
-    } else if (payload.kind === 'sacrifice') {
-      shots = [[ensemble, shortHold], [close, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
-    } else if (payload.kind === 'memory') {
-      shots = [[close, shortHold], [medium, mediumHold], [wide, longHold], [emptySpace, mediumHold]];
-    } else if (payload.kind === 'death') {
-      shots = [[wide, shortHold], [medium, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
-    } else if (payload.style === 'melancholic') {
-      shots = [[ensemble, mediumHold], [close, longHold], [emptySpace, mediumHold]];
-    } else if (payload.style === 'heroic') {
-      shots = [[intimate, shortHold], [medium, mediumHold], [wide, longHold], [close, mediumHold]];
-    } else if (payload.style === 'hopeful') {
-      shots = [[close, shortHold], [medium, mediumHold], [wide, longHold], [ensemble, mediumHold]];
-    } else {
-      shots = [[wide, shortHold], [close, mediumHold], [intimate, longHold], [emptySpace, mediumHold]];
+    switch (payload.kind) {
+      case 'reveal': shots = [[veryWide, beat(.07,900)],[displaced,beat(.12,1200)],[close,beat(.18,1600)],[detail,beat(.12,1100)],[wide,beat(.12,1200)]]; break;
+      case 'entrance': shots = [[empty,beat(.12,1500)],[veryWide,beat(.08,900)],[portrait,beat(.17,1600)],[detail,beat(.13,1200)],[medium,beat(.1,1000)]]; break;
+      case 'sacrifice': shots = [[wide,beat(.09,1000)],[medium,beat(.1,1100)],[detail,beat(.2,1900)],[close,beat(.1,1100)],[empty,beat(.17,1500)]]; break;
+      case 'memory': shots = [[detail,beat(.12,1300)],[portrait,beat(.1,1100)],[veryWide,beat(.2,1900)],[medium,beat(.1,1000)],[close,beat(.14,1300)]]; break;
+      case 'death': shots = [[wide,beat(.08,900)],[medium,beat(.12,1300)],[portrait,beat(.12,1300)],[detail,beat(.2,1900)],[empty,beat(.18,1600)]]; break;
+      default:
+        if (payload.style === 'melancholic') shots = [[wide,beat(.14,1400)],[medium,beat(.12,1200)],[close,beat(.22,2100)],[empty,beat(.16,1500)]];
+        else if (payload.style === 'heroic') shots = [[detail,beat(.08,900)],[portrait,beat(.12,1200)],[medium,beat(.14,1400)],[veryWide,beat(.2,1900)],[close,beat(.1,1000)]];
+        else if (payload.style === 'hopeful') shots = [[close,beat(.1,1000)],[portrait,beat(.12,1200)],[medium,beat(.14,1400)],[veryWide,beat(.2,1900)]];
+        else shots = [[veryWide,beat(.08,900)],[displaced,beat(.1,1000)],[portrait,beat(.12,1200)],[detail,beat(.2,1900)],[empty,beat(.16,1500)]];
     }
-
     if (!await play(shots)) return;
     if (runId === activeRun && originalViewport) {
       const saved = originalViewport;
@@ -161,9 +147,7 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
     if (runId === activeRun && originalViewport) {
-      try { await OBR.viewport.animateTo(originalViewport); } catch (restoreError) {
-        console.error('Não foi possível restaurar a câmera:', restoreError);
-      }
+      try { await OBR.viewport.animateTo(originalViewport); } catch (restoreError) { console.error('Não foi possível restaurar a câmera:', restoreError); }
       originalViewport = undefined;
     }
   }
@@ -355,7 +339,7 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         </div>
 
         <div class="cinematic-control-range">
-          <label for="cinematic-intensity">INTENSIDADE DOS EFEITOS <output id="cinematic-intensity-value">24%</output></label>
+          <label for="cinematic-intensity">INTENSIDADE DOS EFEITOS <output id="cinematic-intensity-value">48%</output></label>
           <input id="cinematic-intensity" type="range" min="0.18" max="0.72" step="0.03" value="0.48">
           <small>Controla a intensidade da iluminação e das partículas sem cobrir o mapa.</small>
         </div>
@@ -478,9 +462,16 @@ export function renderCinematicOverlay(root: HTMLElement): void {
 
   root.innerHTML = [
     '<main class="farewell-scene farewell-' + style + ' scene-' + kind + '" style="--farewell-duration:' + duration + 's;--farewell-intensity:' + intensity + '">',
+    '<div class="farewell-blackout" aria-hidden="true"></div>',
+    '<div class="farewell-grade" aria-hidden="true"></div>',
+    '<div class="farewell-vignette" aria-hidden="true"></div>',
+    '<div class="farewell-flash" aria-hidden="true"></div>',
+    '<div class="farewell-shockwave" aria-hidden="true"></div>',
+    '<div class="farewell-streaks" aria-hidden="true"></div>',
     '<div class="farewell-light" aria-hidden="true"></div>',
     '<div class="farewell-rays" aria-hidden="true"></div>',
     '<div class="farewell-particles" aria-hidden="true">' + particles + '</div>',
+    '<div class="farewell-frame" aria-hidden="true"></div>',
     '<div class="farewell-letterbox farewell-letterbox-top"></div>',
     '<div class="farewell-letterbox farewell-letterbox-bottom"></div>',
     '<div class="farewell-caption">',
