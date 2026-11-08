@@ -101,6 +101,22 @@ function elapsedTime(date: string): string {
 function render() {
   const page = pages[currentPage];
 
+  // O popover da extensão é exclusivo do GM. Jogadores não recebem navegação
+  // nem controles administrativos; overlays e sincronização continuam no background.
+  if (connected && !isGM) {
+    app!.innerHTML = `
+      <main class="engine-access-denied" role="status">
+        <section>
+          <div class="eyebrow">ARTON ENGINE</div>
+          <h2>Painel exclusivo do Mestre</h2>
+          <p>As ferramentas de controle da campanha estão disponíveis apenas para o GM desta sala.</p>
+          <p>Você continuará recebendo a ambientação e os efeitos enviados pelo Mestre.</p>
+        </section>
+      </main>
+    `;
+    return;
+  }
+
   app!.innerHTML = `
     <div class="engine">
       <aside class="sidebar">
