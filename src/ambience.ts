@@ -405,10 +405,139 @@ function startAudio(preset: AmbiencePreset, volume: number): void {
 export function renderAmbienceOverlay(root: HTMLElement): void {
   const params = new URLSearchParams(window.location.search);
   const preset = params.get('preset') as AmbiencePreset;
-  if (!['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'].includes(preset)) return;
+  const supported: AmbiencePreset[] = ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'];
+  if (!supported.includes(preset)) return;
 
-  document.documentElement.style.background = 'transparent';
-  document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
-  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
-  root.innerHTML = '<main class="ambience-overlay ambience-overlay-' + preset + '" aria-hidden="true"><div class="ambience-atmosphere"></div><div class="ambience-grain"></div><div class="ambience-edge"></div></main>';
+  // A camada é um viewport independente: não depende da altura do conteúdo do #app.
+  document.documentElement.style.cssText = 'width:100%;height:100%;min-height:100%;margin:0;padding:0;overflow:hidden;background:transparent;';
+  document.body.style.cssText = 'position:fixed!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
+  root.style.cssText = 'position:fixed!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-width:100%!important;min-height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;z-index:2147483000!important;';
+  root.innerHTML = '<main class="ambience-overlay ambience-overlay-' + preset + '" aria-hidden="true"><div class="ambience-atmosphere"></div><div class="ambience-clouds"></div><canvas class="ambience-weather-canvas"></canvas><div class="ambience-grain"></div><div class="ambience-edge"></div></main>';
+
+  const canvas = root.querySelector<HTMLCanvasElement>('.ambience-weather-canvas');
+  const ctx = canvas?.getContext('2d', { alpha: true });
+  if (!canvas || !ctx) return;
+
+  let width = 0;
+  let height = 0;
+  let frame = 0;
+  let lastTime = 0;
+  let lightning = 0;
+  let nextLightning = 0;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const random = (min: number, max: number) => min + Math.random() * (max - min);
+
+  type Particle = { x: number; y: number; size: number; speed: number; drift: number; phase: number };
+  let particles: Particle[] = [];
+
+  const resize = () => {
+    const rect = root.getBoundingClientRect();
+    width = Math.max(window.innerWidth, rect.width, document.documentElement.clientWidth);
+    height = Math.max(window.innerHeight, rect.height, document.documentElement.clientHeight);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.cssText = 'position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;pointer-events:none!important;';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = preset === 'snow' ? Math.round(width * height / 2100) : preset === 'storm' ? Math.round(width * height / 1500) : 0;
+    particles = Array.from({ length: Math.min(count, 950) }, () => ({
+      x: random(-40, width + 40), y: random(-height, height),
+      size: preset === 'snow' ? random(1.2, 5.2) : random(8, 26),
+      speed: preset === 'snow' ? random(18, 85) : random(500, 1100),
+      drift: random(-1, 1), phase: random(0, Math.PI * 2),
+    }));
+  };
+
+  const drawSnowflake = (p: Particle) => {
+    const r = p.size;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(Math.sin(p.phase) * 0.6);
+    ctx.shadowColor = 'rgba(238,248,255,.85)';
+    ctx.shadowBlur = r * 2.5;
+    ctx.strokeStyle = 'rgba(245,250,255,' + Math.min(.82, .35 + r / 9) + ')';
+    ctx.lineWidth = Math.max(.65, r * .22);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let arm = 0; arm < 6; arm++) {
+      const a = arm * Math.PI / 3;
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * r * 2.2, Math.sin(a) * r * 2.2);
+      for (const side of [-1, 1]) {
+        const bx = Math.cos(a) * r * 1.35;
+        const by = Math.sin(a) * r * 1.35;
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + Math.cos(a + side * .75) * r * .65, by + Math.sin(a + side * .75) * r * .65);
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const draw = (time: number) => {
+    const dt = Math.min(.04, (time - (lastTime || time)) / 1000);
+    lastTime = time;
+    ctx.clearRect(0, 0, width, height);
+
+    if (preset === 'snow') {
+      const gust = Math.sin(time * .00022) * 260 + Math.sin(time * .00061) * 110;
+      for (const p of particles) {
+        p.x += (gust + p.drift * 75) * dt;
+        p.y += p.speed * dt;
+        p.phase += dt * .55;
+        if (p.y > height + 24 || p.x > width + 60 || p.x < -60) {
+          p.x = random(-80, width + 80); p.y = random(-100, -20);
+        }
+        drawSnowflake(p);
+      }
+      // Rajadas de neve soprada: faixas largas e translúcidas, não uma textura de bolinhas.
+      const veil = ctx.createLinearGradient(0, height * .15, width, height * .8);
+      veil.addColorStop(0, 'rgba(222,239,250,0)');
+      veil.addColorStop(.48, 'rgba(222,239,250,.13)');
+      veil.addColorStop(1, 'rgba(222,239,250,0)');
+      ctx.fillStyle = veil;
+      ctx.save();
+      ctx.translate(Math.sin(time * .00018) * 85, 0);
+      ctx.fillRect(-width * .2, height * .22, width * 1.4, height * .48);
+      ctx.restore();
+    } else if (preset === 'storm') {
+      for (const p of particles) {
+        p.x += (-360 + p.drift * 90) * dt;
+        p.y += p.speed * dt;
+        if (p.y > height + 40 || p.x < -50) {
+          p.x = random(0, width + 180); p.y = random(-180, -20);
+        }
+        const length = p.size * (1.1 + p.speed / 600);
+        ctx.strokeStyle = 'rgba(205,220,235,' + random(.12, .32) + ')';
+        ctx.lineWidth = p.speed > 850 ? 1.45 : .8;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - length * .34, p.y + length);
+        ctx.stroke();
+      }
+      if (time > nextLightning) {
+        lightning = random(.25, .8);
+        nextLightning = time + random(6500, 14000);
+      }
+      if (lightning > 0) {
+        ctx.fillStyle = 'rgba(218,231,248,' + lightning * .2 + ')';
+        ctx.fillRect(0, 0, width, height);
+        lightning *= .78;
+        if (lightning < .025) lightning = 0;
+      }
+    }
+    frame = window.requestAnimationFrame(draw);
+  };
+
+  resize();
+  const observer = new ResizeObserver(resize);
+  observer.observe(document.documentElement);
+  observer.observe(root);
+  window.addEventListener('resize', resize, { passive: true });
+  frame = window.requestAnimationFrame(draw);
+  // O documento do modal é descartado ao fechar; listeners e animação não sobrevivem à cena.
+  window.addEventListener('pagehide', () => {
+    window.cancelAnimationFrame(frame);
+    observer.disconnect();
+    window.removeEventListener('resize', resize);
+  }, { once: true });
 }
