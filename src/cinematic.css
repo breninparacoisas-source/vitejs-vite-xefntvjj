@@ -64,3 +64,22 @@ html:has(.cinematic-overlay),body:has(.cinematic-overlay){background:transparent
 @keyframes farewellProgress{to{transform:scaleX(1)}}
 @media(max-width:760px){.cinematic-welcome{grid-template-columns:1fr}.cinematic-preview{min-height:170px}.cinematic-editor{grid-template-columns:1fr}.cinematic-editor-heading{align-items:start;gap:12px;flex-direction:column}.farewell-caption{left:5%;right:5%}}
 @media(prefers-reduced-motion:reduce){.cinematic-preview-light,.farewell-camera:before,.farewell-camera:after,.farewell-light-beam,.farewell-haze,.farewell-horizon,.farewell-vignette,.farewell-caption,.farewell-rule,.farewell-progress{animation:none!important}.farewell-vignette{opacity:.4}.farewell-caption{opacity:1;visibility:visible;filter:none;transform:translateY(-50%)}}
+
+/* CINEMÁTICO 0.10 — composição emocional e tratamento do viewport */
+.cinematic-editor-v2{grid-template-columns:.95fr 1.05fr}
+.cinematic-editor-v2 .cinematic-controls select{width:100%;padding:12px 13px;background:#11110f;border:1px solid rgba(198,165,104,.2);border-radius:3px;color:#e8e1d3;font:12px Inter,sans-serif;outline:none}
+.cinematic-coordinate-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cinematic-coordinate-fields[hidden]{display:none}
+.cinematic-coordinate-fields input{min-width:0}
+.cinematic-act-list>div{padding-bottom:20px}
+.farewell-melancholic .farewell-caption h1{color:#e5eaf0;text-shadow:0 3px 38px rgba(8,14,24,.98)}
+.farewell-melancholic .farewell-light-beam{background:radial-gradient(ellipse at 50% 65%,rgba(160,185,218,.17),rgba(100,125,160,.05) 38%,transparent 68%)}
+.farewell-heroic .farewell-caption h1{color:#fff0cf;text-shadow:0 0 35px rgba(218,164,75,.4),0 3px 30px #000}
+.farewell-heroic .farewell-light-beam{background:radial-gradient(ellipse at 50% 65%,rgba(255,204,124,.25),rgba(190,126,52,.08) 38%,transparent 68%)}
+.farewell-hopeful .farewell-caption h1{color:#fff5dc;text-shadow:0 0 38px rgba(239,210,151,.35),0 3px 30px #000}
+.farewell-hopeful .farewell-light-beam{background:radial-gradient(ellipse at 50% 65%,rgba(255,226,169,.22),rgba(191,168,119,.07) 38%,transparent 68%)}
+.farewell-tragic .farewell-caption h1{color:#f4dedb;text-shadow:0 0 32px rgba(145,25,30,.4),0 3px 30px #000}
+.farewell-tragic .farewell-light-beam{background:radial-gradient(ellipse at 50% 65%,rgba(166,49,49,.19),rgba(80,15,22,.07) 38%,transparent 68%)}
+.farewell-tragic .farewell-camera:before{animation-name:farewellTragicSway}
+@keyframes farewellTragicSway{0%{transform:translate3d(0,0,0) scale(1.02)}23%{transform:translate3d(-.6%,.4%,0) scale(1.05)}47%{transform:translate3d(.8%,-.5%,0) scale(1.07)}68%{transform:translate3d(-.3%,.2%,0) scale(1.08)}100%{transform:translate3d(0,-1%,0) scale(1.1)}}
+@media(max-width:760px){.cinematic-editor-v2{grid-template-columns:1fr}}
