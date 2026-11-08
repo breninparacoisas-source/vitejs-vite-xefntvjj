@@ -353,6 +353,8 @@ function renderPage(): string {
   const descriptions: Record<Exclude<Page, 'central' | 'ambience'>, string> = {
     eventos:
       'Aqui construiremos o sistema de eventos manuais, automáticos e acionados pelos jogadores.',
+    cinematic:
+      'Conduza despedidas, revelações e outros momentos decisivos com sequências dramáticas.',
     cenas:
       'Aqui construiremos transições, efeitos visuais, sons e revelações cinematográficas.',
     interacoes:
