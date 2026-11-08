@@ -147,7 +147,7 @@ async function fireEffect(
 
 async function chooseAppearanceImage(root: HTMLElement): Promise<boolean> {
   try {
-    const images = await OBR.assets.downloadImages(false);
+    const images = await OBR.assets.downloadImages(false, '', 'ATTACHMENT');
     const chosen = images[0];
     if (!chosen) {
       OBR.notification.show('Nenhuma imagem foi selecionada.');
@@ -249,7 +249,7 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     : '<span>SEM IMAGEM PERSONALIZADA</span>';
 
   return [
-    '<section class="showtime-intro"><div class="showtime-intro-copy"><span class="showtime-eyebrow">◆ MOMENTOS CINEMATOGRÁFICOS</span>',
+    '<section class="showtime-intro"><div class="showtime-intro-copy"><span class="showtime-eyebrow">MOMENTOS CINEMATOGRÁFICOS</span>',
     '<h3>A narração é sua.<br><em>A realidade se transforma.</em></h3>',
     '<p>Efeitos translúcidos sobre o mapa. Imagens próprias, movimentos e sussurros visuais para dar corpo aos seus momentos narrativos.</p>',
     '<div class="showtime-audience"><span></span> CAMADA TRANSPARENTE · MAPA SEMPRE VISÍVEL</div></div></section>',
@@ -372,7 +372,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   if (kind === 'appearance') {
     const image = imageUrl
       ? '<img class="appearance-custom-image" src="' + escapeHtml(imageUrl) + '" alt="">'
-      : '<div class="appearance-fallback" aria-hidden="true"></div>';
+      : '';
     root.innerHTML = [
       '<main class="showtime-overlay showtime-appearance" style="--effect-opacity:' + opacity + ';--effect-scale:' + scale + '" role="status" aria-live="polite">',
       '<div class="appearance-atmosphere"></div>',
