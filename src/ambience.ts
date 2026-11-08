@@ -91,6 +91,15 @@ async function openAmbience(preset: AmbiencePreset, settings: AmbienceSettings =
 }
 
 export function initializeAmbienceBackground(): void {
+  // O background permanece carregado para todos os participantes, mesmo quando
+  // o popover está fechado ou o painel administrativo está bloqueado para players.
+  // A permissão autoplay do manifest permite reproduzir mídia recebida neste iframe.
+  sfxEnabled = true;
+  musicEnabled = true;
+  OBR.broadcast.onMessage(SFX_CHANNEL, (event) => {
+    receiveSfx(event.data);
+    receiveTrack(event.data);
+  });
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     if (activePreset !== event.data.preset && audio) stopAudio();
@@ -117,7 +126,8 @@ export function initializeAmbienceBackground(): void {
 }
 
 export function initializeAmbiencePanel(): void {
-  OBR.broadcast.onMessage(SFX_CHANNEL, (event) => { receiveSfx(event.data); receiveTrack(event.data); });
+  // O áudio remoto é recebido somente pelo background persistente, evitando
+  // duplicação quando o GM ou um jogador abre o popover.
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
     activePreset = event.data.preset;
