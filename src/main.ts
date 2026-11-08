@@ -1,6 +1,7 @@
 
 import './style.css';
 import OBR from '@owlbear-rodeo/sdk';
+import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -14,8 +15,8 @@ const pages = {
     subtitle: 'O coração da sua campanha.',
   },
   eventos: {
-    title: 'Eventos',
-    subtitle: 'Controle acontecimentos e sequências narrativas.',
+    title: 'SHOWTIME',
+    subtitle: 'Transforme acontecimentos narrativos em momentos cinematográficos.',
   },
   cenas: {
     title: 'Cenas',
@@ -113,7 +114,7 @@ function render() {
             <span class="nav-icon">⌂</span> Central
           </button>
           <button data-page="eventos" class="${currentPage === 'eventos' ? 'active' : ''}">
-            <span class="nav-icon">◈</span> Eventos
+            <span class="nav-icon">✧</span> SHOWTIME
           </button>
           <button data-page="cenas" class="${currentPage === 'cenas' ? 'active' : ''}">
             <span class="nav-icon">◉</span> Cenas
@@ -176,9 +177,12 @@ function render() {
   });
 
   bindCentralActions();
+  bindShowtimeActions(app!, connected, isGM);
 }
 
 function renderPage(): string {
+  if (currentPage === 'eventos') return renderShowtimePanel(connected, isGM);
+
   if (currentPage === 'central') {
     const active = session.active;
     const started = session.startedAt;
@@ -435,43 +439,32 @@ async function addLog(text: string) {
 // CONEXÃO COM O OWLBEAR RODEO
 // ======================================
 
-if (OBR.isAvailable) {
+const runtimeParams = new URLSearchParams(window.location.search);
+const isShowtimeBackground = runtimeParams.get('background') === '1';
+const isShowtimeOverlay = runtimeParams.get('showtime') === '1';
+
+if (OBR.isAvailable && isShowtimeBackground) {
+  OBR.onReady(() => initializeShowtimeBackground());
+} else if (OBR.isAvailable && !isShowtimeOverlay) {
   OBR.onReady(async () => {
     connected = true;
-
     try {
       isGM = (await OBR.player.getRole()) === 'GM';
       playerName = await OBR.player.getName();
-
       const metadata = await OBR.room.getMetadata();
       const savedSession = metadata[METADATA_KEY] as SessionData | undefined;
-
-      if (savedSession) {
-        session = savedSession;
-      }
-
+      if (savedSession) session = savedSession;
       const updatePlayers = async () => {
         const players = await OBR.party.getPlayers();
         playerCount = players.length + 1;
         render();
       };
-
       await updatePlayers();
-
-      OBR.party.onChange((players) => {
-        playerCount = players.length + 1;
-        render();
-      });
-
+      OBR.party.onChange((players) => { playerCount = players.length + 1; render(); });
       OBR.room.onMetadataChange((metadata) => {
         const updated = metadata[METADATA_KEY] as SessionData | undefined;
-
-        if (updated) {
-          session = updated;
-          render();
-        }
+        if (updated) { session = updated; render(); }
       });
-
       console.log('ARTON ENGINE conectado ao Owlbear Rodeo!');
       render();
     } catch (error) {
@@ -479,8 +472,9 @@ if (OBR.isAvailable) {
       render();
     }
   });
-} else {
+} else if (!OBR.isAvailable && !isShowtimeOverlay && !isShowtimeBackground) {
   console.log('ARTON ENGINE aberto fora do Owlbear Rodeo.');
 }
 
-render();
+if (isShowtimeOverlay) renderShowtimeOverlay(app!);
+else if (!isShowtimeBackground) render();
