@@ -23,7 +23,6 @@ type CinematicPayload = {
 let closeTimer: number | undefined;
 let activeRun = 0;
 let activeEffectId: string | undefined;
-let previousTransform: ViewportTransform | undefined;
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -107,7 +106,6 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
     const [position, scale] = await Promise.all([OBR.viewport.getPosition(), OBR.viewport.getScale()]);
     original = { position, scale };
     if (runId !== activeRun) return;
-    previousTransform = original;
 
     const styleZoom: Record<CinematicStyle, number> = {
       melancholic: 1.48, heroic: 1.62, hopeful: 1.42, tragic: 1.72,
@@ -146,7 +144,6 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       }
     }
   } finally {
-    if (runId === activeRun) previousTransform = undefined;
   }
 }
 
