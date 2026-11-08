@@ -34,6 +34,10 @@ function applyOverlaySettings(root: HTMLElement, settings: AmbienceSettings): vo
   root.style.setProperty('--ambience-intensity', String(settings.intensity / 100));
   root.style.setProperty('--ambience-brightness', String(settings.brightness / 100));
   root.style.setProperty('--ambience-motion', String(settings.motion / 100));
+  root.querySelectorAll<HTMLElement>('.ambience-atmosphere,.ambience-clouds,.ambience-grain,.ambience-edge').forEach((layer) => {
+    layer.style.animationDuration = (30 - settings.motion * 0.25) + 's';
+    layer.style.animationPlayState = settings.motion === 0 ? 'paused' : 'running';
+  });
 }
 
 function refreshAudioPanel(): void {
@@ -487,7 +491,7 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
   const preset = params.get('preset') as AmbiencePreset;
   const supported: AmbiencePreset[] = ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss'];
   if (!supported.includes(preset)) return;
-  const settings = normalizeSettings({ intensity: Number(params.get('intensity')), brightness: Number(params.get('brightness')), motion: Number(params.get('motion')) });
+  const settings = normalizeSettings({ intensity: params.has('intensity') ? Number(params.get('intensity')) : undefined, brightness: params.has('brightness') ? Number(params.get('brightness')) : undefined, motion: params.has('motion') ? Number(params.get('motion')) : undefined });
 
   // A camada é um viewport independente: não depende da altura do conteúdo do #app.
   document.documentElement.style.cssText = 'width:100%;height:100%;min-height:100%;margin:0;padding:0;overflow:hidden;background:transparent;';
