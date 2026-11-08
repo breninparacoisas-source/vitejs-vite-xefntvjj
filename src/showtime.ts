@@ -256,15 +256,15 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
 
   if (kind === 'appearance') {
     root.innerHTML = [
-      '<main class="showtime-overlay showtime-rupture" style="--rupture-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';position:fixed;inset:0;width:100vw;height:100vh;display:block;visibility:visible;opacity:1;pointer-events:none;background:transparent;" role="status" aria-live="polite">',
-      '<div class="rupture-atmosphere"></div>',
-      '<div class="rupture-wave rupture-wave-one"></div><div class="rupture-wave rupture-wave-two"></div><div class="rupture-wave rupture-wave-three"></div>',
-      '<div class="rupture-copy" style="position:absolute;z-index:50;right:20px;bottom:10vh;left:20px;display:block;visibility:visible;opacity:1;text-align:center;pointer-events:none;">' + (title ? '<h1 style="display:block;visibility:visible;opacity:1;color:#fff;font-size:clamp(28px,4.5vw,54px);text-shadow:0 2px 18px #000;">' + title + '</h1>' : '') + (message ? '<p style="display:block;visibility:visible;opacity:1;color:#fff;font-size:clamp(16px,2vw,24px);text-shadow:0 2px 12px #000;">' + escapeHtml(message) + '</p>' : '') + '</div>',
+      '<main class="showtime-overlay showtime-rupture" style="--rupture-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="polite">',
+      '<div class="rupture-vignette"></div><div class="rupture-atmosphere"></div>',
+      '<div class="rupture-tear" aria-hidden="true"><svg viewBox="0 0 900 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="tearGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d9b0"/><stop offset=".45" stop-color="#b95d70"/><stop offset="1" stop-color="#33243f"/></linearGradient></defs><path class="tear-shadow" d="M468 -30 L420 130 474 214 397 320 455 408 362 512 421 604 337 730 380 930"/><path class="tear-core" d="M468 -30 L420 130 474 214 397 320 455 408 362 512 421 604 337 730 380 930"/><path class="tear-branch" d="M421 130 L310 190 260 280 M455 408 L570 350 640 250 M362 512 L240 550 170 640 M421 604 L540 670 610 780"/></svg></div>',
+      '<div class="rupture-shards" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
+      '<div class="rupture-copy">' + (title ? '<span class="rupture-kicker">A REALIDADE CEDE</span><h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
     ].join('');
     return;
   }
-
 
   const phrases = message.split(/\r?\n/).map((phrase) => phrase.trim()).filter(Boolean);
   const whisperElements: string[] = [];
@@ -272,42 +272,43 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   if (omenStyle === 'echo') {
     for (let index = 0; index < Math.max(4, wordCount); index += 1) {
       const phrase = phrases[index % Math.max(1, phrases.length)] || firstPhrase;
-      const x = 8 + Math.random() * 72;
-      const y = 12 + Math.random() * 72;
-      const delay = -Math.random() * 7;
-      const duration = (3.5 + Math.random() * 4) / speed;
+      const x = 8 + Math.random() * 84;
+      const y = 12 + Math.random() * 76;
+      const delay = index * 0.22 - 0.5;
+      const duration = (2.8 + Math.random() * 1.8) / speed;
       whisperElements.push('<span class="omen-echo" style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;--delay:' + delay.toFixed(2) + 's;--float-duration:' + duration.toFixed(2) + 's;--whisper-alpha:' + intensity.toFixed(2) + '">' + escapeHtml(phrase) + '</span>');
     }
   } else if (omenStyle === 'prophecy') {
-    phrases.slice(1, 6).forEach((phrase, index) => {
-      whisperElements.push('<span class="omen-fragment omen-fragment-' + index + '">' + escapeHtml(phrase) + '</span>');
+    phrases.slice(1, 7).forEach((phrase, index) => {
+      whisperElements.push('<span class="prophecy-verse prophecy-verse-' + index + '" style="--verse-delay:' + (1.25 + index * 1.05).toFixed(2) + 's">' + escapeHtml(phrase) + '</span>');
     });
   } else {
     for (let index = 0; index < wordCount; index += 1) {
       const phrase = phrases[Math.floor(Math.random() * phrases.length)] || 'Ele está olhando.';
-      const x = 5 + Math.random() * 82;
-      const y = 8 + Math.random() * 82;
-      const dx = -45 + Math.random() * 90;
-      const dy = -65 + Math.random() * 130;
-      const rotation = -9 + Math.random() * 18;
-      const delay = -Math.random() * 8;
-      const duration = (5.5 + Math.random() * 7) / speed;
-      const fontSize = 13 + Math.random() * 13;
-      const alpha = intensity * (0.42 + Math.random() * 0.58);
+      const x = 5 + Math.random() * 88;
+      const y = 8 + Math.random() * 84;
+      const dx = -65 + Math.random() * 130;
+      const dy = -85 + Math.random() * 170;
+      const rotation = -12 + Math.random() * 24;
+      const delay = -Math.random() * 5;
+      const duration = (4.5 + Math.random() * 5) / speed;
+      const fontSize = 12 + Math.random() * 16;
+      const alpha = intensity * (0.35 + Math.random() * 0.65);
       const style = '--x:' + x.toFixed(2) + '%;--y:' + y.toFixed(2) + '%;--dx:' + dx.toFixed(1) + 'px;--dy:' + dy.toFixed(1) + 'px;--rot:' + rotation.toFixed(1) + 'deg;--delay:' + delay.toFixed(2) + 's;--float-duration:' + duration.toFixed(2) + 's;--font-size:' + fontSize.toFixed(1) + 'px;--whisper-alpha:' + alpha.toFixed(2);
       whisperElements.push('<span class="omen-whisper" style="' + style + '">' + escapeHtml(phrase) + '</span>');
     }
   }
   const styleClass = omenStyle === 'echo' ? 'showtime-echo' : omenStyle === 'prophecy' ? 'showtime-prophecy' : 'showtime-hallucination';
   const caption = omenStyle === 'prophecy' ? '' : '<div class="omen-whisper-caption">' + (title ? escapeHtml(title) : 'SUSSURROS') + '</div>';
-  const mainPhrase = omenStyle === 'prophecy' ? '<div class="prophecy-main">' + escapeHtml(firstPhrase) + '</div>' : '';
+  const prophecy = omenStyle === 'prophecy'
+    ? '<section class="prophecy-vision"><div class="prophecy-aura"></div><div class="prophecy-frame"><span class="prophecy-overline">VISÃO PROFÉTICA</span><h1>' + escapeHtml(title || 'O que ainda está por vir') + '</h1><div class="prophecy-rule"></div><p class="prophecy-main">' + escapeHtml(firstPhrase) + '</p><div class="prophecy-verses">' + whisperElements.join('') + '</div><span class="prophecy-foot">NEM TODO DESTINO PODE SER EVITADO</span></div></section>'
+    : '';
   root.innerHTML = [
-    '<main class="showtime-overlay showtime-omen ' + styleClass + '" style="--omen-intensity:' + intensity + ';--showtime-opacity:' + opacity + ';position:fixed;inset:0;width:100vw;height:100vh;display:block;visibility:visible;opacity:1;pointer-events:none;background:transparent;" role="status" aria-live="off">',
+    '<main class="showtime-overlay showtime-omen ' + styleClass + '" style="--omen-intensity:' + intensity + ';--showtime-opacity:' + opacity + '" role="status" aria-live="off">',
     '<div class="omen-atmosphere"></div><div class="omen-haze"></div>',
-    mainPhrase,
-    '<div class="omen-whisper-field" aria-hidden="true">' + whisperElements.join('') + '</div>',
+    prophecy,
+    '<div class="omen-whisper-field" aria-hidden="true">' + (omenStyle === 'prophecy' ? '' : whisperElements.join('')) + '</div>',
     caption,
     '</main>',
   ].join('');
-
 }
