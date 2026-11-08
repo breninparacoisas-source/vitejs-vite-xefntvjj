@@ -49,3 +49,17 @@
 .showtime-overlay .omen-whisper-field{z-index:15}
 .showtime-overlay .omen-whisper-caption{z-index:25;text-shadow:0 2px 12px #000}
 .showtime-overlay .omen-center-mark{z-index:10}
+
+/* Exibição estável dos elementos: o texto nunca fica dependente de keyframes */
+.showtime-overlay .appearance-copy{z-index:40!important;display:block!important;visibility:visible!important;opacity:1!important;animation:none!important;filter:none!important}
+.showtime-overlay .appearance-copy h1,.showtime-overlay .appearance-copy p{display:block!important;visibility:visible!important;opacity:1!important;color:#fff!important;text-shadow:0 2px 18px #000,0 0 9px #000!important}
+.showtime-overlay .appearance-copy h1{font-size:clamp(28px,4.5vw,54px);font-weight:700}
+.showtime-overlay .appearance-copy p{font-size:clamp(16px,2vw,24px)}
+.showtime-overlay .appearance-image-stage{z-index:20!important}
+.showtime-overlay .appearance-custom-image{display:block!important;visibility:visible!important;opacity:var(--effect-opacity)!important;animation:none!important;transform:scale(var(--effect-scale));filter:drop-shadow(0 0 24px rgba(135,69,73,.5))}
+.showtime-overlay .omen-whisper-field{z-index:25!important}
+.showtime-overlay .omen-whisper{display:block!important;visibility:visible!important;opacity:var(--whisper-alpha)!important;animation:whisperFloat var(--float-duration) ease-in-out var(--delay) infinite alternate!important}
+.showtime-overlay .omen-whisper-caption{z-index:40!important;color:rgba(235,226,250,.72)!important;text-shadow:0 2px 12px #000}
+.showtime-overlay .omen-center-mark{z-index:15}
+@keyframes whisperFloat{from{transform:translate3d(0,0,0) rotate(var(--rot))}to{transform:translate3d(var(--dx),var(--dy),0) rotate(calc(var(--rot) * -1))}}
+@media(prefers-reduced-motion:reduce){.showtime-overlay .omen-whisper{animation:none!important;opacity:var(--whisper-alpha)!important}}
