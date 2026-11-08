@@ -8,6 +8,7 @@ const METADATA_KEY = 'com.arton.engine/ambience';
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number };
 
+let activePreset: AmbiencePreset = 'off';
 
 function validPayload(value: unknown): value is AmbiencePayload {
   if (!value || typeof value !== 'object') return false;
@@ -34,21 +35,25 @@ async function openAmbience(preset: AmbiencePreset): Promise<void> {
     fullScreen: true,
     hideBackdrop: true,
     hidePaper: true,
-    disablePointerEvents: false,
+    disablePointerEvents: true,
   });
 }
 
 export function initializeAmbienceBackground(): void {
   OBR.broadcast.onMessage(CHANNEL, (event) => {
     if (!validPayload(event.data)) return;
+    activePreset = event.data.preset;
+    if (activePreset === 'off') stopAudio();
     void openAmbience(event.data.preset).catch((error) => {
       console.error('Falha ao atualizar AMBIENCE:', error);
     });
   });
   void OBR.room.getMetadata().then((metadata) => {
     const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
-    if (saved && ['forest', 'tavern', 'dungeon'].includes(saved.preset || '')) {
-      return openAmbience(saved.preset as AmbiencePreset);
+    if (saved && ['forest', 'tavern', 'dungeon', 'off'].includes(saved.preset || '')) {
+      activePreset = saved.preset as AmbiencePreset;
+      if (activePreset === 'off') return openAmbience('off');
+      return openAmbience(activePreset);
     }
     return undefined;
   }).catch((error) => console.warn('Não foi possível recuperar AMBIENCE:', error));
@@ -74,11 +79,53 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     ...presets.map((preset) => '<button class="ambience-preset ambience-' + preset.id + '" data-ambience="' + preset.id + '" ' + disabled + '><span class="ambience-preset-preview"></span><span class="ambience-preset-copy"><strong>' + preset.title + '</strong><small>' + preset.description + '</small></span><span class="ambience-preset-action">ATIVAR</span></button>'),
     '</section>',
     '<div class="ambience-controls-row"><button class="ambience-stop" data-ambience="off" ' + disabled + '>DESLIGAR AMBIENTAÇÃO</button><span class="ambience-footnote">' + status + '</span></div>',
-    '<section class="ambience-note"><h4>Como o áudio funciona</h4><p>Ao trocar o ambiente, cada participante verá a mesma ambientação. Para ouvir, cada jogador precisa clicar em “Ativar áudio” na camada que aparece sobre o mapa. Essa etapa é exigida pelo navegador e o volume é individual.</p><p>Os sons desta versão são sintetizados em tempo real pelo navegador. Não há faixas externas ou arquivos de áudio carregados.</p></section>',
+    '<section class="ambience-audio-settings"><div><span>02 / ÁUDIO LOCAL</span><h3>Som neste dispositivo</h3><p>Ative o áudio por aqui. O mapa continuará recebendo seus cliques normalmente.</p></div><button id="ambience-audio-enable" ' + (activePreset === 'off' ? 'disabled' : '') + '>ATIVAR ÁUDIO</button><label for="ambience-volume">VOLUME <output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" disabled>DESATIVAR ÁUDIO</button><p id="ambience-audio-status">' + (activePreset === 'off' ? 'Escolha um ambiente para liberar a paisagem sonora.' : 'O ambiente está pronto. Cada jogador ativa o áudio individualmente.') + '</p></section>',
+    '<section class="ambience-note"><h4>Sobre esta versão</h4><p>Os sons são sintetizados em tempo real pelo navegador. A camada visual é transparente aos cliques do mapa; os controles de áudio ficam neste painel da extensão.</p></section>',
   ].join('');
 }
 
+function bindLocalAudioControls(root: HTMLElement): void {
+  const enable = root.querySelector<HTMLButtonElement>('#ambience-audio-enable');
+  const volume = root.querySelector<HTMLInputElement>('#ambience-volume');
+  const value = root.querySelector<HTMLOutputElement>('#ambience-volume-value');
+  const status = root.querySelector<HTMLElement>('#ambience-audio-status');
+  const mute = root.querySelector<HTMLButtonElement>('#ambience-audio-mute');
+  if (!enable || !volume || !value || !status || !mute) return;
+
+  enable.addEventListener('click', async () => {
+    if (!['forest', 'tavern', 'dungeon'].includes(activePreset)) {
+      status.textContent = 'O mestre ainda não escolheu um ambiente.';
+      return;
+    }
+    try {
+      startAudio(activePreset, Number(volume.value));
+      await audio?.context.resume();
+      enable.disabled = true;
+      enable.textContent = 'ÁUDIO ATIVO';
+      volume.disabled = false;
+      mute.disabled = false;
+      status.textContent = 'Paisagem sonora em reprodução neste dispositivo.';
+    } catch (error) {
+      console.error('Não foi possível iniciar o áudio:', error);
+      status.textContent = 'O navegador não liberou o áudio. Tente novamente.';
+    }
+  });
+  volume.addEventListener('input', () => {
+    value.textContent = Math.round(Number(volume.value) * 100) + '%';
+    if (audio) audio.master.gain.setTargetAtTime(Number(volume.value), audio.context.currentTime, 0.08);
+  });
+  mute.addEventListener('click', () => {
+    stopAudio();
+    enable.disabled = !['forest', 'tavern', 'dungeon'].includes(activePreset);
+    enable.textContent = 'ATIVAR ÁUDIO';
+    volume.disabled = true;
+    mute.disabled = true;
+    status.textContent = 'Áudio desativado neste dispositivo. O ambiente visual continua ativo.';
+  });
+}
+
 export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM: boolean): void {
+  bindLocalAudioControls(root);
   root.querySelectorAll<HTMLButtonElement>('[data-ambience]').forEach((button) => {
     button.addEventListener('click', () => {
       if (!connected || !isGM) return;
@@ -87,7 +134,8 @@ export function bindAmbienceActions(root: HTMLElement, connected: boolean, isGM:
       void (async () => {
         const payload: AmbiencePayload = { version: 1, preset, createdAt: Date.now() };
         try {
-          if (preset === 'off') await openAmbience('off');
+          activePreset = preset;
+          if (preset === 'off') { stopAudio(); await openAmbience('off'); }
           else await openAmbience(preset);
           await OBR.room.setMetadata({ [METADATA_KEY]: { preset, updatedAt: payload.createdAt } });
           await OBR.broadcast.sendMessage(CHANNEL, payload, { destination: 'REMOTE' });
@@ -203,39 +251,6 @@ export function renderAmbienceOverlay(root: HTMLElement): void {
 
   document.documentElement.style.background = 'transparent';
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
-  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
-  root.innerHTML = '<main class="ambience-overlay ambience-overlay-' + preset + '"><div class="ambience-atmosphere"></div><div class="ambience-grain"></div><div class="ambience-edge"></div><section class="ambience-audio-panel"><div class="ambience-audio-heading"><strong>AMBIENCE</strong><span>' + (preset === 'forest' ? 'FLORESTA' : preset === 'tavern' ? 'TAVERNA' : 'MASMORRA') + '</span></div><p id="ambience-audio-status">O ambiente está ativo. Ative o áudio para ouvir a paisagem sonora.</p><button id="ambience-audio-enable">ATIVAR ÁUDIO</button><label for="ambience-volume">VOLUME <output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" disabled>DESATIVAR ÁUDIO</button></section></main>';
-
-  const enable = root.querySelector<HTMLButtonElement>('#ambience-audio-enable')!;
-  const volume = root.querySelector<HTMLInputElement>('#ambience-volume')!;
-  const value = root.querySelector<HTMLOutputElement>('#ambience-volume-value')!;
-  const status = root.querySelector<HTMLElement>('#ambience-audio-status')!;
-  const mute = root.querySelector<HTMLButtonElement>('#ambience-audio-mute')!;
-
-  enable.addEventListener('click', async () => {
-    try {
-      startAudio(preset, Number(volume.value));
-      await audio?.context.resume();
-      enable.disabled = true;
-      enable.textContent = 'ÁUDIO ATIVO';
-      volume.disabled = false;
-      mute.disabled = false;
-      status.textContent = 'Paisagem sonora em reprodução neste dispositivo.';
-    } catch (error) {
-      console.error('Não foi possível iniciar o áudio:', error);
-      status.textContent = 'O navegador não liberou o áudio. Tente novamente.';
-    }
-  });
-  volume.addEventListener('input', () => {
-    value.textContent = Math.round(Number(volume.value) * 100) + '%';
-    if (audio) audio.master.gain.setTargetAtTime(Number(volume.value), audio.context.currentTime, 0.08);
-  });
-  mute.addEventListener('click', () => {
-    stopAudio();
-    enable.disabled = false;
-    enable.textContent = 'ATIVAR ÁUDIO';
-    volume.disabled = true;
-    mute.disabled = true;
-    status.textContent = 'Áudio desativado neste dispositivo. O ambiente visual continua ativo.';
-  });
+  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;pointer-events:none!important;';
+  root.innerHTML = '<main class="ambience-overlay ambience-overlay-' + preset + '" aria-hidden="true"><div class="ambience-atmosphere"></div><div class="ambience-grain"></div><div class="ambience-edge"></div></main>';
 }
