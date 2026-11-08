@@ -185,3 +185,21 @@
 @media(max-width:900px){.ambience-presets{grid-template-columns:repeat(2,minmax(0,1fr))}.ambience-hero-art{width:42%}}
 @media(max-width:620px){.ambience-hero{min-height:280px;padding:25px 22px}.ambience-hero-art{width:58%;opacity:.42}.ambience-hero-copy{max-width:100%}.ambience-hero h3{font-size:23px}.ambience-library-head{align-items:flex-start;flex-direction:column}.ambience-presets{grid-template-columns:1fr}.ambience-preset-preview{height:155px}.ambience-audio-settings{grid-template-columns:1fr;padding:20px}.ambience-library-head .ambience-stop{margin-top:0}}
 @media(prefers-reduced-motion:reduce){.ambience-preset{transition:none}}
+
+/* 0.8.2 — viewport real e fenômenos climáticos em canvas */
+html:has(.ambience-overlay),body:has(.ambience-overlay),body:has(.ambience-overlay) #app{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;overflow:hidden!important}
+.ambience-overlay{position:fixed!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-width:100%!important;min-height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;overflow:hidden!important;pointer-events:none!important;isolation:isolate!important}
+.ambience-overlay>*{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;pointer-events:none!important}
+.ambience-weather-canvas{z-index:5!important;display:block!important}
+.ambience-atmosphere{z-index:1!important}
+.ambience-clouds{z-index:2!important}
+.ambience-grain{z-index:3!important}
+.ambience-edge{z-index:4!important}
+.ambience-overlay-storm .ambience-atmosphere{background:linear-gradient(180deg,rgba(10,17,28,.68) 0%,rgba(21,31,43,.42) 42%,rgba(5,10,17,.3) 100%),radial-gradient(ellipse at 72% 13%,rgba(137,157,181,.2),transparent 38%)!important;animation:stormCloudMass 22s ease-in-out infinite alternate}
+.ambience-overlay-storm .ambience-clouds{background:radial-gradient(ellipse at 18% 4%,rgba(3,8,15,.8),transparent 52%),radial-gradient(ellipse at 77% 18%,rgba(7,12,21,.72),transparent 48%),radial-gradient(ellipse at 48% 0%,rgba(42,54,69,.48),transparent 60%);filter:blur(24px);transform:scale(1.12);animation:stormCloudMass 30s ease-in-out infinite alternate-reverse}
+.ambience-overlay-storm .ambience-edge{background:linear-gradient(180deg,rgba(0,0,0,.22),transparent 28%,transparent 68%,rgba(0,0,0,.28))!important;opacity:1}
+.ambience-overlay-snow .ambience-atmosphere{background:linear-gradient(180deg,rgba(151,178,194,.2),rgba(106,139,157,.16) 42%,rgba(210,224,230,.27)),radial-gradient(ellipse at 50% 100%,rgba(231,242,248,.25),transparent 62%)!important}
+.ambience-overlay-snow .ambience-clouds{background:radial-gradient(ellipse at 20% 10%,rgba(218,232,241,.28),transparent 44%),radial-gradient(ellipse at 84% 42%,rgba(229,239,245,.22),transparent 48%);filter:blur(30px);animation:snowSquall 13s ease-in-out infinite alternate}
+.ambience-overlay-snow .ambience-edge{background:radial-gradient(ellipse at center,transparent 24%,rgba(222,237,245,.24) 100%)!important;opacity:1}
+@keyframes stormCloudMass{from{transform:translate3d(-2%,0,0) scale(1.08);filter:brightness(.82)}to{transform:translate3d(2%,1%,0) scale(1.16);filter:brightness(1.08)}}
+@keyframes snowSquall{from{transform:translate3d(-4%,0,0) scale(1.04);opacity:.55}to{transform:translate3d(4%,2%,0) scale(1.16);opacity:1}}
