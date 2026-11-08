@@ -91,23 +91,63 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
     original = { position, scale };
     if (runId !== activeRun) return;
 
-    // A atmosfera visual é renderizada pelo modal HTML/CSS em cada cliente.
-    // A câmera é apenas uma camada da coreografia, não o efeito principal.
-    await OBR.viewport.animateToBounds(payload.establishingBounds);
-    if (runId !== activeRun) return;
-    await wait(1800);
+    // Cada tom tem uma gramática de planos própria. Não é apenas trocar a cor do overlay.
+    const intimateBounds = expandBounds(payload.focusBounds, 0.72);
+    const wideBounds = expandBounds(payload.establishingBounds, 1.55);
+    const focusHold = Math.max(2600, payload.durationMs - 9000);
 
-    await OBR.viewport.animateToBounds(payload.focusBounds);
-    if (runId !== activeRun) return;
-
-    const revealHold = payload.style === 'tragic' ? 1700 : payload.style === 'heroic' ? 2300 : 2000;
-    const focusHold = Math.max(2500, payload.durationMs - 7600 - revealHold);
-    await wait(focusHold);
-    if (runId !== activeRun) return;
-
-    await OBR.viewport.animateToBounds(payload.establishingBounds);
-    if (runId !== activeRun) return;
-    await wait(revealHold);
+    if (payload.style === 'melancholic') {
+      // A despedida fica íntima: contexto, aproximação e um último afastamento silencioso.
+      await OBR.viewport.animateToBounds(payload.establishingBounds);
+      if (runId !== activeRun) return;
+      await wait(2600);
+      await OBR.viewport.animateToBounds(payload.focusBounds);
+      if (runId !== activeRun) return;
+      await wait(focusHold);
+      if (runId !== activeRun) return;
+      await OBR.viewport.animateToBounds(wideBounds);
+      if (runId !== activeRun) return;
+      await wait(2100);
+    } else if (payload.style === 'heroic') {
+      // Começa no herói; abre para revelar o grupo e retorna ao protagonista.
+      await OBR.viewport.animateToBounds(payload.focusBounds);
+      if (runId !== activeRun) return;
+      await wait(1500);
+      await OBR.viewport.animateToBounds(payload.establishingBounds);
+      if (runId !== activeRun) return;
+      await wait(Math.max(2200, focusHold - 1800));
+      if (runId !== activeRun) return;
+      await OBR.viewport.animateToBounds(intimateBounds);
+      if (runId !== activeRun) return;
+      await wait(1900);
+    } else if (payload.style === 'hopeful') {
+      // A câmera parte do grupo e termina abrindo o horizonte ao redor do personagem.
+      await OBR.viewport.animateToBounds(payload.establishingBounds);
+      if (runId !== activeRun) return;
+      await wait(1900);
+      await OBR.viewport.animateToBounds(payload.focusBounds);
+      if (runId !== activeRun) return;
+      await wait(Math.max(2200, focusHold - 1200));
+      if (runId !== activeRun) return;
+      await OBR.viewport.animateToBounds(wideBounds);
+      if (runId !== activeRun) return;
+      await wait(2500);
+    } else {
+      // A tragédia aperta o enquadramento antes de devolver o espaço ao redor.
+      await OBR.viewport.animateToBounds(payload.establishingBounds);
+      if (runId !== activeRun) return;
+      await wait(1100);
+      await OBR.viewport.animateToBounds(payload.focusBounds);
+      if (runId !== activeRun) return;
+      await wait(1700);
+      await OBR.viewport.animateToBounds(intimateBounds);
+      if (runId !== activeRun) return;
+      await wait(Math.max(2300, focusHold - 1800));
+      if (runId !== activeRun) return;
+      await OBR.viewport.animateToBounds(payload.establishingBounds);
+      if (runId !== activeRun) return;
+      await wait(1700);
+    }
 
     if (runId === activeRun && original) await OBR.viewport.animateTo(original);
   } catch (error) {
@@ -389,10 +429,8 @@ export function renderCinematicOverlay(root: HTMLElement): void {
     '<div class="farewell-letterbox farewell-letterbox-top"></div>',
     '<div class="farewell-letterbox farewell-letterbox-bottom"></div>',
     '<div class="farewell-caption">',
-    '<span class="farewell-overline">UMA VIDA · UMA HISTÓRIA · UMA AUSÊNCIA</span>',
-    '<h1>' + character + '</h1>',
-    epitaph ? '<p>' + epitaph + '</p>' : '',
-    '<span class="farewell-rule"></span>',
+    epitaph ? '<p class="farewell-epitaph">“' + epitaph + '”</p>' : '',
+    '<h1 class="farewell-name">' + character + '</h1>',
     '</div></main>',
   ].join('');
 }
