@@ -120,7 +120,7 @@ function render() {
             <span class="nav-icon">◉</span> Cenas
           </button>
           <button data-page="interacoes" class="${currentPage === 'interacoes' ? 'active' : ''}">
-            <span class="nav-icon">✧</span> Interações
+            Interações
           </button>
         </nav>
 
@@ -270,7 +270,7 @@ function renderPage(): string {
         </button>
 
         <button class="tool-card" data-page="interacoes">
-          <span class="tool-symbol">✧</span>
+          
           <strong>Interações</strong>
           <p>Crie objetos e experiências para os jogadores.</p>
           <span class="card-link">ABRIR MÓDULO →</span>
@@ -327,7 +327,7 @@ function renderPage(): string {
 
   return `
     <section class="module-placeholder">
-      <div class="placeholder-symbol">✧</div>
+      
       <div class="eyebrow">MÓDULO EM CONSTRUÇÃO</div>
       <h3>${pages[currentPage].title}</h3>
       <p>${descriptions[currentPage]}</p>
