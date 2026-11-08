@@ -5,6 +5,7 @@ import './cinematic.css';
 const CHANNEL = 'com.arton.engine/cinematic/v1';
 const MODAL_ID = 'com.arton.engine/cinematic/scene';
 type CinematicStyle = 'melancholic' | 'heroic' | 'hopeful' | 'tragic';
+type CinematicKind = 'farewell' | 'reveal' | 'entrance' | 'sacrifice' | 'memory' | 'death';
 type FocusMode = 'center' | 'selected' | 'custom';
 type Point = { x: number; y: number };
 type Bounds = { min: Point; max: Point; width: number; height: number; center: Point };
@@ -12,7 +13,7 @@ type Bounds = { min: Point; max: Point; width: number; height: number; center: P
 type CinematicPayload = {
   version: 3;
   id: string;
-  kind: 'farewell';
+  kind: CinematicKind;
   character: string;
   epitaph: string;
   style: CinematicStyle;
@@ -25,6 +26,7 @@ type CinematicPayload = {
 
 let closeTimer: number | undefined;
 let activeRun = 0;
+let originalViewport: ViewportTransform | undefined;
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -32,6 +34,10 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   })[char] || char);
+}
+
+function isKind(value: unknown): value is CinematicKind {
+  return value === 'farewell' || value === 'reveal' || value === 'entrance' || value === 'sacrifice' || value === 'memory' || value === 'death';
 }
 
 function isStyle(value: unknown): value is CinematicStyle {
@@ -49,7 +55,7 @@ function isBounds(value: unknown): value is Bounds {
 function validPayload(value: unknown): value is CinematicPayload {
   if (!value || typeof value !== 'object') return false;
   const data = value as Partial<CinematicPayload>;
-  return data.version === 3 && data.kind === 'farewell'
+  return data.version === 4 && isKind(data.kind)
     && typeof data.id === 'string'
     && typeof data.character === 'string'
     && typeof data.epitaph === 'string'
@@ -82,80 +88,100 @@ function unionBounds(a: Bounds, b: Bounds): Bounds {
 }
 
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
-  let original: ViewportTransform | undefined;
   try {
-    const [position, scale] = await Promise.all([
-      OBR.viewport.getPosition(),
-      OBR.viewport.getScale(),
-    ]);
-    original = { position, scale };
-    if (runId !== activeRun) return;
-
-    // Cada tom tem uma gramática de planos própria. Não é apenas trocar a cor do overlay.
-    const intimateBounds = expandBounds(payload.focusBounds, 0.72);
-    const wideBounds = expandBounds(payload.establishingBounds, 1.55);
-    const focusHold = Math.max(2600, payload.durationMs - 9000);
-
-    if (payload.style === 'melancholic') {
-      // A despedida fica íntima: contexto, aproximação e um último afastamento silencioso.
-      await OBR.viewport.animateToBounds(payload.establishingBounds);
-      if (runId !== activeRun) return;
-      await wait(2600);
-      await OBR.viewport.animateToBounds(payload.focusBounds);
-      if (runId !== activeRun) return;
-      await wait(focusHold);
-      if (runId !== activeRun) return;
-      await OBR.viewport.animateToBounds(wideBounds);
-      if (runId !== activeRun) return;
-      await wait(2100);
-    } else if (payload.style === 'heroic') {
-      // Começa no herói; abre para revelar o grupo e retorna ao protagonista.
-      await OBR.viewport.animateToBounds(payload.focusBounds);
-      if (runId !== activeRun) return;
-      await wait(1500);
-      await OBR.viewport.animateToBounds(payload.establishingBounds);
-      if (runId !== activeRun) return;
-      await wait(Math.max(2200, focusHold - 1800));
-      if (runId !== activeRun) return;
-      await OBR.viewport.animateToBounds(intimateBounds);
-      if (runId !== activeRun) return;
-      await wait(1900);
-    } else if (payload.style === 'hopeful') {
-      // A câmera parte do grupo e termina abrindo o horizonte ao redor do personagem.
-      await OBR.viewport.animateToBounds(payload.establishingBounds);
-      if (runId !== activeRun) return;
-      await wait(1900);
-      await OBR.viewport.animateToBounds(payload.focusBounds);
-      if (runId !== activeRun) return;
-      await wait(Math.max(2200, focusHold - 1200));
-      if (runId !== activeRun) return;
-      await OBR.viewport.animateToBounds(wideBounds);
-      if (runId !== activeRun) return;
-      await wait(2500);
-    } else {
-      // A tragédia aperta o enquadramento antes de devolver o espaço ao redor.
-      await OBR.viewport.animateToBounds(payload.establishingBounds);
-      if (runId !== activeRun) return;
-      await wait(1100);
-      await OBR.viewport.animateToBounds(payload.focusBounds);
-      if (runId !== activeRun) return;
-      await wait(1700);
-      await OBR.viewport.animateToBounds(intimateBounds);
-      if (runId !== activeRun) return;
-      await wait(Math.max(2300, focusHold - 1800));
-      if (runId !== activeRun) return;
-      await OBR.viewport.animateToBounds(payload.establishingBounds);
-      if (runId !== activeRun) return;
-      await wait(1700);
+    if (!originalViewport) {
+      const [position, scale] = await Promise.all([OBR.viewport.getPosition(), OBR.viewport.getScale()]);
+      originalViewport = { position, scale };
     }
+    if (runId !== activeRun) return;
+    const intimate = expandBounds(payload.focusBounds, 0.72);
+    const wide = expandBounds(payload.establishingBounds, 1.55);
+    const context = payload.establishingBounds;
+    const longHold = Math.max(1800, payload.durationMs * 0.42);
+    const shortHold = Math.max(900, payload.durationMs * 0.16);
+    const move = async (bounds: Bounds, hold = 0) => {
+      if (runId !== activeRun) return false;
+      await OBR.viewport.animateToBounds(bounds);
+      if (runId !== activeRun) return false;
+      if (hold) await wait(hold);
+      return runId === activeRun;
+    };
 
-    if (runId === activeRun && original) await OBR.viewport.animateTo(original);
+    switch (payload.kind) {
+      case 'reveal':
+        if (!await move(wide, shortHold)) return;
+        if (!await move(context, shortHold)) return;
+        if (!await move(payload.focusBounds, longHold)) return;
+        if (!await move(wide, shortHold)) return;
+        break;
+      case 'entrance':
+        if (!await move(wide, shortHold)) return;
+        if (!await move(intimate, longHold)) return;
+        if (!await move(context, shortHold)) return;
+        if (!await move(payload.focusBounds, shortHold)) return;
+        break;
+      case 'sacrifice':
+        if (!await move(context, shortHold)) return;
+        if (!await move(payload.focusBounds, shortHold)) return;
+        if (!await move(intimate, longHold)) return;
+        if (!await move(context, shortHold)) return;
+        break;
+      case 'memory':
+        if (!await move(payload.focusBounds, shortHold)) return;
+        if (!await move(wide, longHold)) return;
+        if (!await move(context, shortHold)) return;
+        break;
+      case 'death':
+        if (!await move(context, shortHold)) return;
+        if (!await move(payload.focusBounds, shortHold)) return;
+        if (!await move(intimate, longHold)) return;
+        if (!await move(wide, shortHold)) return;
+        break;
+      default:
+        if (payload.style === 'melancholic') {
+          if (!await move(context, shortHold)) return;
+          if (!await move(payload.focusBounds, longHold)) return;
+          if (!await move(wide, shortHold)) return;
+        } else if (payload.style === 'heroic') {
+          if (!await move(payload.focusBounds, shortHold)) return;
+          if (!await move(context, longHold)) return;
+          if (!await move(intimate, shortHold)) return;
+        } else if (payload.style === 'hopeful') {
+          if (!await move(context, shortHold)) return;
+          if (!await move(payload.focusBounds, shortHold)) return;
+          if (!await move(wide, longHold)) return;
+        } else {
+          if (!await move(context, shortHold)) return;
+          if (!await move(payload.focusBounds, shortHold)) return;
+          if (!await move(intimate, longHold)) return;
+          if (!await move(context, shortHold)) return;
+        }
+    }
+    if (runId === activeRun && originalViewport) {
+      await OBR.viewport.animateTo(originalViewport);
+      originalViewport = undefined;
+    }
   } catch (error) {
     console.error('Falha na coreografia da câmera CINEMÁTICA:', error);
-    if (original && runId === activeRun) {
-      try { await OBR.viewport.animateTo(original); } catch (restoreError) {
+    if (runId === activeRun && originalViewport) {
+      try { await OBR.viewport.animateTo(originalViewport); } catch (restoreError) {
         console.error('Não foi possível restaurar a câmera:', restoreError);
       }
+      originalViewport = undefined;
+    }
+  }
+}
+
+async function stopCinematic(): Promise<void> {
+  activeRun += 1;
+  if (closeTimer !== undefined) window.clearTimeout(closeTimer);
+  closeTimer = undefined;
+  try { await OBR.modal.close(MODAL_ID); } catch { /* Nenhuma cena aberta. */ }
+  if (originalViewport) {
+    const saved = originalViewport;
+    originalViewport = undefined;
+    try { await OBR.viewport.animateTo(saved); } catch (error) {
+      console.error('Falha ao restaurar a câmera após interromper CINEMÁTICO:', error);
     }
   }
 }
@@ -167,6 +193,7 @@ async function openScene(payload: CinematicPayload): Promise<void> {
   const url = new URL('/', window.location.origin);
   url.searchParams.set('cinematic', '1');
   url.searchParams.set('sceneId', payload.id);
+  url.searchParams.set('kind', payload.kind);
   url.searchParams.set('character', payload.character.slice(0, 80));
   url.searchParams.set('epitaph', payload.epitaph.slice(0, 240));
   url.searchParams.set('style', payload.style);
@@ -246,6 +273,10 @@ async function resolveEstablishingBounds(focusBounds: Bounds): Promise<Bounds> {
 
 export function initializeCinematicBackground(): void {
   OBR.broadcast.onMessage(CHANNEL, (event) => {
+    if (event.data && typeof event.data === 'object' && (event.data as { type?: string }).type === 'stop') {
+      void stopCinematic();
+      return;
+    }
     if (!validPayload(event.data)) return;
     void openScene(event.data).catch((error) => {
       console.error('Falha ao iniciar CINEMÁTICO:', error);
@@ -291,13 +322,23 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         </div>
       </div>
       <div class="cinematic-controls">
-        <label for="cinematic-character">PERSONAGEM</label>
-        <input id="cinematic-character" maxlength="80" value="A última luz" placeholder="Nome do personagem">
+        <label for="cinematic-kind">TIPO DE CENA</label>
+        <select id="cinematic-kind">
+          <option value="farewell">Despedida — a última lembrança</option>
+          <option value="reveal">Revelação — mostrar o que estava oculto</option>
+          <option value="entrance">Entrada — apresentar uma presença</option>
+          <option value="sacrifice">Sacrifício — o instante decisivo</option>
+          <option value="memory">Memória — um lugar que permanece</option>
+          <option value="death">Morte — o silêncio depois do fim</option>
+        </select>
 
-        <label for="cinematic-epitaph">ÚLTIMAS PALAVRAS</label>
-        <textarea id="cinematic-epitaph" maxlength="240" rows="3" placeholder="Uma última frase, lembrança ou despedida...">Algumas histórias não terminam quando a luz se apaga.</textarea>
+        <label for="cinematic-character">FOCO / NOME DA CENA</label>
+        <input id="cinematic-character" maxlength="80" value="A última luz" placeholder="Personagem, criatura ou lugar">
 
-        <label for="cinematic-style">TOM DA DESPEDIDA</label>
+        <label for="cinematic-epitaph">TEXTO DA CENA <small>(OPCIONAL)</small></label>
+        <textarea id="cinematic-epitaph" maxlength="240" rows="3" placeholder="Uma frase, lembrança ou descrição breve..."></textarea>
+
+        <label for="cinematic-style">ATMOSFERA</label>
         <select id="cinematic-style">
           <option value="melancholic">Melancólica — perda e silêncio</option>
           <option value="heroic">Heroica — sacrifício e legado</option>
@@ -326,7 +367,8 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
           <input id="cinematic-duration" type="range" min="16" max="40" step="1" value="24">
           <small>Controla o tempo de permanência entre a aproximação e o plano final.</small>
         </div>
-        <button class="cinematic-launch" data-cinematic-launch="farewell" ${disabled}>INICIAR DESPEDIDA</button>
+        <button class="cinematic-launch" data-cinematic-launch="farewell" ${disabled}>INICIAR CENA</button>
+        <button class="cinematic-stop" data-cinematic-stop ${disabled}>INTERROMPER CENA</button>
         <p class="cinematic-status">${status}</p>
       </div>
     </section>
@@ -340,6 +382,9 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
   const intensityOutput = root.querySelector<HTMLOutputElement>('#cinematic-intensity-value');
   const durationOutput = root.querySelector<HTMLOutputElement>('#cinematic-duration-value');
   const focusSelect = root.querySelector<HTMLSelectElement>('#cinematic-focus');
+  const kindSelect = root.querySelector<HTMLSelectElement>('#cinematic-kind');
+  const launchButton = root.querySelector<HTMLButtonElement>('[data-cinematic-launch="farewell"]');
+  const stopButton = root.querySelector<HTMLButtonElement>('[data-cinematic-stop]');
   const coordinateFields = root.querySelector<HTMLElement>('.cinematic-coordinate-fields');
 
   intensity?.addEventListener('input', () => {
@@ -353,7 +398,19 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
   });
   if (coordinateFields) coordinateFields.hidden = focusSelect?.value !== 'custom';
 
-  root.querySelector<HTMLButtonElement>('[data-cinematic-launch="farewell"]')?.addEventListener('click', async () => {
+  stopButton?.addEventListener('click', async () => {
+    if (!connected || !isGM) return;
+    try {
+      await stopCinematic();
+      await OBR.broadcast.sendMessage(CHANNEL, { type: 'stop', id: Date.now().toString(36) }, { destination: 'REMOTE' });
+      OBR.notification.show('Cena interrompida e câmeras restauradas.');
+    } catch (error) {
+      console.error('Erro ao interromper CINEMÁTICO:', error);
+      OBR.notification.show('Não foi possível interromper a cena em todos os clientes.');
+    }
+  });
+
+  launchButton?.addEventListener('click', async () => {
     if (!connected || !isGM) {
       OBR.notification.show('Somente o mestre conectado pode iniciar uma cena CINEMÁTICA.');
       return;
@@ -362,20 +419,20 @@ export function bindCinematicActions(root: HTMLElement, connected: boolean, isGM
     const character = root.querySelector<HTMLInputElement>('#cinematic-character')?.value.trim() || '';
     const epitaph = root.querySelector<HTMLTextAreaElement>('#cinematic-epitaph')?.value.trim() || '';
     if (!character) {
-      OBR.notification.show('Informe o nome do personagem para iniciar a despedida.');
+      OBR.notification.show('Informe o foco ou nome da cena antes de iniciar.');
       return;
     }
 
-    const button = root.querySelector<HTMLButtonElement>('[data-cinematic-launch="farewell"]');
+    const button = launchButton;
     if (button) button.disabled = true;
     try {
       const focusMode = (focusSelect?.value || 'selected') as FocusMode;
       const focusBounds = await resolveFocus(root, focusMode);
       const establishingBounds = await resolveEstablishingBounds(focusBounds);
       const payload: CinematicPayload = {
-        version: 3,
+        version: 4,
         id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9),
-        kind: 'farewell',
+        kind: (kindSelect?.value || 'farewell') as CinematicKind,
         character: character.slice(0, 80),
         epitaph: epitaph.slice(0, 240),
         style: (root.querySelector<HTMLSelectElement>('#cinematic-style')?.value || 'melancholic') as CinematicStyle,
@@ -402,6 +459,7 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const character = escapeHtml((params.get('character') || 'Uma despedida').slice(0, 80));
   const epitaph = escapeHtml((params.get('epitaph') || '').slice(0, 240));
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
+  const kind = isKind(params.get('kind')) ? params.get('kind') as CinematicKind : 'farewell';
   const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24));
   const intensity = Math.max(0.08, Math.min(0.42, Number(params.get('intensity')) || 0.24));
 
@@ -422,7 +480,7 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   }).join('');
 
   root.innerHTML = [
-    '<main class="farewell-scene farewell-' + style + '" style="--farewell-duration:' + duration + 's;--farewell-intensity:' + intensity + '">',
+    '<main class="farewell-scene farewell-' + style + ' scene-' + kind + '" style="--farewell-duration:' + duration + 's;--farewell-intensity:' + intensity + '">',
     '<div class="farewell-light" aria-hidden="true"></div>',
     '<div class="farewell-rays" aria-hidden="true"></div>',
     '<div class="farewell-particles" aria-hidden="true">' + particles + '</div>',
