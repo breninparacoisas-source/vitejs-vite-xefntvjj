@@ -193,6 +193,37 @@ const SFX_SOURCES:Record<SfxId,string>={
  chime:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Windchime.ogg'
 };
 
+const activeSfx=new Set<HTMLAudioElement>();
+function enableSfxAudio():void{
+ sfxEnabled=true;
+ const status=document.querySelector<HTMLElement>('#sfx-audio-status');
+ const volume=document.querySelector<HTMLInputElement>('#sfx-volume');
+ const button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
+ if(status)status.textContent='Efeitos liberados neste dispositivo.';
+ if(volume)volume.disabled=false;
+ if(button)button.textContent='SONS LIBERADOS';
+}
+function playSfx(id:SfxId):void{
+ if(!sfxEnabled)return;
+ const source=SFX_SOURCES[id];
+ if(!source)return;
+ const player=new Audio(source);
+ player.preload='auto';
+ player.volume=sfxVolume;
+ activeSfx.add(player);
+ player.addEventListener('ended',()=>activeSfx.delete(player),{once:true});
+ player.addEventListener('error',()=>{
+  activeSfx.delete(player);
+  const status=document.querySelector<HTMLElement>('#sfx-audio-status');
+  if(status)status.textContent='Não foi possível carregar esta gravação. Verifique a conexão.';
+ },{once:true});
+ void player.play().catch(error=>{
+  activeSfx.delete(player);
+  console.warn('Falha ao reproduzir gravação:',id,error);
+  const status=document.querySelector<HTMLElement>('#sfx-audio-status');
+  if(status)status.textContent='Não foi possível reproduzir o som. Tente liberar o áudio novamente.';
+ });
+}
 function receiveSfx(value:unknown):void{
  if(!value||typeof value!=='object')return;
  const p=value as Partial<SfxPayload>;
