@@ -13,12 +13,17 @@ let activePreset: AmbiencePreset = 'off';
 function refreshAudioPanel(): void {
   const enable = document.querySelector<HTMLButtonElement>('#ambience-audio-enable');
   const status = document.querySelector<HTMLElement>('#ambience-audio-status');
-  if (!enable || !status) return;
+  const volume = document.querySelector<HTMLInputElement>('#ambience-volume');
+  const mute = document.querySelector<HTMLButtonElement>('#ambience-audio-mute');
+  if (!enable || !status || !volume || !mute) return;
   const available = ['forest', 'tavern', 'dungeon'].includes(activePreset);
   enable.disabled = !available || Boolean(audio);
-  if (!audio) enable.textContent = 'ATIVAR ÁUDIO';
+  enable.textContent = audio ? 'ÁUDIO ATIVO' : 'ATIVAR ÁUDIO';
+  volume.disabled = !audio;
+  mute.disabled = !audio;
   if (!available && !audio) status.textContent = 'Escolha um ambiente para liberar a paisagem sonora.';
   else if (available && !audio) status.textContent = 'Ambiente pronto. Ative o áudio neste dispositivo.';
+  else status.textContent = 'Paisagem sonora em reprodução neste dispositivo.';
 }
 
 function validPayload(value: unknown): value is AmbiencePayload {
