@@ -279,7 +279,7 @@ export function renderCinematicPanel(connected: boolean, isGM: boolean): string 
         <div class="cinematic-control-range">
           <label for="cinematic-intensity">INTENSIDADE DOS EFEITOS <output id="cinematic-intensity-value">24%</output></label>
           <input id="cinematic-intensity" type="range" min="0.08" max="0.42" step="0.02" value="0.24">
-          <small>Controla a força da luz, gradação de cor, vinheta, partículas e granulação.</small>
+          <small>Controla a intensidade da iluminação e das partículas sem cobrir o mapa.</small>
         </div>
         <div class="cinematic-control-range">
           <label for="cinematic-duration">DURAÇÃO <output id="cinematic-duration-value">24 s</output></label>
@@ -362,7 +362,8 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   const character = escapeHtml((params.get('character') || 'Uma despedida').slice(0, 80));
   const epitaph = escapeHtml((params.get('epitaph') || '').slice(0, 240));
   const style = isStyle(params.get('style')) ? params.get('style') as CinematicStyle : 'melancholic';
-  const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24)) / 1000;
+  const duration = Math.max(16, Math.min(40, Number(params.get('duration')) || 24));
+  const intensity = Math.max(0.08, Math.min(0.42, Number(params.get('intensity')) || 0.24));
 
   document.documentElement.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   document.body.style.cssText = 'margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
@@ -381,7 +382,7 @@ export function renderCinematicOverlay(root: HTMLElement): void {
   }).join('');
 
   root.innerHTML = [
-    '<main class="farewell-scene farewell-' + style + '" style="--farewell-duration:' + duration + 's">',
+    '<main class="farewell-scene farewell-' + style + '" style="--farewell-duration:' + duration + 's;--farewell-intensity:' + intensity + '">',
     '<div class="farewell-light" aria-hidden="true"></div>',
     '<div class="farewell-rays" aria-hidden="true"></div>',
     '<div class="farewell-particles" aria-hidden="true">' + particles + '</div>',
