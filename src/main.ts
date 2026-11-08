@@ -2,6 +2,7 @@
 import './style.css';
 import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
+import { bindAmbienceActions, initializeAmbienceBackground, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -17,6 +18,10 @@ const pages = {
   eventos: {
     title: 'SHOWTIME',
     subtitle: 'Transforme acontecimentos narrativos em momentos cinematográficos.',
+  },
+  ambience: {
+    title: 'AMBIENCE',
+    subtitle: 'Crie uma atmosfera contínua com efeitos visuais e paisagens sonoras.',
   },
   cenas: {
     title: 'Cenas',
@@ -116,6 +121,9 @@ function render() {
           <button data-page="eventos" class="${currentPage === 'eventos' ? 'active' : ''}">
             SHOWTIME
           </button>
+          <button data-page="ambience" class="${currentPage === 'ambience' ? 'active' : ''}">
+            AMBIENCE
+          </button>
           <button data-page="cenas" class="${currentPage === 'cenas' ? 'active' : ''}">
             <span class="nav-icon">◉</span> Cenas
           </button>
@@ -178,10 +186,12 @@ function render() {
 
   bindCentralActions();
   bindShowtimeActions(app!, connected, isGM);
+  bindAmbienceActions(app!, connected, isGM);
 }
 
 function renderPage(): string {
   if (currentPage === 'eventos') return renderShowtimePanel(connected, isGM);
+  if (currentPage === 'ambience') return renderAmbiencePanel(connected, isGM);
 
   if (currentPage === 'central') {
     const active = session.active;
@@ -314,7 +324,7 @@ function renderPage(): string {
     `;
   }
 
-  const descriptions: Record<Exclude<Page, 'central'>, string> = {
+  const descriptions: Record<Exclude<Page, 'central' | 'ambience'>, string> = {
     eventos:
       'Aqui construiremos o sistema de eventos manuais, automáticos e acionados pelos jogadores.',
     cenas:
@@ -442,9 +452,10 @@ async function addLog(text: string) {
 const runtimeParams = new URLSearchParams(window.location.search);
 const isShowtimeBackground = runtimeParams.get('background') === '1';
 const isShowtimeOverlay = runtimeParams.get('showtime') === '1';
+const isAmbienceOverlay = runtimeParams.get('ambience') === '1';
 
 if (OBR.isAvailable && isShowtimeBackground) {
-  OBR.onReady(() => initializeShowtimeBackground());
+  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); });
 } else if (OBR.isAvailable && !isShowtimeOverlay) {
   OBR.onReady(async () => {
     connected = true;
@@ -477,4 +488,5 @@ if (OBR.isAvailable && isShowtimeBackground) {
 }
 
 if (isShowtimeOverlay) renderShowtimeOverlay(app!);
+else if (isAmbienceOverlay) renderAmbienceOverlay(app!);
 else if (!isShowtimeBackground) render();
