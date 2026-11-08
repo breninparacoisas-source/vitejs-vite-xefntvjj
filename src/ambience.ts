@@ -8,7 +8,7 @@ const SFX_CHANNEL = 'com.arton.engine/soundboard/v1';
 
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
 type AmbiencePayload = { version: 1; preset: AmbiencePreset; settings?: AmbienceSettings; createdAt: number };
-type SfxId = 'sword'|'impact'|'arrow'|'spell'|'portal'|'heal'|'roar'|'growl'|'thunder'|'explosion'|'door'|'footsteps';
+type SfxId = 'metal'|'thud'|'door'|'knock'|'steps'|'wolf'|'birds'|'thunder'|'fire'|'chime';
 type SfxPayload = { version: 1; id: SfxId; createdAt: number };
 
 type AmbienceSettings = { intensity: number; brightness: number; motion: number };
@@ -158,162 +158,154 @@ export function renderAmbiencePanel(connected: boolean, isGM: boolean): string {
     '</section>',
     '<section class="ambience-customizer"><div class="ambience-customizer-heading"><div><span class="ambience-eyebrow">AJUSTE FINO</span><h3>Personalize a atmosfera</h3><p>Os ajustes são aplicados a todos na sala. O volume de áudio continua individual.</p></div><div class="ambience-customizer-actions"><button type="button" id="ambience-reset-settings" ' + disabled + '>RESTAURAR PADRÃO</button><button type="button" id="ambience-apply-settings" class="ambience-apply-settings" ' + disabled + '>APLICAR AJUSTES</button></div></div><div class="ambience-setting-grid"><label class="ambience-setting"><span><strong>Intensidade</strong><output id="ambience-intensity-value">' + ambienceSettings.intensity + '%</output></span><small>Força dos efeitos visuais</small><input id="ambience-intensity" type="range" min="0" max="100" value="' + ambienceSettings.intensity + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Clareza</strong><output id="ambience-brightness-value">' + (ambienceSettings.brightness > 0 ? '+' : '') + ambienceSettings.brightness + '</output></span><small>Clarear ou escurecer a cena</small><input id="ambience-brightness" type="range" min="-40" max="40" value="' + ambienceSettings.brightness + '" ' + disabled + '></label><label class="ambience-setting"><span><strong>Movimento</strong><output id="ambience-motion-value">' + ambienceSettings.motion + '%</output></span><small>Velocidade dos efeitos animados</small><input id="ambience-motion" type="range" min="0" max="100" value="' + ambienceSettings.motion + '" ' + disabled + '></label></div><p class="ambience-customizer-note">Ajustes em tempo real: escolha o nível de presença visual sem alterar a imagem original do mapa.</p></section>',
     '<section class="ambience-audio-settings"><div class="ambience-audio-copy"><span class="ambience-eyebrow">MESA DE SOM</span><h3>Paisagem sonora</h3><p>O som é reproduzido neste dispositivo. Ative uma vez para liberar a reprodução no navegador.</p><p id="ambience-audio-status">' + (activePreset === 'off' ? 'Escolha um ambiente para liberar a paisagem sonora.' : 'Ambiente pronto. Ative o áudio neste dispositivo.') + '</p></div><div class="ambience-audio-controls"><button id="ambience-audio-enable" ' + (activePreset === 'off' ? 'disabled' : '') + '>ATIVAR ÁUDIO</button><label for="ambience-volume"><span>VOLUME</span><output id="ambience-volume-value">35%</output></label><input id="ambience-volume" type="range" min="0" max="1" step="0.01" value="0.35" disabled><button id="ambience-audio-mute" class="ambience-mute" disabled>SILENCIAR NESTE DISPOSITIVO</button></div></section>',
-    `<section class="soundtrack-panel"><div class="soundboard-heading"><div><span class="ambience-eyebrow">TRILHAS MUSICAIS</span><h3>Música para acompanhar a aventura</h3><p>Temas suaves e recorrentes para exploração, descanso, viagem e cenas cotidianas.</p></div><div class="soundboard-audio-access"><button id="music-audio-enable" type="button">ATIVAR TRILHAS</button><span id="music-audio-status">Cada jogador ativa a música no próprio dispositivo.</span></div></div><div class="soundtrack-grid"><button data-track="calm" ${disabled}>Fantasia tranquila<small>Melodia leve e contemplativa</small></button><button data-track="village" ${disabled}>Vila e cotidiano<small>Acolhedora, simples e serena</small></button><button data-track="travel" ${disabled}>Jornada e viagem<small>Ritmo constante e esperançoso</small></button><button data-track="tavern" ${disabled}>Taverna tranquila<small>Dedilhado suave e caloroso</small></button><button data-track="mystery" ${disabled}>Mistério leve<small>Curiosidade sem tensão pesada</small></button><button data-track="rest" ${disabled}>Descanso e reflexão<small>Calma, emoção e espaço</small></button><button data-track="stop" ${disabled}>Parar trilha<small>Encerra a música compartilhada</small></button></div><div class="soundboard-volume"><label for="music-volume">VOLUME DA MÚSICA <output id="music-volume-value">28%</output></label><input id="music-volume" type="range" min="0" max="1" step="0.01" value="0.28" disabled></div></section>`,
-    '<section class="soundboard"><div class="soundboard-heading"><div><span class="ambience-eyebrow">SOUNDBOARD</span><h3>Efeitos sonoros pontuais</h3><p>Dispare sons no momento exato. O efeito é enviado aos participantes da sala.</p></div><div class="soundboard-audio-access"><button id="sfx-audio-enable" type="button">LIBERAR EFEITOS</button><span id="sfx-audio-status">Libere o áudio neste dispositivo para ouvir os efeitos.</span></div></div><div class="soundboard-volume"><label for="sfx-volume">VOLUME DOS EFEITOS <output id="sfx-volume-value">75%</output></label><input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.75" disabled></div><div class="soundboard-category"><h4>Combate</h4><div class="soundboard-grid"><button data-sfx="sword" ' + (!connected || !isGM ? 'disabled' : '') + '>Choque de espadas</button><button data-sfx="impact" ' + (!connected || !isGM ? 'disabled' : '') + '>Impacto pesado</button><button data-sfx="arrow" ' + (!connected || !isGM ? 'disabled' : '') + '>Flecha disparada</button></div></div><div class="soundboard-category"><h4>Magia</h4><div class="soundboard-grid"><button data-sfx="spell" ' + (!connected || !isGM ? 'disabled' : '') + '>Conjuração arcana</button><button data-sfx="portal" ' + (!connected || !isGM ? 'disabled' : '') + '>Portal dimensional</button><button data-sfx="heal" ' + (!connected || !isGM ? 'disabled' : '') + '>Energia restauradora</button></div></div><div class="soundboard-category"><h4>Criaturas</h4><div class="soundboard-grid"><button data-sfx="roar" ' + (!connected || !isGM ? 'disabled' : '') + '>Rugido monstruoso</button><button data-sfx="growl" ' + (!connected || !isGM ? 'disabled' : '') + '>Rosnado grave</button></div></div><div class="soundboard-category"><h4>Ambiente e tensão</h4><div class="soundboard-grid"><button data-sfx="thunder" ' + (!connected || !isGM ? 'disabled' : '') + '>Trovão próximo</button><button data-sfx="explosion" ' + (!connected || !isGM ? 'disabled' : '') + '>Explosão</button><button data-sfx="door" ' + (!connected || !isGM ? 'disabled' : '') + '>Portão rangendo</button><button data-sfx="footsteps" ' + (!connected || !isGM ? 'disabled' : '') + '>Passos pesados</button></div></div><p class="soundboard-footnote">Somente o mestre dispara efeitos. Cada participante controla o próprio volume.</p></section>',
+    `<section class="soundtrack-panel"><div class="soundboard-heading"><div><span class="ambience-eyebrow">TRILHAS MUSICAIS</span><h3>Composições completas, não loops de sintetizador</h3><p>Cada opção toca uma gravação musical diferente, com instrumentos, arranjo e duração próprios.</p></div><div class="soundboard-audio-access"><button id="music-audio-enable" type="button">ATIVAR MÚSICA</button><span id="music-audio-status">Cada participante ativa a música no próprio dispositivo.</span></div></div><div class="soundtrack-grid"><button data-track="calm" ${disabled}>Cotidiano tranquilo<small>Instrumental leve e acolhedor · 6 min</small></button><button data-track="village" ${disabled}>Mercado e vila<small>Melodia medieval discreta · 2 min</small></button><button data-track="travel" ${disabled}>Estrada e jornada<small>Folk acústico, violão e cordas · 3 min</small></button><button data-track="tavern" ${disabled}>Taverna e convivência<small>Clima medieval e intimista · 2 min</small></button><button data-track="mystery" ${disabled}>Contemplação mística<small>Ambient instrumental · 2 min</small></button><button data-track="rest" ${disabled}>Memória e descanso<small>Piano, cordas e marimba · 6 min</small></button><button data-track="stop" ${disabled}>Parar música<small>Encerra a trilha compartilhada</small></button></div><div class="soundboard-volume"><label for="music-volume">VOLUME DA MÚSICA <output id="music-volume-value">28%</output></label><input id="music-volume" type="range" min="0" max="1" step="0.01" value="0.28" disabled></div><p class="soundboard-footnote">As faixas são carregadas da internet e podem levar alguns segundos para iniciar. Créditos: Kevin MacLeod, Frank Schröter, MusicLFiles e Scott Buckley. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">Licença CC BY 4.0</a>.</p></section>`,
+    '<section class="soundboard"><div class="soundboard-heading"><div><span class="ambience-eyebrow">SONS DO MUNDO</span><h3>Acontecimentos e detalhes</h3><p>Gravações de objetos, natureza e criaturas. Sons discretos para acompanhar a cena, sem efeitos artificiais de interface.</p></div><div class="soundboard-audio-access"><button id="sfx-audio-enable" type="button">LIBERAR SONS</button><span id="sfx-audio-status">Cada participante libera o áudio no próprio dispositivo.</span></div></div><div class="soundboard-volume"><label for="sfx-volume">VOLUME DOS SONS <output id="sfx-volume-value">55%</output></label><input id="sfx-volume" type="range" min="0" max="1" step="0.01" value="0.55" disabled></div><div class="soundboard-category"><h4>Objetos e construções</h4><div class="soundboard-grid"><button data-sfx="metal" ' + (!connected || !isGM ? 'disabled' : '') + '>Metal batendo</button><button data-sfx="thud" ' + (!connected || !isGM ? 'disabled' : '') + '>Objeto pesado caindo</button><button data-sfx="door" ' + (!connected || !isGM ? 'disabled' : '') + '>Porta rangendo</button><button data-sfx="knock" ' + (!connected || !isGM ? 'disabled' : '') + '>Batidas na madeira</button><button data-sfx="fire" ' + (!connected || !isGM ? 'disabled' : '') + '>Estalos e madeira</button></div></div><div class="soundboard-category"><h4>Natureza e criaturas</h4><div class="soundboard-grid"><button data-sfx="steps" ' + (!connected || !isGM ? 'disabled' : '') + '>Passos em cascalho</button><button data-sfx="wolf" ' + (!connected || !isGM ? 'disabled' : '') + '>Uivos distantes</button><button data-sfx="birds" ' + (!connected || !isGM ? 'disabled' : '') + '>Pássaros na mata</button><button data-sfx="thunder" ' + (!connected || !isGM ? 'disabled' : '') + '>Chuva e trovão</button><button data-sfx="chime" ' + (!connected || !isGM ? 'disabled' : '') + '>Sino ao vento</button></div></div><p class="soundboard-footnote">Somente o mestre dispara os sons. As gravações são reproduzidas localmente em cada participante que liberou o áudio.</p><p class="soundboard-footnote">Fontes: gravações do Wikimedia Commons, em domínio público ou Creative Commons. <a href="https://commons.wikimedia.org/wiki/File:Metal_Clanging_Noises.ogg" target="_blank" rel="noreferrer">Metal</a> · <a href="https://commons.wikimedia.org/wiki/File:Walkingongravel.ogg" target="_blank" rel="noreferrer">Passos</a>.</p></section>',
   ].join('');;
 }
 
 
-let sfxContext: AudioContext | undefined;
-let sfxMaster: GainNode | undefined;
-let sfxVolume = 0.75;
-let sfxEnabled = false;
-const SFX_IDS: SfxId[] = ['sword','impact','arrow','spell','portal','heal','roar','growl','thunder','explosion','door','footsteps'];
-function noiseBurst(ctx: AudioContext, out: AudioNode, duration: number, frequency: number, volume: number, filter: BiquadFilterType = 'lowpass'): void {
-  const length = Math.floor(ctx.sampleRate * duration);
-  const buffer = ctx.createBuffer(1,length,ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/length,2.1);
-  const source=ctx.createBufferSource(), band=ctx.createBiquadFilter(), gain=ctx.createGain();
-  source.buffer=buffer; band.type=filter; band.frequency.value=frequency; gain.gain.value=volume;
-  source.connect(band).connect(gain).connect(out); source.start();
+
+let sfxVolume=0.55;
+let sfxEnabled=false;
+const SFX_IDS:SfxId[]=['metal','thud','door','knock','steps','wolf','birds','thunder','fire','chime'];
+const SFX_SOURCES:Record<SfxId,string>={
+ metal:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Metal_Clanging_Noises.ogg',
+ thud:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dull_thud.ogg',
+ door:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Door_handle_creaking.ogg',
+ knock:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Knocking_on_wood_or_door.ogg',
+ steps:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Walkingongravel.ogg',
+ wolf:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Wolf_howls.ogg',
+ birds:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Birds_forest.ogg',
+ thunder:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rain_and_thunder.ogg',
+ fire:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Bones_breaking_wood_fire_ice_crackling.ogg',
+ chime:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Windchime.ogg'
+};
+const activeSfx=new Set<HTMLAudioElement>();
+function playSfx(id:SfxId):void{
+ if(!sfxEnabled)return;
+ const player=new Audio(SFX_SOURCES[id]);player.preload='auto';player.volume=sfxVolume;activeSfx.add(player);
+ player.addEventListener('ended',()=>activeSfx.delete(player),{once:true});
+ player.addEventListener('error',()=>{activeSfx.delete(player);const status=document.querySelector<HTMLElement>('#sfx-audio-status');if(status)status.textContent='Não foi possível carregar uma gravação. Verifique a conexão.';},{once:true});
+ void player.play().catch(error=>{activeSfx.delete(player);console.warn('Falha ao reproduzir gravação:',id,error);const status=document.querySelector<HTMLElement>('#sfx-audio-status');if(status)status.textContent='Não foi possível reproduzir o som. Tente liberar o áudio novamente.';});
 }
-function tone(ctx: AudioContext,out: AudioNode,hz: number,duration: number,volume: number,endHz?: number,type: OscillatorType='sine',delay=0): void {
-  const osc=ctx.createOscillator(), gain=ctx.createGain(), start=ctx.currentTime+delay;
-  osc.type=type; osc.frequency.setValueAtTime(hz,start);
-  if(endHz) osc.frequency.exponentialRampToValueAtTime(Math.max(1,endHz),start+duration);
-  gain.gain.setValueAtTime(.0001,start); gain.gain.exponentialRampToValueAtTime(volume,start+.025);
-  gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-  osc.connect(gain).connect(out); osc.start(start); osc.stop(start+duration+.03);
+function enableSfxAudio():void{
+ sfxEnabled=true;
+ const status=document.querySelector<HTMLElement>('#sfx-audio-status'),volume=document.querySelector<HTMLInputElement>('#sfx-volume'),button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
+ if(status)status.textContent='Sons liberados neste dispositivo.';
+ if(volume)volume.disabled=false;
+ if(button)button.textContent='SONS LIBERADOS';
 }
-function playSfx(id: SfxId): void {
-  if(!sfxEnabled||!sfxContext||!sfxMaster||sfxContext.state!=='running') return;
-  const x=sfxContext,y=sfxMaster;
-  switch(id){
-    case 'sword': noiseBurst(x,y,.32,2100,.32,'highpass'); tone(x,y,920,.46,.16,310,'triangle'); tone(x,y,1460,.2,.08,760); break;
-    case 'impact': noiseBurst(x,y,.4,480,.5); tone(x,y,105,.48,.4,35); break;
-    case 'arrow': noiseBurst(x,y,.38,2700,.23,'bandpass'); tone(x,y,700,.25,.07,160); break;
-    case 'spell': tone(x,y,220,.72,.18,1300); tone(x,y,480,.6,.1,1600,'triangle',.08); tone(x,y,950,.5,.07,520,'sine',.18); noiseBurst(x,y,.5,3600,.07,'highpass'); break;
-    case 'portal': tone(x,y,78,1.7,.16,34,'sawtooth'); tone(x,y,300,1.4,.1,900); tone(x,y,620,1.1,.07,150,'triangle',.12); noiseBurst(x,y,1.3,720,.12,'bandpass'); break;
-    case 'heal': [523,659,784,1047].forEach((hz,i)=>tone(x,y,hz,.8,.12,hz*1.01,'sine',i*.12)); break;
-    case 'roar': tone(x,y,90,1.1,.28,40,'sawtooth'); tone(x,y,135,.9,.18,55,'triangle',.04); noiseBurst(x,y,1,800,.25); break;
-    case 'growl': tone(x,y,65,.85,.23,32,'sawtooth'); tone(x,y,92,.7,.12,45,'triangle',.08); noiseBurst(x,y,.7,390,.16); break;
-    case 'thunder': noiseBurst(x,y,2.1,180,.5); tone(x,y,52,2.2,.38,24,'triangle'); break;
-    case 'explosion': noiseBurst(x,y,1,680,.65); tone(x,y,120,.85,.45,22); break;
-    case 'door': noiseBurst(x,y,1.1,350,.28,'bandpass'); tone(x,y,112,.8,.12,75,'sawtooth'); tone(x,y,70,.5,.16,40,'triangle',.3); break;
-    case 'footsteps': [0,.38,.78].forEach((d,i)=>{tone(x,y,i===1?75:90,.18,.2,36,'sine',d);noiseBurst(x,y,.1,240,.13);}); break;
-  }
+function receiveSfx(value:unknown):void{
+ if(!value||typeof value!=='object')return;
+ const p=value as Partial<SfxPayload>;
+ if(p.version!==1||typeof p.id!=='string'||typeof p.createdAt!=='number'||Math.abs(Date.now()-p.createdAt)>12000)return;
+ if(!SFX_IDS.includes(p.id as SfxId))return;
+ playSfx(p.id as SfxId);
 }
-function enableSfxAudio(): void {
-  if(!sfxContext||sfxContext.state==='closed'){sfxContext=new AudioContext();sfxMaster=sfxContext.createGain();sfxMaster.gain.value=sfxVolume;sfxMaster.connect(sfxContext.destination);}
-  void sfxContext.resume().then(()=>{
-    sfxEnabled=sfxContext?.state==='running';
-    const status=document.querySelector<HTMLElement>('#sfx-audio-status'), volume=document.querySelector<HTMLInputElement>('#sfx-volume'), button=document.querySelector<HTMLButtonElement>('#sfx-audio-enable');
-    if(status)status.textContent=sfxEnabled?'Efeitos liberados neste dispositivo.':'O navegador não liberou o áudio. Tente novamente.';
-    if(volume)volume.disabled=!sfxEnabled;
-    if(button)button.textContent=sfxEnabled?'EFEITOS LIBERADOS':'LIBERAR EFEITOS';
-  }).catch(error=>console.error('Falha ao liberar soundboard:',error));
-}
-function receiveSfx(value: unknown): void {
-  if(!value||typeof value!=='object')return;
-  const p=value as Partial<SfxPayload>;
-  if(p.version!==1||typeof p.id!=='string'||typeof p.createdAt!=='number'||Math.abs(Date.now()-p.createdAt)>12000)return;
-  if(!SFX_IDS.includes(p.id as SfxId))return;
-  playSfx(p.id as SfxId);
-}
-function bindSoundboard(root: HTMLElement, connected: boolean, isGM: boolean): void {
-  const enable=root.querySelector<HTMLButtonElement>('#sfx-audio-enable'), volume=root.querySelector<HTMLInputElement>('#sfx-volume'), output=root.querySelector<HTMLOutputElement>('#sfx-volume-value'), status=root.querySelector<HTMLElement>('#sfx-audio-status');
-  if(!enable||!volume||!output||!status)return;
-  enable.textContent=sfxEnabled?'EFEITOS LIBERADOS':'LIBERAR EFEITOS'; enable.addEventListener('click',enableSfxAudio);
-  volume.disabled=!sfxEnabled; volume.value=String(sfxVolume); output.textContent=Math.round(sfxVolume*100)+'%';
-  volume.addEventListener('input',()=>{sfxVolume=Number(volume.value);output.textContent=Math.round(sfxVolume*100)+'%';if(sfxMaster&&sfxContext)sfxMaster.gain.setTargetAtTime(sfxVolume,sfxContext.currentTime,.06);});
-  root.querySelectorAll<HTMLButtonElement>('[data-sfx]').forEach(button=>button.addEventListener('click',()=>{
-    if(!connected||!isGM||!sfxEnabled){if(!sfxEnabled)status.textContent='Libere os efeitos neste dispositivo antes de disparar sons.';return;}
-    const id=button.dataset.sfx as SfxId;if(!SFX_IDS.includes(id))return;
-    const payload:SfxPayload={version:1,id,createdAt:Date.now()}; playSfx(id);
-    void OBR.broadcast.sendMessage(SFX_CHANNEL,payload,{destination:'REMOTE'}).catch(error=>{console.error('Falha ao enviar efeito sonoro:',error);status.textContent='Não foi possível enviar o efeito para a sala.';});
-  }));
+function bindSoundboard(root:HTMLElement,connected:boolean,isGM:boolean):void{
+ const enable=root.querySelector<HTMLButtonElement>('#sfx-audio-enable'),volume=root.querySelector<HTMLInputElement>('#sfx-volume'),output=root.querySelector<HTMLOutputElement>('#sfx-volume-value'),status=root.querySelector<HTMLElement>('#sfx-audio-status');
+ if(!enable||!volume||!output||!status)return;
+ enable.textContent=sfxEnabled?'SONS LIBERADOS':'LIBERAR SONS';volume.disabled=!sfxEnabled;volume.value=String(sfxVolume);output.textContent=Math.round(sfxVolume*100)+'%';
+ enable.addEventListener('click',enableSfxAudio);
+ volume.addEventListener('input',()=>{sfxVolume=Number(volume.value);output.textContent=Math.round(sfxVolume*100)+'%';activeSfx.forEach(player=>{player.volume=sfxVolume;});});
+ root.querySelectorAll<HTMLButtonElement>('[data-sfx]').forEach(button=>button.addEventListener('click',()=>{
+  if(!connected||!isGM)return;
+  if(!sfxEnabled){status.textContent='Libere os sons neste dispositivo antes de disparar.';return;}
+  const id=button.dataset.sfx as SfxId;if(!SFX_IDS.includes(id))return;
+  const payload:SfxPayload={version:1,id,createdAt:Date.now()};playSfx(id);
+  void OBR.broadcast.sendMessage(SFX_CHANNEL,payload,{destination:'REMOTE'}).catch(error=>{console.error('Falha ao enviar som:',error);status.textContent='Não foi possível enviar o som à sala.';});
+ }));
 }
 
 
 type TrackId='calm'|'village'|'travel'|'tavern'|'mystery'|'rest'|'stop';
-const TRACKS: Record<Exclude<TrackId,'stop'>,number[][]> = {
- calm:[[261.63,329.63,392],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66]],
- village:[[293.66,369.99,440],[261.63,329.63,392],[220,293.66,349.23],[246.94,311.13,369.99]],
- travel:[[196,246.94,293.66],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,329.63]],
- tavern:[[220,261.63,329.63],[196,246.94,293.66],[164.81,196,246.94],[196,246.94,329.63]],
- mystery:[[220,261.63,311.13],[196,233.08,293.66],[174.61,220,261.63],[196,246.94,293.66]],
- rest:[[261.63,329.63,392],[196,261.63,329.63],[220,293.66,349.23],[174.61,220,261.63]]
+type TrackDefinition={url:string;credit:string};
+const TRACKS:Record<Exclude<TrackId,'stop'>,TrackDefinition>={
+ calm:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Wholesome_by_Kevin_MacLeod.ogg',credit:'Wholesome — Kevin MacLeod'},
+ village:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Medieval_Dream_by_Frank_Schr%C3%B6ter.ogg',credit:'Medieval Dream — Frank Schröter'},
+ travel:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Warm_Sunset_by_MusicLFiles.ogg',credit:'Warm Sunset — MusicLFiles'},
+ tavern:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Medieval_Story_by_Frank_Schr%C3%B6ter.ogg',credit:'Medieval Story — Frank Schröter'},
+ mystery:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Placid_Ambient_by_MusicLFiles.ogg',credit:'Placid Ambient — MusicLFiles'},
+ rest:{url:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Scott_Buckley_-_Solace.oga',credit:'Solace — Scott Buckley'}
 };
-let musicContext:AudioContext|undefined;
-let musicMaster:GainNode|undefined;
-let musicTimer:number|undefined;
-let musicStep=0;
+let musicAudio:HTMLAudioElement|undefined;
+let musicFadeTimer:number|undefined;
 let currentTrack:TrackId='stop';
 let musicVolume=.28;
-function playMusicChord(track:Exclude<TrackId,'stop'>):void{
- if(!musicContext||!musicMaster||musicContext.state!=='running')return;
- const chord=TRACKS[track][musicStep%TRACKS[track].length];
- const now=musicContext.currentTime;
- chord.forEach((hz,index)=>{
-  const osc=musicContext!.createOscillator(),gain=musicContext!.createGain();
-  osc.type=index===0?'sine':'triangle';osc.frequency.value=hz;
-  gain.gain.setValueAtTime(.0001,now);
-  gain.gain.linearRampToValueAtTime(index===0?.055:.025,now+1.8);
-  gain.gain.setTargetAtTime(.0001,now+6.2,1.1);
-  osc.connect(gain).connect(musicMaster!);osc.start(now);osc.stop(now+10);
- });
- const melody=[chord[2]*2,chord[1]*2,chord[0]*2,chord[1]*2];
- melody.forEach((hz,index)=>{
-  const osc=musicContext!.createOscillator(),gain=musicContext!.createGain(),start=now+index*1.35+.35;
-  osc.type='sine';osc.frequency.value=hz;
-  gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(.022,start+.35);gain.gain.exponentialRampToValueAtTime(.0001,start+1.65);
-  osc.connect(gain).connect(musicMaster!);osc.start(start);osc.stop(start+1.7);
- });
- musicStep++;
+let musicEnabled=false;
+function fadeOutMusic(player:HTMLAudioElement):void{
+ const initial=player.volume;const started=Date.now();
+ const timer=window.setInterval(()=>{
+  const progress=Math.min(1,(Date.now()-started)/650);player.volume=Math.max(0,initial*(1-progress));
+  if(progress>=1){window.clearInterval(timer);player.pause();player.src='';}
+ },30);
 }
 function stopMusic():void{
- if(musicTimer!==undefined)window.clearInterval(musicTimer);
- musicTimer=undefined;
- if(musicContext){void musicContext.close();musicContext=undefined;musicMaster=undefined;}
+ currentTrack='stop';
+ if(musicFadeTimer!==undefined){window.clearInterval(musicFadeTimer);musicFadeTimer=undefined;}
+ if(musicAudio){fadeOutMusic(musicAudio);musicAudio=undefined;}
 }
-function startMusic(track:TrackId):void{
+function startMusic(track:TrackId,createdAt=Date.now()):void{
  currentTrack=track;
  if(track==='stop'){stopMusic();return;}
- if(!musicContext||musicContext.state==='closed'){
-  musicContext=new AudioContext();musicMaster=musicContext.createGain();musicMaster.gain.value=musicVolume;musicMaster.connect(musicContext.destination);
- }
- if(musicContext.state!=='running')return;
- if(musicTimer!==undefined)window.clearInterval(musicTimer);
- musicStep=0;playMusicChord(track);
- musicTimer=window.setInterval(()=>playMusicChord(track),8000);
+ if(!musicEnabled)return;
+ const definition=TRACKS[track];if(!definition)return;
+ if(musicFadeTimer!==undefined){window.clearInterval(musicFadeTimer);musicFadeTimer=undefined;}
+ const previous=musicAudio;
+ const next=new Audio(definition.url);next.preload='auto';next.loop=true;next.volume=0;
+ next.addEventListener('error',()=>{
+  const status=document.querySelector<HTMLElement>('#music-audio-status');
+  if(status)status.textContent='Não foi possível carregar a faixa. Verifique a conexão e tente novamente.';
+ },{once:true});
+ next.addEventListener('loadedmetadata',()=>{
+  if(Number.isFinite(next.duration)&&next.duration>0){
+   const elapsed=Math.max(0,(Date.now()-createdAt)/1000);
+   try{next.currentTime=elapsed%next.duration;}catch{/* O navegador pode ainda estar preparando a faixa. */}
+  }
+ },{once:true});
+ musicAudio=next;
+ void next.play().then(()=>{
+  const status=document.querySelector<HTMLElement>('#music-audio-status');
+  if(status)status.textContent='Em reprodução: '+definition.credit+'.';
+  if(previous)fadeOutMusic(previous);
+  const started=Date.now();
+  musicFadeTimer=window.setInterval(()=>{
+   if(musicAudio!==next){if(musicFadeTimer!==undefined)window.clearInterval(musicFadeTimer);return;}
+   const progress=Math.min(1,(Date.now()-started)/900);next.volume=musicVolume*progress;
+   if(progress>=1&&musicFadeTimer!==undefined){window.clearInterval(musicFadeTimer);musicFadeTimer=undefined;}
+  },30);
+ }).catch(error=>{
+  console.warn('Falha ao iniciar trilha:',track,error);
+  const status=document.querySelector<HTMLElement>('#music-audio-status');
+  if(status)status.textContent='Trilha selecionada. Clique em ATIVAR MÚSICA neste dispositivo.';
+ });
 }
 function enableMusic():void{
- if(!musicContext||musicContext.state==='closed'){musicContext=new AudioContext();musicMaster=musicContext.createGain();musicMaster.gain.value=musicVolume;musicMaster.connect(musicContext.destination);}
- void musicContext.resume().then(()=>{
-  const status=document.querySelector<HTMLElement>('#music-audio-status'),volume=document.querySelector<HTMLInputElement>('#music-volume');
-  if(volume)volume.disabled=false;
-  if(status)status.textContent='Trilhas liberadas neste dispositivo.';
-  if(currentTrack!=='stop')startMusic(currentTrack);
- }).catch(error=>console.error('Falha ao liberar trilhas:',error));
+ musicEnabled=true;
+ const status=document.querySelector<HTMLElement>('#music-audio-status'),volume=document.querySelector<HTMLInputElement>('#music-volume'),button=document.querySelector<HTMLButtonElement>('#music-audio-enable');
+ if(volume)volume.disabled=false;
+ if(button)button.textContent='MÚSICA LIBERADA';
+ if(status)status.textContent='Música liberada neste dispositivo.';
+ if(currentTrack!=='stop')startMusic(currentTrack);
 }
 function receiveTrack(value:unknown):void{
  if(!value||typeof value!=='object')return;
  const data=value as {version?:number;track?:TrackId;createdAt?:number};
- if(data.version!==1||!['calm','village','travel','tavern','mystery','rest','stop'].includes(data.track||'')||typeof data.createdAt!=='number'||Math.abs(Date.now()-data.createdAt)>12000)return;
- startMusic(data.track!);
+ if(data.version!==1||!['calm','village','travel','tavern','mystery','rest','stop'].includes(data.track||'')||typeof data.createdAt!=='number'||Math.abs(Date.now()-data.createdAt)>120000)return;
+ startMusic(data.track!,data.createdAt);
 }
 function bindSoundtracks(root:HTMLElement,connected:boolean,isGM:boolean):void{
  const enable=root.querySelector<HTMLButtonElement>('#music-audio-enable'),volume=root.querySelector<HTMLInputElement>('#music-volume'),output=root.querySelector<HTMLOutputElement>('#music-volume-value');
  if(!enable||!volume||!output)return;
+ enable.textContent=musicEnabled?'MÚSICA LIBERADA':'ATIVAR MÚSICA';
  enable.addEventListener('click',enableMusic);
- volume.disabled=!musicContext||musicContext.state!=='running';volume.value=String(musicVolume);output.textContent=Math.round(musicVolume*100)+'%';
- volume.addEventListener('input',()=>{musicVolume=Number(volume.value);output.textContent=Math.round(musicVolume*100)+'%';if(musicMaster&&musicContext)musicMaster.gain.setTargetAtTime(musicVolume,musicContext.currentTime,.08);});
+ volume.disabled=!musicEnabled;volume.value=String(musicVolume);output.textContent=Math.round(musicVolume*100)+'%';
+ volume.addEventListener('input',()=>{musicVolume=Number(volume.value);output.textContent=Math.round(musicVolume*100)+'%';if(musicAudio)musicAudio.volume=musicVolume;});
  root.querySelectorAll<HTMLButtonElement>('[data-track]').forEach(button=>button.addEventListener('click',()=>{
   if(!connected||!isGM)return;
   const track=button.dataset.track as TrackId;if(!['calm','village','travel','tavern','mystery','rest','stop'].includes(track))return;
-  const payload={version:1,track,createdAt:Date.now()};
-  startMusic(track);
+  const createdAt=Date.now();const payload={version:1,track,createdAt};
+  startMusic(track,createdAt);
   void OBR.broadcast.sendMessage(SFX_CHANNEL,payload,{destination:'REMOTE'}).catch(error=>console.error('Falha ao sincronizar trilha:',error));
  }));
 }
