@@ -511,7 +511,7 @@ if (OBR.isAvailable && isShowtimeBackground) {
       render();
     }
   });
-} else if (!OBR.isAvailable && !isShowtimeOverlay && !isShowtimeBackground) {
+} else if (!OBR.isAvailable && !isShowtimeOverlay && !isShowtimeBackground && !isCinematicOverlay && !isAmbienceOverlay) {
   console.log('ARTON ENGINE aberto fora do Owlbear Rodeo.');
 }
 
