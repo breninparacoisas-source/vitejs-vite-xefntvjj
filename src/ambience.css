@@ -275,3 +275,12 @@ html:has(.ambience-overlay),body:has(.ambience-overlay),body:has(.ambience-overl
 .soundboard-grid button:disabled{opacity:.38;cursor:not-allowed}
 .soundboard-footnote{margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);font-size:10px}
 @media(max-width:700px){.soundboard{padding:20px}.soundboard-heading{flex-direction:column}.soundboard-audio-access{align-items:flex-start}.soundboard-audio-access span{text-align:left}.soundboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Trilhas musicais */
+.soundtrack-panel{margin-top:26px;padding:25px 26px 22px;border:1px solid rgba(198,165,104,.2);border-radius:8px;background:linear-gradient(135deg,#24231f,#191a18)}
+.soundtrack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:20px}
+.soundtrack-grid button{display:flex;flex-direction:column;gap:5px;min-height:62px;padding:13px 15px;border:1px solid rgba(198,165,104,.18);border-radius:5px;background:rgba(255,255,255,.025);color:#e0d5c3;text-align:left;font-size:12px;cursor:pointer;transition:background .16s,border-color .16s}
+.soundtrack-grid button:hover:not(:disabled){border-color:rgba(198,165,104,.58);background:rgba(198,165,104,.11)}
+.soundtrack-grid button:disabled{opacity:.38;cursor:not-allowed}
+.soundtrack-grid button small{color:#928b7e;font-size:10px;font-weight:400}
+@media(max-width:700px){.soundtrack-panel{padding:20px}.soundtrack-grid{grid-template-columns:1fr}}
