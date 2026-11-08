@@ -147,7 +147,7 @@ async function fireEffect(
 
 async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
   try {
-    const images = await OBR.assets.downloadImages(false, '', 'ATTACHMENT');
+    const images = await OBR.assets.downloadImages(false, '');
     const chosen = images[0];
     if (!chosen) {
       OBR.notification.show('Nenhuma imagem foi selecionada na biblioteca.');
@@ -194,9 +194,8 @@ async function uploadAppearancePng(file: File, root: HTMLElement): Promise<void>
     const bytes = await file.arrayBuffer();
     const safeFile = new File([bytes], file.name, { type: 'image/png' });
     const upload = buildImageUpload(safeFile).build();
-    await OBR.assets.uploadImages([upload], 'ATTACHMENT');
-    OBR.notification.show('Upload concluído. Agora escolha o PNG na janela da biblioteca que será aberta.');
-    await chooseAppearanceImage(root);
+    await OBR.assets.uploadImages([upload]);
+    OBR.notification.show('PNG enviado à biblioteca do Owlbear. Clique em “Selecionar imagem” para escolhê-lo.');
   } catch (error) {
     console.error('Erro ao enviar PNG:', error);
     OBR.notification.show('Não foi possível enviar esse PNG para a biblioteca do Owlbear.');
@@ -261,8 +260,8 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-section-heading"><div><span>01 / MANIFESTAÇÃO</span><h3>Aparição personalizada</h3></div><small>IMAGEM PNG COM TRANSPARÊNCIA</small></div>',
     '<section class="showtime-editor appearance-editor">',
     '<div class="appearance-image-column"><div class="appearance-image-preview" id="appearance-image-preview">' + imagePreview + '</div>',
-    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button" id="appearance-image-pick">ESCOLHER DA BIBLIOTECA</button><button type="button" class="showtime-secondary-button upload-png-button" id="appearance-image-upload-button">ENVIAR PNG</button><input type="file" id="appearance-image-upload" accept="image/png,.png" hidden><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
-    '<p class="showtime-hint">Escolha uma imagem PNG com fundo transparente. Ela será exibida proporcionalmente, sem esticar.</p></div>',
+    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button" id="appearance-image-pick">SELECIONAR IMAGEM</button><button type="button" class="showtime-secondary-button upload-png-button" id="appearance-image-upload-button">ENVIAR PNG À BIBLIOTECA</button><input type="file" id="appearance-image-upload" accept="image/png,.png" hidden><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
+    '<p class="showtime-hint">Envie o PNG uma vez. Depois use “Selecionar imagem” para escolher qualquer imagem da biblioteca. Ela será exibida sem deformação.</p><label for="appearance-image-url">OU COLE UM LINK DIRETO DE IMAGEM</label><input id="appearance-image-url" type="url" placeholder="https://.../imagem.png" value="' + escapeHtml(selectedImageUrl) + '"><button type="button" class="showtime-text-button" id="appearance-image-url-apply">Usar link</button></div>',
     '<div class="showtime-settings-column"><label for="appearance-title">TÍTULO</label><input id="appearance-title" maxlength="100" value="Uma presença se revela" placeholder="Ex.: O Devorador de Almas">',
     '<label for="appearance-message">FRASE OPCIONAL</label><input id="appearance-message" maxlength="180" value="Algo antigo despertou..." placeholder="Uma frase curta para acompanhar a entrada">',
     '<div class="showtime-range"><label for="appearance-opacity">OPACIDADE <output id="appearance-opacity-value">88%</output></label><input id="appearance-opacity" type="range" min="0.25" max="1" step="0.01" value="0.88"></div>',
@@ -302,6 +301,19 @@ export function bindShowtimeActions(root: HTMLElement, connected: boolean, isGM:
 
   root.querySelector<HTMLButtonElement>('#appearance-image-pick')?.addEventListener('click', () => {
     void chooseAppearanceImage(root);
+  });
+
+  root.querySelector<HTMLButtonElement>('#appearance-image-url-apply')?.addEventListener('click', () => {
+    const field = root.querySelector<HTMLInputElement>('#appearance-image-url');
+    const value = field?.value.trim() || '';
+    if (value && !/^https?:\\/\\//i.test(value)) {
+      OBR.notification.show('Use um link de imagem iniciado por http:// ou https://.');
+      return;
+    }
+    selectedImageUrl = value;
+    try { localStorage.setItem(IMAGE_STORAGE_KEY, selectedImageUrl); } catch { /* armazenamento opcional */ }
+    updateImagePreview(root);
+    OBR.notification.show(value ? 'Link de imagem aplicado.' : 'Imagem removida.');
   });
 
   root.querySelector<HTMLButtonElement>('#appearance-image-remove')?.addEventListener('click', () => {
@@ -364,10 +376,10 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
   if (kind === 'appearance') {
     const image = imageUrl
       ? '<img class="appearance-custom-image" src="' + escapeHtml(imageUrl) + '" alt="">'
-      : '<div class="appearance-fallback" aria-hidden="true"><span>✧</span></div>';
+      : '<div class="appearance-fallback" aria-hidden="true"></div>';
     root.innerHTML = [
       '<main class="showtime-overlay showtime-appearance" style="--effect-opacity:' + opacity + ';--effect-scale:' + scale + '" role="status" aria-live="polite">',
-      '<div class="appearance-atmosphere"></div><div class="appearance-runes" aria-hidden="true">ᚦ　ᚱ　ᛟ　ᚨ　ᛉ　ᚷ　ᚦ</div>',
+      '<div class="appearance-atmosphere"></div>',
       '<div class="appearance-image-stage">' + image + '</div>',
       '<div class="appearance-copy">' + (title ? '<h1>' + title + '</h1>' : '') + (message ? '<p>' + escapeHtml(message) + '</p>' : '') + '</div>',
       '</main>',
@@ -396,7 +408,7 @@ export function renderShowtimeOverlay(root: HTMLElement): void {
     '<main class="showtime-overlay showtime-omen" style="--omen-intensity:' + intensity + '" role="status" aria-live="off">',
     '<div class="omen-atmosphere"></div><div class="omen-haze"></div>',
     '<div class="omen-whisper-field" aria-hidden="true">' + whisperElements.join('') + '</div>',
-    '<div class="omen-center-mark" aria-hidden="true">✧</div>',
+
     '<div class="omen-whisper-caption">' + (title ? escapeHtml(title) : 'SUSSURROS') + '</div>',
     '</main>',
   ].join('');
