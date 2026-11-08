@@ -1,0 +1,60 @@
+/* CINEMÁTICO — linguagem de direção dramática, independente do SHOWTIME */
+.cinematic-welcome{display:grid;grid-template-columns:1.1fr .9fr;min-height:250px;margin-bottom:34px;border:1px solid rgba(198,165,104,.2);background:linear-gradient(115deg,#191815,#211e19 58%,#171614);overflow:hidden}
+.cinematic-welcome-copy{padding:34px 30px;align-self:center}
+.cinematic-kicker,.cinematic-editor-heading>div>span{font-size:9px;letter-spacing:2px;color:#b49a70;font-weight:700}
+.cinematic-welcome h3{font:400 clamp(25px,3vw,38px)/1.25 Georgia,serif;color:#eee5d7;margin:17px 0 12px}
+.cinematic-welcome h3 em{color:#c4aa83;font-weight:400}
+.cinematic-welcome p{max-width:530px;color:#aaa294;font-size:12px;line-height:1.8;margin:0}
+.cinematic-preview{position:relative;min-height:250px;overflow:hidden;background:linear-gradient(180deg,rgba(10,10,12,.05),rgba(8,8,10,.85)),radial-gradient(ellipse at 52% 62%,rgba(171,150,123,.28),transparent 38%),linear-gradient(130deg,#37332e,#17191b 62%,#101114)}
+.cinematic-preview:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#1d1a16,transparent 45%),repeating-linear-gradient(0deg,transparent 0 30px,rgba(220,210,190,.018) 31px 32px)}
+.cinematic-preview-light{position:absolute;width:55%;height:110%;left:23%;top:16%;border-radius:50%;background:radial-gradient(ellipse,rgba(201,181,148,.2),rgba(125,112,95,.07) 35%,transparent 70%);filter:blur(18px);animation:cinematicPreviewLight 7s ease-in-out infinite alternate}
+.cinematic-preview-horizon{position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(0deg,rgba(3,4,5,.8),transparent);border-top:1px solid rgba(203,187,161,.12)}
+.cinematic-preview-caption{position:absolute;left:24px;bottom:23px;color:rgba(230,219,201,.65);font:10px Georgia,serif;letter-spacing:4px}
+@keyframes cinematicPreviewLight{from{transform:translateY(8px) scale(.9);opacity:.45}to{transform:translateY(-8px) scale(1.08);opacity:.9}}
+.cinematic-editor-heading{display:flex;align-items:end;justify-content:space-between;margin:32px 0 15px}
+.cinematic-editor-heading h3{font:400 23px Georgia,serif;color:#e8dfd1;margin:7px 0 0}
+.cinematic-editor-heading small{font-size:8px;letter-spacing:1.4px;color:#817969}
+.cinematic-editor{display:grid;grid-template-columns:.9fr 1.1fr;gap:25px;padding:24px;background:#191916;border:1px solid rgba(198,165,104,.17);border-radius:5px}
+.cinematic-act-list{display:flex;flex-direction:column;gap:0}
+.cinematic-act-list>div{padding:14px 0 18px 17px;border-left:1px solid rgba(190,164,120,.35);position:relative}
+.cinematic-act-list>div:before{content:"";position:absolute;left:-4px;top:19px;width:7px;height:7px;border-radius:50%;background:#a88c62}
+.cinematic-act-list span{display:block;color:#b69a70;font-size:8px;letter-spacing:1.7px;margin-bottom:7px}
+.cinematic-act-list strong{display:block;color:#e1d7c8;font:400 17px Georgia,serif}
+.cinematic-act-list p{color:#918a7e;font-size:11px;line-height:1.65;margin:7px 0 0}
+.cinematic-controls{display:flex;flex-direction:column;gap:9px}
+.cinematic-controls>label,.cinematic-control-range label{font-size:9px;letter-spacing:1.1px;color:#b6aa96;font-weight:700}
+.cinematic-controls input,.cinematic-controls textarea{width:100%;padding:12px 13px;background:#11110f;border:1px solid rgba(198,165,104,.2);border-radius:3px;color:#e8e1d3;font:12px Inter,sans-serif;outline:none;resize:vertical}
+.cinematic-controls input:focus,.cinematic-controls textarea:focus{border-color:rgba(198,165,104,.65)}
+.cinematic-control-range{margin-top:10px}
+.cinematic-control-range label{display:flex;justify-content:space-between;gap:12px}
+.cinematic-control-range output{color:#d1b88f}
+.cinematic-control-range input{padding:0;margin:12px 0 4px;accent-color:#b99b6b}
+.cinematic-control-range small{display:block;color:#817b70;font-size:10px;line-height:1.5}
+.cinematic-launch{margin-top:9px;padding:14px 16px;background:linear-gradient(110deg,#9a7b4d,#c1a477);border:1px solid #c9ad7d;border-radius:3px;color:#17130e;font-size:10px;font-weight:800;letter-spacing:1.5px;cursor:pointer;transition:filter .2s,transform .2s}
+.cinematic-launch:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.cinematic-launch:disabled{opacity:.4;cursor:not-allowed}
+.cinematic-status,.cinematic-footnote{color:#938b7d;font-size:10px;line-height:1.6;margin:5px 0 0}
+.cinematic-footnote{margin-top:17px}
+.cinematic-overlay{isolation:isolate;contain:strict}
+.farewell-scene{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:#f0e9dc}
+.farewell-dimming{position:absolute;inset:-8%;background:radial-gradient(ellipse at 50% 54%,rgba(15,15,17,.04),rgba(7,8,11,.3) 62%,rgba(2,3,5,.72) 115%);opacity:0;animation:farewellDim var(--farewell-duration) ease-out forwards}
+.farewell-drift{position:absolute;inset:-12%;background:linear-gradient(112deg,transparent 22%,rgba(193,183,166,.035) 49%,transparent 76%),radial-gradient(ellipse at 50% 75%,rgba(174,159,139,.11),transparent 50%);filter:blur(18px);transform:translate3d(0,2%,0) scale(1.04);animation:farewellDrift var(--farewell-duration) cubic-bezier(.2,.55,.25,1) both}
+.farewell-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 52%,transparent 18%,rgba(5,6,9,.2) 66%,rgba(1,2,4,.76) 120%);opacity:0;animation:farewellVignette var(--farewell-duration) ease-in-out both}
+.farewell-haze{position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 72%,rgba(175,163,148,.13),transparent 45%);filter:blur(38px);opacity:0;animation:farewellHaze var(--farewell-duration) ease-in-out both}
+.farewell-caption{position:absolute;left:8%;right:8%;top:50%;transform:translateY(-42%);text-align:center;opacity:0;animation:farewellCaption var(--farewell-duration) ease-in-out 2.5s both}
+.farewell-overline{display:block;margin-bottom:18px;color:rgba(218,208,192,.58);font:700 9px Inter,sans-serif;letter-spacing:3px}
+.farewell-caption h1{margin:0;color:#eee7dc;font:400 clamp(30px,5vw,64px)/1.1 Georgia,serif;letter-spacing:.02em;text-shadow:0 3px 35px rgba(0,0,0,.9)}
+.farewell-caption p{max-width:min(680px,82vw);margin:20px auto 0;color:rgba(225,216,202,.82);font:italic clamp(14px,1.8vw,21px)/1.65 Georgia,serif;text-shadow:0 2px 18px #000}
+.farewell-rule{display:block;width:0;height:1px;margin:25px auto 0;background:linear-gradient(90deg,transparent,rgba(206,187,158,.7),transparent);animation:farewellRule var(--farewell-duration) ease 3s both}
+.farewell-endfade{position:absolute;inset:0;background:#050609;opacity:0;animation:farewellEnd var(--farewell-duration) ease-in 0s both}
+.farewell-progress{position:absolute;left:0;right:0;bottom:0;height:2px;transform:scaleX(0);transform-origin:left;background:rgba(201,181,151,.65);animation:farewellProgress var(--farewell-duration) linear both}
+@keyframes farewellDim{0%,8%{opacity:0}35%{opacity:calc(var(--farewell-intensity)*.58)}100%{opacity:calc(var(--farewell-intensity)*.7)}}
+@keyframes farewellDrift{0%{transform:translate3d(0,2%,0) scale(1.04)}35%{transform:translate3d(-1.2%,-.4%,0) scale(1.08)}70%{transform:translate3d(.8%,-1%,0) scale(1.1)}100%{transform:translate3d(0,-1.8%,0) scale(1.12)}}
+@keyframes farewellVignette{0%,10%{opacity:0}45%{opacity:calc(var(--farewell-intensity)*.7)}100%{opacity:var(--farewell-intensity)}}
+@keyframes farewellHaze{0%,22%{opacity:0}50%{opacity:.7}100%{opacity:.4}}
+@keyframes farewellCaption{0%,22%{opacity:0;filter:blur(9px);transform:translateY(-35%)}42%{opacity:1;filter:blur(0);transform:translateY(-50%)}78%{opacity:1;filter:blur(0);transform:translateY(-50%)}100%{opacity:0;filter:blur(5px);transform:translateY(-58%)}}
+@keyframes farewellRule{0%,28%{width:0;opacity:0}55%{width:150px;opacity:1}85%{width:150px;opacity:.6}100%{width:0;opacity:0}}
+@keyframes farewellEnd{0%,76%{opacity:0}100%{opacity:.88}}
+@keyframes farewellProgress{to{transform:scaleX(1)}}
+@media(max-width:760px){.cinematic-welcome{grid-template-columns:1fr}.cinematic-preview{min-height:170px}.cinematic-editor{grid-template-columns:1fr}.cinematic-editor-heading{align-items:start;gap:12px;flex-direction:column}.farewell-caption{left:5%;right:5%}}
+@media(prefers-reduced-motion:reduce){.cinematic-preview-light,.farewell-dimming,.farewell-drift,.farewell-vignette,.farewell-haze,.farewell-caption,.farewell-rule,.farewell-endfade,.farewell-progress{animation:none!important}.farewell-dimming{opacity:.35}.farewell-caption{opacity:1;transform:translateY(-50%)}}
