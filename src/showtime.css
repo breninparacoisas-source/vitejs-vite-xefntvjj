@@ -161,3 +161,10 @@
 @keyframes verseReveal{to{opacity:1;filter:blur(0)}}
 @media(max-width:650px){.prophecy-frame{padding:22px 16px}.prophecy-frame h1{margin:10px 0 14px}.prophecy-verses{gap:7px}.prophecy-verse{font-size:13px}.prophecy-foot{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.rupture-atmosphere,.rupture-vignette,.tear-shadow,.tear-core,.tear-branch,.rupture-shards i,.rupture-copy,.prophecy-aura,.prophecy-frame,.prophecy-main,.prophecy-verse,.prophecy-foot{animation:none!important;opacity:1!important;filter:none!important;stroke-dashoffset:0!important}.showtime-hallucination .omen-whisper,.showtime-echo .omen-echo{animation:none!important;opacity:var(--whisper-alpha)!important}}
+
+/* Ajustes de composição da profecia: versos no fluxo, sem herdar posicionamento antigo */
+.showtime-prophecy .prophecy-main{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;width:auto!important;z-index:auto!important;animation:prophecyTextIn 1.4s ease .35s both!important}
+.showtime-prophecy .prophecy-frame{max-height:90vh;overflow:hidden}
+.showtime-prophecy .prophecy-verses{max-height:34vh;overflow:hidden}
+.showtime-prophecy .prophecy-verse{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;opacity:0;animation:verseReveal .9s ease var(--verse-delay) forwards!important}
+@media(max-height:650px){.showtime-prophecy .prophecy-frame{padding:15px 22px}.showtime-prophecy .prophecy-frame h1{margin:8px 0 10px}.showtime-prophecy .prophecy-rule{margin-bottom:12px}.showtime-prophecy .prophecy-verses{margin-top:12px;gap:6px}.showtime-prophecy .prophecy-verse{font-size:12px}.showtime-prophecy .prophecy-foot{margin-top:12px}}
