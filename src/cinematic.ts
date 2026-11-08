@@ -28,133 +28,127 @@ let activeRun = 0;
 
 type GradeProfile = {
   tint: { x: number; y: number; z: number };
-  saturation: number;
-  grade: number;
-  glow: number;
-  vignette: number;
-  bars: number;
-  particles: number;
-  grain: number;
-  flash: number;
+  saturation: number; grade: number; glow: number; vignette: number;
+  bars: number; particles: number; grain: number; flash: number;
 };
-
 const GRADE_PROFILES: Record<CinematicStyle, GradeProfile> = {
-  melancholic: {
-    tint: { x: 0.72, y: 0.82, z: 1.0 }, saturation: 0.58, grade: 0.28,
-    glow: 0.07, vignette: 0.42, bars: 0.92, particles: 0.34, grain: 0.035, flash: 0.025,
-  },
-  heroic: {
-    tint: { x: 1.0, y: 0.76, z: 0.43 }, saturation: 1.12, grade: 0.22,
-    glow: 0.25, vignette: 0.25, bars: 0.88, particles: 0.9, grain: 0.025, flash: 0.16,
-  },
-  hopeful: {
-    tint: { x: 1.0, y: 0.9, z: 0.65 }, saturation: 1.08, grade: 0.18,
-    glow: 0.32, vignette: 0.18, bars: 0.82, particles: 0.72, grain: 0.02, flash: 0.12,
-  },
-  tragic: {
-    tint: { x: 0.92, y: 0.43, z: 0.39 }, saturation: 0.48, grade: 0.4,
-    glow: 0.025, vignette: 0.56, bars: 1.0, particles: 0.82, grain: 0.055, flash: 0.07,
-  },
+  melancholic: { tint:{x:0.62,y:0.72,z:1}, saturation:0.48, grade:0.42, glow:0.10, vignette:0.62, bars:0.96, particles:0.28, grain:0.05, flash:0.015 },
+  heroic: { tint:{x:1,y:0.67,z:0.28}, saturation:1.12, grade:0.25, glow:0.42, vignette:0.34, bars:0.96, particles:0.95, grain:0.025, flash:0.28 },
+  hopeful: { tint:{x:1,y:0.84,z:0.48}, saturation:1.12, grade:0.22, glow:0.5, vignette:0.24, bars:0.88, particles:0.82, grain:0.018, flash:0.22 },
+  tragic: { tint:{x:0.95,y:0.25,z:0.22}, saturation:0.35, grade:0.52, glow:0.045, vignette:0.76, bars:1, particles:0.9, grain:0.07, flash:0.08 },
 };
 
-const CINEMATIC_SHADER = `
-uniform shader scene;
+const CINEMATIC_OVERLAY_SHADER = \`
 uniform vec2 size;
-uniform mat3 view;
 uniform float time;
 uniform float startTime;
 uniform float duration;
-uniform vec2 focus;
 uniform vec3 tint;
-uniform float saturation;
-uniform float grade;
 uniform float glow;
 uniform float vignette;
 uniform float bars;
 uniform float particles;
 uniform float grain;
 uniform float flash;
-
 half4 main(float2 coord) {
   vec2 uv = coord / size;
-  vec2 sceneCoord = (vec3(coord, 1.0) * view).xy;
-  half4 source = scene.eval(sceneCoord);
   float phase = clamp((time - startTime) / duration, 0.0, 1.0);
-  float fadeIn = smoothstep(0.0, 0.10, phase);
-  float fadeOut = 1.0 - smoothstep(0.88, 1.0, phase);
-  float envelope = fadeIn * fadeOut;
-
-  vec3 color = source.rgb;
-  float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-  color = mix(vec3(luminance), color, saturation);
-  color = mix(color, color * tint, grade);
-
-  vec2 centered = uv - focus;
-  float distanceToFocus = length(centered * vec2(1.0, 0.82));
-  float focusLight = 1.0 - smoothstep(0.12, 0.82, distanceToFocus);
-  float breathing = 0.92 + 0.08 * sin(time * 1.15);
-  color += tint * focusLight * glow * breathing;
-
-  float edge = length((uv - vec2(0.5, 0.5)) * vec2(1.0, 0.84));
-  float edgeShade = smoothstep(0.28, 0.82, edge);
-  color *= 1.0 - edgeShade * vignette;
-
-  float edgeY = min(uv.y, 1.0 - uv.y);
-  float letterbox = 1.0 - smoothstep(0.052, 0.078, edgeY);
-  color = mix(color, vec3(0.0), letterbox * bars);
-
-  vec2 grid = uv * vec2(19.0, 11.0);
+  float envelope = smoothstep(0.0, 0.09, phase) * (1.0 - smoothstep(0.88, 1.0, phase));
+  float edge = length((uv - vec2(0.5,0.5)) * vec2(1.0,0.86));
+  float vignetteAlpha = smoothstep(0.28,0.78,edge) * vignette * envelope;
+  float edgeY = min(uv.y,1.0-uv.y);
+  float barAlpha = (1.0-smoothstep(0.045,0.065,edgeY)) * bars * envelope;
+  float focusDistance = length((uv-vec2(0.5,0.44))*vec2(1.0,0.86));
+  float glowAlpha = (1.0-smoothstep(0.08,0.64,focusDistance)) * glow * (0.82+0.18*sin(time*1.25)) * envelope;
+  vec2 grid = uv * vec2(22.0,13.0);
   vec2 cell = floor(grid);
   vec2 local = fract(grid);
-  float seed = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
-  vec2 mote = vec2(fract(seed * 17.13), fract(seed * 31.71 + time * (0.018 + seed * 0.025)));
-  float moteDistance = length((local - mote) * vec2(1.0, 1.55));
-  float moteShape = 1.0 - smoothstep(0.012, 0.045, moteDistance);
-  float moteVisibility = step(0.84, seed) * particles * (0.55 + 0.45 * sin(time * 1.7 + seed * 19.0));
-  color += tint * moteShape * moteVisibility * 0.52;
-
-  float noise = fract(sin(dot(coord + time, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
-  color += vec3(noise * grain);
-
-  float openingFlash = exp(-pow((phase - 0.115) * 34.0, 2.0)) * flash;
-  color = mix(color, vec3(1.0), openingFlash);
-
-  return half4(mix(source.rgb, color, envelope), source.a);
+  float seed = fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
+  vec2 particlePos = vec2(fract(seed*17.13),fract(seed*31.71+time*(0.018+seed*0.022)));
+  float particleDistance = length((local-particlePos)*vec2(1.0,1.45));
+  float particleShape = 1.0-smoothstep(0.012,0.038,particleDistance);
+  float particleAlpha = step(0.90,seed)*particleShape*particles*envelope*(0.45+0.55*sin(time*1.6+seed*20.0));
+  float noise = fract(sin(dot(coord+time,vec2(12.9898,78.233)))*43758.5453);
+  float grainAlpha = step(1.0-grain*0.18,noise)*grain*envelope;
+  float phaseFlash = exp(-pow((phase-0.115)*34.0,2.0))*flash;
+  float lightAlpha = max(glowAlpha,particleAlpha);
+  float darkAlpha = max(vignetteAlpha,barAlpha);
+  float alpha = clamp(max(darkAlpha,max(lightAlpha,max(grainAlpha,phaseFlash))),0.0,0.98);
+  vec3 color = mix(vec3(0.0),tint,lightAlpha/max(alpha,0.001));
+  color = mix(color,vec3(1.0),phaseFlash/max(alpha,0.001));
+  return half4(color,alpha);
 }
-`;
+\`;
 
-async function addCinematicGrade(style: CinematicStyle, intensity: number, durationMs: number): Promise<string | undefined> {
+const CINEMATIC_GRADE_SHADER = \`
+uniform shader scene;
+uniform vec2 size;
+uniform mat3 view;
+uniform float time;
+uniform float startTime;
+uniform float duration;
+uniform vec3 tint;
+uniform float saturation;
+uniform float grade;
+half4 main(float2 coord) {
+  vec2 screenCoord = (vec3(coord,1.0)*view).xy;
+  half4 source = scene.eval(screenCoord);
+  vec2 uv = coord/size;
+  float phase = clamp((time-startTime)/duration,0.0,1.0);
+  float envelope = smoothstep(0.0,0.10,phase)*(1.0-smoothstep(0.90,1.0,phase));
+  vec3 original = source.rgb;
+  float luminance = dot(original,vec3(0.2126,0.7152,0.0722));
+  vec3 graded = mix(vec3(luminance),original,saturation);
+  graded = mix(graded,graded*tint,grade);
+  float edge = length((uv-vec2(0.5,0.5))*vec2(1.0,0.86));
+  graded *= 1.0-smoothstep(0.28,0.82,edge)*0.18;
+  return half4(mix(original,graded,envelope),source.a);
+}
+\`;
+
+async function addCinematicGrade(style: CinematicStyle, intensity: number, durationMs: number): Promise<string[]> {
   const profile = GRADE_PROFILES[style];
-  const strength = 0.65 + ((Math.max(0.08, Math.min(0.42, intensity)) - 0.08) / 0.34) * 0.75;
-  const effect = buildEffect()
+  const strength = 0.75 + ((Math.max(0.08,Math.min(0.42,intensity))-0.08)/0.34)*0.9;
+  const startTime = Date.now()/1000;
+  const duration = durationMs/1000;
+  const ids: string[] = [];
+  const overlay = buildEffect()
     .effectType('VIEWPORT')
-    .layer('POST_PROCESS')
+    .blendMode('SRC_OVER')
     .locked(true)
     .disableHit(true)
-    .sksl(CINEMATIC_SHADER)
+    .sksl(CINEMATIC_OVERLAY_SHADER)
     .uniforms([
-      { name: 'startTime', value: Date.now() / 1000 },
-      { name: 'duration', value: durationMs / 1000 },
-      { name: 'focus', value: { x: 0.5, y: 0.44 } },
-      { name: 'tint', value: profile.tint },
-      { name: 'saturation', value: profile.saturation },
-      { name: 'grade', value: profile.grade * strength },
-      { name: 'glow', value: profile.glow * strength },
-      { name: 'vignette', value: profile.vignette * strength },
-      { name: 'bars', value: profile.bars },
-      { name: 'particles', value: profile.particles * strength },
-      { name: 'grain', value: profile.grain * strength },
-      { name: 'flash', value: profile.flash * strength },
-    ])
-    .build();
-
+      {name:'startTime',value:startTime},{name:'duration',value:duration},
+      {name:'tint',value:profile.tint},{name:'glow',value:profile.glow*strength},
+      {name:'vignette',value:profile.vignette*strength},{name:'bars',value:profile.bars},
+      {name:'particles',value:profile.particles*strength},{name:'grain',value:profile.grain*strength},
+      {name:'flash',value:profile.flash*strength},
+    ]).build();
   try {
-    await OBR.scene.local.addItems([effect]);
-    return effect.id;
-  } catch (error) {
-    console.error('Não foi possível aplicar a gradação cinematográfica:', error);
-    return undefined;
+    await OBR.scene.local.addItems([overlay]);
+    ids.push(overlay.id);
+    console.info('CINEMÁTICO: camada viewport adicionada',overlay.id);
+  } catch(error) {
+    console.error('CINEMÁTICO: falha ao adicionar camada viewport',error);
+    OBR.notification.show('CINEMÁTICO: o Owlbear recusou a camada visual. Consulte o console.');
+    throw error;
   }
+  try {
+    const grade = buildEffect().effectType('VIEWPORT').layer('POST_PROCESS')
+      .locked(true).disableHit(true).sksl(CINEMATIC_GRADE_SHADER)
+      .uniforms([
+        {name:'startTime',value:startTime},{name:'duration',value:duration},
+        {name:'tint',value:profile.tint},{name:'saturation',value:profile.saturation},
+        {name:'grade',value:profile.grade*strength},
+      ]).build();
+    await OBR.scene.local.addItems([grade]);
+    ids.push(grade.id);
+    console.info('CINEMÁTICO: pós-processamento adicionado',grade.id);
+  } catch(error) {
+    console.warn('CINEMÁTICO: pós-processamento indisponível; mantendo efeitos viewport.',error);
+  }
+  return ids;
 }
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -214,7 +208,7 @@ function unionBounds(a: Bounds, b: Bounds): Bounds {
 
 async function runCameraSequence(payload: CinematicPayload, runId: number): Promise<void> {
   let original: ViewportTransform | undefined;
-  let gradeId: string | undefined;
+  let gradeIds: string[] = [];
   try {
     const [position, scale] = await Promise.all([OBR.viewport.getPosition(), OBR.viewport.getScale()]);
     original = { position, scale };
@@ -222,7 +216,7 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
 
     // O tratamento é um shader POST_PROCESS local: atua sobre a imagem do mapa,
     // não é apenas um painel HTML sobreposto.
-    gradeId = await addCinematicGrade(payload.style, payload.intensity, payload.durationMs);
+    gradeIds = await addCinematicGrade(payload.style, payload.intensity, payload.durationMs);
     if (runId !== activeRun) return;
 
     // Ato I: o mundo perde saturação, surgem barras de cinema e a luz começa a se concentrar.
@@ -254,8 +248,8 @@ async function runCameraSequence(payload: CinematicPayload, runId: number): Prom
       }
     }
   } finally {
-    if (gradeId) {
-      try { await OBR.scene.local.deleteItems([gradeId]); } catch (error) {
+    if (gradeIds.length) {
+      try { await OBR.scene.local.deleteItems(gradeIds); } catch (error) {
         console.warn('Não foi possível remover o tratamento cinematográfico:', error);
       }
     }
