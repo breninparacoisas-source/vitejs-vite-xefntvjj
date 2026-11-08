@@ -1,4 +1,4 @@
-import OBR from '@owlbear-rodeo/sdk';
+import OBR, { buildImageUpload } from '@owlbear-rodeo/sdk';
 import './showtime.css';
 
 const CHANNEL = 'com.arton.engine/showtime/v2';
@@ -147,7 +147,7 @@ async function fireEffect(
 
 async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
   try {
-    const images = await OBR.assets.downloadImages(false, 'PNG', 'ATTACHMENT');
+    const images = await OBR.assets.downloadImages(false, '', 'ATTACHMENT');
     const chosen = images[0];
     if (!chosen) return;
 
@@ -173,6 +173,30 @@ async function chooseAppearanceImage(root: HTMLElement): Promise<void> {
   } catch (error) {
     console.error('Erro ao selecionar imagem:', error);
     OBR.notification.show('Não foi possível abrir a biblioteca de imagens.');
+  }
+}
+
+
+async function uploadAppearancePng(file: File, root: HTMLElement): Promise<void> {
+  if (file.type !== 'image/png') {
+    OBR.notification.show('O arquivo precisa estar no formato PNG.');
+    return;
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    OBR.notification.show('O PNG precisa ter no máximo 12 MB.');
+    return;
+  }
+
+  try {
+    const bytes = await file.arrayBuffer();
+    const safeFile = new File([bytes], file.name, { type: 'image/png' });
+    const upload = buildImageUpload(safeFile).build();
+    await OBR.assets.uploadImages([upload], 'ATTACHMENT');
+    OBR.notification.show('PNG enviado para sua biblioteca. Selecione-o para usar na aparição.');
+    await chooseAppearanceImage(root);
+  } catch (error) {
+    console.error('Erro ao enviar PNG:', error);
+    OBR.notification.show('Não foi possível enviar esse PNG para a biblioteca do Owlbear.');
   }
 }
 
@@ -234,7 +258,7 @@ export function renderShowtimePanel(connected: boolean, isGM: boolean): string {
     '<div class="showtime-section-heading"><div><span>01 / MANIFESTAÇÃO</span><h3>Aparição personalizada</h3></div><small>IMAGEM PNG COM TRANSPARÊNCIA</small></div>',
     '<section class="showtime-editor appearance-editor">',
     '<div class="appearance-image-column"><div class="appearance-image-preview" id="appearance-image-preview">' + imagePreview + '</div>',
-    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button" id="appearance-image-pick">ESCOLHER PNG DA BIBLIOTECA</button><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
+    '<div class="appearance-image-actions"><button type="button" class="showtime-secondary-button" id="appearance-image-pick">ESCOLHER DA BIBLIOTECA</button><button type="button" class="showtime-secondary-button upload-png-button" id="appearance-image-upload-button">ENVIAR PNG</button><input type="file" id="appearance-image-upload" accept="image/png,.png" hidden><button type="button" class="showtime-text-button" id="appearance-image-remove" ' + (selectedImageUrl ? '' : 'hidden') + '>Remover imagem</button></div>',
     '<p class="showtime-hint">Escolha uma imagem PNG com fundo transparente. Ela será exibida proporcionalmente, sem esticar.</p></div>',
     '<div class="showtime-settings-column"><label for="appearance-title">TÍTULO</label><input id="appearance-title" maxlength="100" value="Uma presença se revela" placeholder="Ex.: O Devorador de Almas">',
     '<label for="appearance-message">FRASE OPCIONAL</label><input id="appearance-message" maxlength="180" value="Algo antigo despertou..." placeholder="Uma frase curta para acompanhar a entrada">',
@@ -262,6 +286,15 @@ export function bindShowtimeActions(root: HTMLElement, connected: boolean, isGM:
 
   root.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach((input) => {
     input.addEventListener('input', () => updateRangeLabels(root));
+  });
+
+  root.querySelector<HTMLButtonElement>('#appearance-image-upload-button')?.addEventListener('click', () => {
+    root.querySelector<HTMLInputElement>('#appearance-image-upload')?.click();
+  });
+  root.querySelector<HTMLInputElement>('#appearance-image-upload')?.addEventListener('change', (event) => {
+    const file = (event.currentTarget as HTMLInputElement).files?.[0];
+    if (file) void uploadAppearancePng(file, root);
+    (event.currentTarget as HTMLInputElement).value = '';
   });
 
   root.querySelector<HTMLButtonElement>('#appearance-image-pick')?.addEventListener('click', () => {
