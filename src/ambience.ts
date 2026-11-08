@@ -6,7 +6,7 @@ const MODAL_ID = 'com.arton.engine/ambience/overlay';
 const METADATA_KEY = 'com.arton.engine/ambience';
 
 export type AmbiencePreset = 'forest' | 'tavern' | 'dungeon' | 'city' | 'storm' | 'desert' | 'snow' | 'swamp' | 'coast' | 'battlefield' | 'abyss' | 'off';
-type AmbiencePayload = { version: 1; preset: AmbiencePreset; createdAt: number };
+type AmbiencePayload = { version: 1; preset: AmbiencePreset; settings?: AmbienceSettings; createdAt: number };
 
 type AmbienceSettings = { intensity: number; brightness: number; motion: number };
 const DEFAULT_SETTINGS: AmbienceSettings = { intensity: 70, brightness: 0, motion: 65 };
@@ -96,7 +96,7 @@ export function initializeAmbienceBackground(): void {
     });
   });
   void OBR.room.getMetadata().then((metadata) => {
-    const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
+    const saved = metadata[METADATA_KEY] as { preset?: string; settings?: Partial<AmbienceSettings> } | undefined;
     if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
       ambienceSettings = normalizeSettings(saved.settings);
@@ -117,7 +117,7 @@ export function initializeAmbiencePanel(): void {
     refreshAudioPanel();
   });
   void OBR.room.getMetadata().then((metadata) => {
-    const saved = metadata[METADATA_KEY] as { preset?: string } | undefined;
+    const saved = metadata[METADATA_KEY] as { preset?: string; settings?: Partial<AmbienceSettings> } | undefined;
     if (saved && ['forest', 'tavern', 'dungeon', 'city', 'storm', 'desert', 'snow', 'swamp', 'coast', 'battlefield', 'abyss', 'off'].includes(saved.preset || '')) {
       activePreset = saved.preset as AmbiencePreset;
       ambienceSettings = normalizeSettings(saved.settings);
