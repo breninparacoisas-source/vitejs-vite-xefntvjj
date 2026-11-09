@@ -4,7 +4,7 @@ import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
 import { bindAmbienceActions, initializeAmbienceBackground, initializeAmbiencePanel, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
 import { bindCinematicActions, initializeCinematicBackground, renderCinematicOverlay, renderCinematicPanel } from './cinematic';
-import { bindFalseAscendidoActions, initializeFalseAscendido, renderFalseAscendidoPanel } from './false-ascendido';
+import { bindFalseAscendidoActions, initializeFalseAscendido, initializeFalseAscendidoVisuals, renderFalseAscendidoPanel, renderFalsoAscendidoOverlay } from './false-ascendido';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -494,10 +494,11 @@ const isShowtimeBackground = runtimeParams.get('background') === '1';
 const isShowtimeOverlay = runtimeParams.get('showtime') === '1';
 const isAmbienceOverlay = runtimeParams.get('ambience') === '1';
 const isCinematicOverlay = runtimeParams.get('cinematic') === '1';
+const isFalsoAscendidoOverlay = runtimeParams.get('falsoAscendido') === '1';
 
 if (OBR.isAvailable && isShowtimeBackground) {
-  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); initializeCinematicBackground(); });
-} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay && !isCinematicOverlay) {
+  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); initializeCinematicBackground(); initializeFalseAscendidoVisuals(); });
+} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay && !isCinematicOverlay && !isFalsoAscendidoOverlay) {
   OBR.onReady(async () => {
     initializeAmbiencePanel();
     connected = true;
@@ -527,11 +528,12 @@ if (OBR.isAvailable && isShowtimeBackground) {
       render();
     }
   });
-} else if (!OBR.isAvailable && !isShowtimeOverlay && !isShowtimeBackground && !isCinematicOverlay && !isAmbienceOverlay) {
+} else if (!OBR.isAvailable && !isShowtimeOverlay && !isShowtimeBackground && !isCinematicOverlay && !isAmbienceOverlay && !isFalsoAscendidoOverlay) {
   console.log('ARTON ENGINE aberto fora do Owlbear Rodeo.');
 }
 
-if (isShowtimeOverlay) renderShowtimeOverlay(app!);
+if (isFalsoAscendidoOverlay) renderFalsoAscendidoOverlay(app!);
+else if (isShowtimeOverlay) renderShowtimeOverlay(app!);
 else if (isAmbienceOverlay) renderAmbienceOverlay(app!);
 else if (isCinematicOverlay) renderCinematicOverlay(app!);
 else if (!isShowtimeBackground) render();
