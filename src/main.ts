@@ -175,7 +175,7 @@ function render() {
         <div class="sidebar-footer">
           <span class="status-dot"></span>
           ${connected ? 'CONECTADO AO OWLBEAR' : 'AGUARDANDO CONEXÃO'}
-          <small>ARTON ENGINE · 0.23.0</small>
+          <small>ARTON ENGINE · 0.23.1</small>
         </div>
       </aside>
 
