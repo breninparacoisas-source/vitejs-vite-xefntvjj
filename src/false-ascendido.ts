@@ -189,8 +189,11 @@ async function createInfluenceZone(): Promise<void> {
   if (!connected || !isGM) return;
   try {
     const position = await OBR.viewport.getPosition();
-    const zone = buildShape().shapeType('CIRCLE').width(420).height(420)
-      .fillColor('#70447f').position(position).layer('PROP').build();
+    const zone = buildShape().name('Falso Ascendido — Área de influência')
+      .shapeType('CIRCLE').width(420).height(420)
+      .fillColor('#70447f').fillOpacity(0.18)
+      .strokeColor('#b58ac3').strokeOpacity(0.8).strokeWidth(3)
+      .position(position).layer('PROP').locked(true).disableHit(true).build();
     await OBR.scene.items.addItems([zone]);
     sceneEffectIds = [...sceneEffectIds, zone.id];
     await OBR.scene.setMetadata({ [SCENE_EFFECTS_KEY]: sceneEffectIds });
