@@ -1,8 +1,10 @@
-import OBR from '@owlbear-rodeo/sdk';
+import OBR, { buildShape } from '@owlbear-rodeo/sdk';
+import { triggerFalseAscendidoVisual } from './showtime';
 import './false-ascendido.css';
 
 const METADATA_KEY = 'com.arton.engine/falso-ascendido/v1';
 const SCENE_METADATA_KEY = 'com.arton.engine/falso-ascendido/local/v1';
+const SCENE_EFFECTS_KEY = 'com.arton.engine/falso-ascendido/effects/v1';
 const STAGES = [
   { name: 'Vestígios', description: 'Sinais isolados de algo que não deveria existir.' },
   { name: 'Ressonância', description: 'Os vestígios começam a se conectar.' },
@@ -51,6 +53,7 @@ let connected = false;
 let isGM = false;
 let initialized = false;
 let saving = false;
+let sceneEffectIds: string[] = [];
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
@@ -124,6 +127,7 @@ export async function initializeFalseAscendido(master: boolean): Promise<void> {
     ]);
     state = normalizeState(roomMetadata[METADATA_KEY]);
     local = normalizeLocal(sceneMetadata[SCENE_METADATA_KEY]);
+    sceneEffectIds = Array.isArray(sceneMetadata[SCENE_EFFECTS_KEY]) ? (sceneMetadata[SCENE_EFFECTS_KEY] as unknown[]).filter((id): id is string => typeof id === 'string') : [];
     currentSceneLabel = 'Cena aberta no Owlbear';
     OBR.room.onMetadataChange((updated) => {
       state = normalizeState(updated[METADATA_KEY]);
@@ -138,6 +142,7 @@ export async function initializeFalseAscendido(master: boolean): Promise<void> {
       try {
         const metadata = await OBR.scene.getMetadata();
         local = normalizeLocal(metadata[SCENE_METADATA_KEY]);
+        sceneEffectIds = Array.isArray(metadata[SCENE_EFFECTS_KEY]) ? (metadata[SCENE_EFFECTS_KEY] as unknown[]).filter((id): id is string => typeof id === 'string') : [];
         renderIntoPage();
       } catch (error) {
         console.warn('Não foi possível carregar a influência local:', error);
@@ -180,6 +185,36 @@ async function persist(next: InfluenceState): Promise<void> {
     renderIntoPage();
   }
 }
+async function createInfluenceZone(): Promise<void> {
+  if (!connected || !isGM) return;
+  try {
+    const position = await OBR.viewport.getPosition();
+    const zone = buildShape().shapeType('CIRCLE').width(420).height(420)
+      .fillColor('#70447f').position(position).layer('PROP').build();
+    await OBR.scene.items.addItems([zone]);
+    sceneEffectIds = [...sceneEffectIds, zone.id];
+    await OBR.scene.setMetadata({ [SCENE_EFFECTS_KEY]: sceneEffectIds });
+    OBR.notification.show('Área de influência posicionada no mapa.');
+  } catch (error) {
+    console.error('Falha ao criar área de influência:', error);
+    OBR.notification.show('Não foi possível criar a área no mapa.');
+  }
+  renderIntoPage();
+}
+async function clearInfluenceZones(): Promise<void> {
+  if (!connected || !isGM || !sceneEffectIds.length) return;
+  try {
+    await OBR.scene.items.deleteItems(sceneEffectIds);
+    sceneEffectIds = [];
+    await OBR.scene.setMetadata({ [SCENE_EFFECTS_KEY]: [] });
+    OBR.notification.show('Áreas de influência removidas desta cena.');
+  } catch (error) {
+    console.error('Falha ao remover áreas de influência:', error);
+    OBR.notification.show('Não foi possível remover as áreas da cena.');
+  }
+  renderIntoPage();
+}
+
 function renderIntoPage(): void {
   const root = document.querySelector<HTMLElement>('#app');
   const existing = root?.querySelector<HTMLElement>('.false-ascendido-panel');
@@ -235,8 +270,36 @@ export function renderFalseAscendidoPanel(isConnected: boolean, master: boolean)
         </div>
       </section>
 
+      <section class="fa-manifestations">
+        <div class="fa-section-title"><div><span>03 / AÇÃO NA MESA</span><h3>Manifestações</h3></div><small>EFEITOS PARA OS JOGADORES</small></div>
+        <div class="fa-global-card">
+          <p class="fa-help">Dispare uma manifestação visual nas telas dos jogadores ou marque uma região de influência diretamente no cenário.</p>
+          <label for="fa-visual-kind">MANIFESTAÇÃO NA TELA</label>
+          <select id="fa-visual-kind">
+            <option value="appearance">Ruptura da realidade</option>
+            <option value="presence">Presença sombria</option>
+            <option value="threshold">Limiar entre planos</option>
+          </select>
+          <label for="fa-visual-title">TÍTULO (OPCIONAL)</label>
+          <input id="fa-visual-title" maxlength="100" value="A realidade se distorce" placeholder="Uma frase para a manifestação">
+          <label for="fa-visual-message">MENSAGEM</label>
+          <textarea id="fa-visual-message" rows="2" maxlength="180" placeholder="Algo antigo observa vocês...">Algo antigo observa vocês...</textarea>
+          <label for="fa-visual-intensity">INTENSIDADE</label>
+          <input id="fa-visual-intensity" type="range" min="0.2" max="1" step="0.05" value="0.7">
+          <label for="fa-visual-duration">DURAÇÃO (SEGUNDOS)</label>
+          <input id="fa-visual-duration" type="number" min="5" max="30" value="12">
+          <button class="fa-button" data-fa-action="visual" ${saving ? 'disabled' : ''}>Manifestar nas telas dos jogadores</button>
+          <div class="fa-map-tools">
+            <label>MARCA NO MAPA</label>
+            <p class="fa-help">Cria uma zona circular compartilhada no centro da visão atual do mestre. Ela permanece na cena até ser removida.</p>
+            <button class="fa-button" data-fa-action="map-zone" ${saving ? 'disabled' : ''}>Criar área de influência</button>
+            <button class="fa-button secondary" data-fa-action="clear-map" ${saving || !sceneEffectIds.length ? 'disabled' : ''}>Remover áreas criadas (${sceneEffectIds.length})</button>
+          </div>
+        </div>
+      </section>
+
       <section class="fa-chronicle">
-        <div class="fa-section-title"><div><span>03 / ACONTECIMENTOS</span><h3>Crônica da influência</h3></div><small>${state.history.length} REGISTROS</small></div>
+        <div class="fa-section-title"><div><span>04 / ACONTECIMENTOS</span><h3>Crônica da influência</h3></div><small>${state.history.length} REGISTROS</small></div>
         <form id="fa-event-form" class="fa-event-form">
           <label for="fa-event-title">ACONTECIMENTO</label>
           <input id="fa-event-title" maxlength="100" required placeholder="Ex.: O selo de uma antiga ruína foi rompido">
@@ -276,6 +339,16 @@ export function bindFalseAscendidoActions(root: HTMLElement, isConnected: boolea
         const note = root.querySelector<HTMLTextAreaElement>('#fa-global-note')?.value || '';
         void persist(normalizeState({ ...state, globalNote: note }));
       }
+      if (button.dataset.faAction === 'visual') {
+        const kind = root.querySelector<HTMLSelectElement>('#fa-visual-kind')?.value || 'appearance';
+        const title = root.querySelector<HTMLInputElement>('#fa-visual-title')?.value || '';
+        const message = root.querySelector<HTMLTextAreaElement>('#fa-visual-message')?.value || '';
+        const intensity = Number(root.querySelector<HTMLInputElement>('#fa-visual-intensity')?.value || 0.7);
+        const duration = Number(root.querySelector<HTMLInputElement>('#fa-visual-duration')?.value || 12);
+        void triggerFalseAscendidoVisual(kind as 'appearance' | 'presence' | 'threshold', title, message, intensity, duration, connected, isGM);
+      }
+      if (button.dataset.faAction === 'map-zone') void createInfluenceZone();
+      if (button.dataset.faAction === 'clear-map') void clearInfluenceZones();
       if (button.dataset.faAction === 'local') {
         const level = Number(root.querySelector<HTMLInputElement>('#fa-local-level')?.value || 0);
         const note = root.querySelector<HTMLTextAreaElement>('#fa-local-note')?.value || '';
