@@ -156,15 +156,12 @@ async function persist(next: InfluenceState): Promise<void> {
 }
 function renderIntoPage(): void {
   const root = document.querySelector<HTMLElement>('#app');
-  if (!root || !root.querySelector('.false-ascendido-panel')) return;
-  const container = root.querySelector<HTMLElement>('.content');
-  if (!container) return;
-  const heading = container.querySelector('.page-heading');
-  if (heading) heading.insertAdjacentHTML('afterend', renderFalseAscendidoPanel(connected, isGM));
-  root.querySelector('.false-ascendido-panel')?.remove();
-  if (heading) heading.insertAdjacentHTML('afterend', renderFalseAscendidoPanel(connected, isGM));
+  const existing = root?.querySelector<HTMLElement>('.false-ascendido-panel');
+  if (!root || !existing) return;
+  existing.outerHTML = renderFalseAscendidoPanel(connected, isGM);
   bindFalseAscendidoActions(root, connected, isGM);
 }
+
 export function renderFalseAscendidoPanel(isConnected: boolean, master: boolean): string {
   connected = isConnected;
   isGM = master;
