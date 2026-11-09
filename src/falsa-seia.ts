@@ -74,7 +74,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  <button type="button" data-fs-mode>Permitir exploração livre</button><button type="button" data-fs-reaction>Fazer o espaço reagir</button>
  <label>Resposta do Mestre <input id="fs-gm-response" maxlength="220" placeholder="Responder à interação..."></label><button type="button" data-fs-response>Deixar resposta no ambiente</button>
  <div class="fs-replies" aria-live="polite"><small>O QUE ACONTECE NA CENA</small><div class="fs-reply-list"></div></div><button type="button" data-fs-end>Encerrar Falsa Seia</button></aside>
- <button class="fs-gm-tab" hidden title="Abrir condução">◈</button><div class="fs-player-hint">A névoa se move. Algo observa.</div><div class="fs-explore-help">WASD / setas para caminhar · arraste para olhar · roda do mouse para aproximar</div>
+ <button class="fs-gm-tab" hidden title="Abrir condução">◈</button><div class="fs-player-hint">A névoa se move. Algo observa.</div><div class="fs-explore-help">WASD / setas para caminhar · arraste para olhar · roda do mouse para aproximar</div><div class="fs-entry-veil" aria-hidden="true"></div>
  </main>`;
 
  const world=root.querySelector<HTMLElement>('.fs-world')!;
