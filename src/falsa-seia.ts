@@ -13,10 +13,10 @@ const valid=(v:unknown):v is State=>!!v&&typeof v==='object'&&typeof (v as State
 async function openOverlay(){const url=new URL('/',window.location.origin);url.searchParams.set('falsaSeia','1');if(backgroundIsGM)url.searchParams.set('gm','1');await OBR.modal.open({id:MODAL_ID,url:url.toString(),fullScreen:true,hideBackdrop:true,hidePaper:true,disablePointerEvents:false});}
 async function closeOverlay(){try{await OBR.modal.close(MODAL_ID);}catch{/* already closed */}}
 async function publish(next:State){state={...next};await OBR.room.setMetadata({[KEY]:state});await OBR.broadcast.sendMessage(CHANNEL,{type:'state',state},{destination:'REMOTE'});}
-export function initializeFalsaSeiaBackground(){
- void OBR.player.getRole().then(role=>{backgroundIsGM=role==='GM';}).catch(console.error);
+export async function initializeFalsaSeiaBackground(){
+ try{backgroundIsGM=(await OBR.player.getRole())==='GM';}catch(error){console.error('Falha ao identificar o Mestre no background da Falsa Seia.',error);}
  OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;state?:State};if(d?.type==='state'&&valid(d.state)){state=d.state;if(state.active)void openOverlay().catch(console.error);else void closeOverlay();}});
- void OBR.room.getMetadata().then(m=>{const v=m[KEY];if(valid(v)){state=v;if(v.active)void openOverlay().catch(console.error);}}).catch(console.error);
+ try{const m=await OBR.room.getMetadata();const v=m[KEY];if(valid(v)){state=v;if(v.active)await openOverlay();}}catch(error){console.error('Falha ao recuperar estado da Falsa Seia.',error);}
  OBR.room.onMetadataChange(m=>{const v=m[KEY];if(valid(v)){state=v;if(v.active)void openOverlay().catch(console.error);else void closeOverlay();}});
 }
 export function renderFalsaSeiaPanel(connected:boolean,isGM:boolean){
