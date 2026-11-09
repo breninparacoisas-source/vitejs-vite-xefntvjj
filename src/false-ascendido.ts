@@ -2,6 +2,7 @@ import OBR from '@owlbear-rodeo/sdk';
 import './false-ascendido.css';
 
 const METADATA_KEY = 'com.arton.engine/falso-ascendido/v1';
+const SCENE_METADATA_KEY = 'com.arton.engine/falso-ascendido/local/v1';
 const STAGES = [
   { name: 'Vestígios', description: 'Sinais isolados de algo que não deveria existir.' },
   { name: 'Ressonância', description: 'Os vestígios começam a se conectar.' },
@@ -44,8 +45,8 @@ const DEFAULT_STATE: InfluenceState = {
   updatedAt: new Date(0).toISOString(),
 };
 let state: InfluenceState = structuredClone(DEFAULT_STATE);
-let currentSceneId = 'scene-unavailable';
 let currentSceneLabel = 'Cena atual';
+let local: LocalInfluence = { level: 0, note: '', updatedAt: new Date(0).toISOString() };
 let connected = false;
 let isGM = false;
 let initialized = false;
@@ -91,8 +92,11 @@ function normalizeState(value: unknown): InfluenceState {
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
   };
 }
-function localState(): LocalInfluence {
-  return state.local[currentSceneId] || { level: 0, note: '', updatedAt: new Date(0).toISOString() };
+function localState(): LocalInfluence { return local; }
+function normalizeLocal(value: unknown): LocalInfluence {
+  if (!value || typeof value !== 'object') return { level: 0, note: '', updatedAt: new Date(0).toISOString() };
+  const item = value as Partial<LocalInfluence>;
+  return { level: clamp(Number(item.level) || 0, 0, 5), note: typeof item.note === 'string' ? item.note.slice(0, 500) : '', updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString() };
 }
 function stageName(stage: number): string {
   return stage === 0 ? 'Adormecida' : STAGES[clamp(stage, 1, 5) - 1].name;
@@ -114,22 +118,29 @@ export async function initializeFalseAscendido(master: boolean): Promise<void> {
   if (initialized || !master) return;
   initialized = true;
   try {
-    const [metadata, sceneId] = await Promise.all([
+    const [roomMetadata, sceneMetadata] = await Promise.all([
       OBR.room.getMetadata(),
-      OBR.scene.getId(),
+      OBR.scene.getMetadata(),
     ]);
-    currentSceneId = sceneId || 'scene-unavailable';
-    currentSceneLabel = 'Cena ' + currentSceneId.slice(0, 8);
-    state = normalizeState(metadata[METADATA_KEY]);
+    state = normalizeState(roomMetadata[METADATA_KEY]);
+    local = normalizeLocal(sceneMetadata[SCENE_METADATA_KEY]);
+    currentSceneLabel = 'Cena aberta no Owlbear';
     OBR.room.onMetadataChange((updated) => {
       state = normalizeState(updated[METADATA_KEY]);
+      renderIntoPage();
     });
-    OBR.scene.onChange(async () => {
+    OBR.scene.onMetadataChange((updated) => {
+      local = normalizeLocal(updated[SCENE_METADATA_KEY]);
+      renderIntoPage();
+    });
+    OBR.scene.onReadyChange(async (ready) => {
+      if (!ready) return;
       try {
-        currentSceneId = await OBR.scene.getId() || 'scene-unavailable';
-        currentSceneLabel = 'Cena ' + currentSceneId.slice(0, 8);
+        const metadata = await OBR.scene.getMetadata();
+        local = normalizeLocal(metadata[SCENE_METADATA_KEY]);
+        renderIntoPage();
       } catch (error) {
-        console.warn('Não foi possível identificar a cena atual:', error);
+        console.warn('Não foi possível carregar a influência local:', error);
       }
     });
   } catch (error) {
@@ -138,6 +149,21 @@ export async function initializeFalseAscendido(master: boolean): Promise<void> {
   }
 }
 
+async function persistLocal(next: LocalInfluence): Promise<void> {
+  if (!connected || !isGM || saving) return;
+  saving = true;
+  try {
+    await OBR.scene.setMetadata({ [SCENE_METADATA_KEY]: next });
+    local = normalizeLocal(next);
+    OBR.notification.show('Manifestação desta cena atualizada.');
+  } catch (error) {
+    console.error('Falha ao salvar influência local:', error);
+    OBR.notification.show('Não foi possível salvar a manifestação desta cena.');
+  } finally {
+    saving = false;
+    renderIntoPage();
+  }
+}
 async function persist(next: InfluenceState): Promise<void> {
   if (!connected || !isGM || saving) return;
   saving = true;
@@ -253,9 +279,8 @@ export function bindFalseAscendidoActions(root: HTMLElement, isConnected: boolea
       if (button.dataset.faAction === 'local') {
         const level = Number(root.querySelector<HTMLInputElement>('#fa-local-level')?.value || 0);
         const note = root.querySelector<HTMLTextAreaElement>('#fa-local-note')?.value || '';
-        const next = normalizeState(state);
-        next.local[currentSceneId] = { level: clamp(level, 0, 5), note, updatedAt: new Date().toISOString() };
-        void persist(next);
+        const updated = { level: clamp(level, 0, 5), note: note.slice(0, 500), updatedAt: new Date().toISOString() };
+        void persistLocal(updated);
       }
     });
   });
