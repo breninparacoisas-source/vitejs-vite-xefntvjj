@@ -1,8 +1,8 @@
 {
   "name": "ARTON ENGINE",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "manifest_version": 1,
-  "description": "Central de controle e imersão para campanhas de RPG.",
+  "description": "Central de controle e imersão para campanhas de RPG, com ferramentas narrativas exclusivas do mestre.",
   "author": "ARTON ENGINE",
   "background_url": "/?background=1",
   "action": {
