@@ -117,7 +117,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
   const presence=root.querySelector<HTMLSelectElement>('#fs-gm-presence');if(presence&&document.activeElement!==presence)presence.value=v.presence;
   const mode=root.querySelector<HTMLButtonElement>('[data-fs-mode]');if(mode)mode.textContent=v.mode==='explore'?'Retomar condução cinematográfica':'Permitir exploração livre';
   if(v.wid&&v.wid!==lastWhisper){lastWhisper=v.wid;whisper.textContent=v.whisper;whisper.style.left=(12+Math.random()*54)+'%';whisper.style.top=(20+Math.random()*43)+'%';whisper.classList.remove('show');void whisper.offsetWidth;whisper.classList.add('show');}
-  if(v.qid&&v.qid!==lastQuestion){lastQuestion=v.qid;question.querySelector('p')!.textContent=v.question;question.classList.add('show');}
+  if(v.qid&&v.qid!==lastQuestion){lastQuestion=v.qid;question.querySelector('p')!.textContent=v.question;question.classList.add('show');}else if(!v.question){question.classList.remove('show');}
   if(v.rid&&v.rid!==lastReaction){lastReaction=v.rid;world.classList.remove('world-reaction');void world.offsetWidth;world.classList.add('world-reaction');const ripple=root.querySelector<HTMLElement>('.fs-ripple')!;ripple.style.left='50%';ripple.style.top='58%';ripple.classList.remove('pulse');void ripple.offsetWidth;ripple.classList.add('pulse');}
  };
  const send=(patch:Partial<State>)=>{if(isGM)void publish({...state,...patch}).catch(error=>{console.error(error);OBR.notification.show('Não foi possível atualizar a Falsa Seia.');});};
@@ -144,7 +144,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
   const f:Figure={id:crypto.randomUUID(),title:el.value.trim(),x:spot.x+(Math.random()*7-3.5),y:spot.y+(Math.random()*8-4),depth:.72+Math.random()*.48,seed:Math.floor(Math.random()*1000)};
   send({figures:[...state.figures,f]});el.value='';
  });
- root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
+ root.querySelector('[data-fs-clear-figures]')?.addEventListener('click',()=>send({figures:[]}));\n root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
  root.querySelector('[data-fs-reaction]')?.addEventListener('click',()=>send({rid:crypto.randomUUID()}));
  root.querySelector('[data-fs-response]')?.addEventListener('click',()=>{const el=root.querySelector<HTMLInputElement>('#fs-gm-response')!;if(el.value.trim())send({whisper:el.value.trim(),wid:crypto.randomUUID(),rid:crypto.randomUUID()});el.value='';});
  root.querySelector('[data-fs-end]')?.addEventListener('click',()=>send({active:false}));
