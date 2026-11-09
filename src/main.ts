@@ -4,6 +4,7 @@ import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
 import { bindAmbienceActions, initializeAmbienceBackground, initializeAmbiencePanel, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
 import { bindCinematicActions, initializeCinematicBackground, renderCinematicOverlay, renderCinematicPanel } from './cinematic';
+import { bindFalsaSeiaActions, initializeFalsaSeiaBackground, renderFalsaSeiaOverlay, renderFalsaSeiaPanel } from './falsa-seia';
 import { bindFalseAscendidoActions, initializeFalseAscendido, initializeFalseAscendidoVisuals, renderFalseAscendidoPanel, renderFalsoAscendidoOverlay } from './false-ascendido';
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -29,6 +30,7 @@ const pages = {
     title: 'CINEMÁTICO',
     subtitle: 'Conduza momentos importantes da narrativa com ritmo e atmosfera.',
   },
+  falsaSeia: { title: 'FALSA SEIA', subtitle: 'Um espaço mental distorcido pelo Abismo.' },
   falsoAscendido: {
     title: 'FALSO ASCENDIDO',
     subtitle: 'Acompanhe a influência e registre os avanços de seus planos.',
@@ -153,6 +155,7 @@ function render() {
           <button data-page="cinematic" class="${currentPage === 'cinematic' ? 'active' : ''}">
             CINEMÁTICO
           </button>
+          <button data-page="falsaSeia">Falsa Seia</button>
           <button data-page="falsoAscendido" class="${currentPage === 'falsoAscendido' ? 'active' : ''}">
             <span class="nav-icon">◈</span> Falso Ascendido
           </button>
@@ -221,6 +224,7 @@ function render() {
   bindAmbienceActions(app!, connected, isGM);
   bindCinematicActions(app!, connected, isGM);
   bindFalseAscendidoActions(app!, connected, isGM);
+  bindFalsaSeiaActions(app!, connected, isGM);
 }
 
 function renderPage(): string {
@@ -228,6 +232,7 @@ function renderPage(): string {
   if (currentPage === 'ambience') return renderAmbiencePanel(connected, isGM);
   if (currentPage === 'cinematic') return renderCinematicPanel(connected, isGM);
   if (currentPage === 'falsoAscendido') return renderFalseAscendidoPanel(connected, isGM);
+  if (currentPage === 'falsaSeia') return renderFalsaSeiaPanel(connected, isGM);
 
   if (currentPage === 'central') {
     const active = session.active;
@@ -495,10 +500,11 @@ const isShowtimeOverlay = runtimeParams.get('showtime') === '1';
 const isAmbienceOverlay = runtimeParams.get('ambience') === '1';
 const isCinematicOverlay = runtimeParams.get('cinematic') === '1';
 const isFalsoAscendidoOverlay = runtimeParams.get('falsoAscendido') === '1';
+const isFalsaSeiaOverlay = runtimeParams.get('falsaSeia') === '1';
 
 if (OBR.isAvailable && isShowtimeBackground) {
-  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); initializeCinematicBackground(); initializeFalseAscendidoVisuals(); });
-} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay && !isCinematicOverlay && !isFalsoAscendidoOverlay) {
+  OBR.onReady(() => { initializeShowtimeBackground(); initializeAmbienceBackground(); initializeCinematicBackground(); initializeFalseAscendidoVisuals(); initializeFalsaSeiaBackground(); });
+} else if (OBR.isAvailable && !isShowtimeOverlay && !isAmbienceOverlay && !isCinematicOverlay && !isFalsoAscendidoOverlay && !isFalsaSeiaOverlay) {
   OBR.onReady(async () => {
     initializeAmbiencePanel();
     connected = true;
@@ -532,7 +538,8 @@ if (OBR.isAvailable && isShowtimeBackground) {
   console.log('ARTON ENGINE aberto fora do Owlbear Rodeo.');
 }
 
-if (isFalsoAscendidoOverlay) renderFalsoAscendidoOverlay(app!);
+if (isFalsaSeiaOverlay) renderFalsaSeiaOverlay(app!);
+else if (isFalsoAscendidoOverlay) renderFalsoAscendidoOverlay(app!);
 else if (isShowtimeOverlay) renderShowtimeOverlay(app!);
 else if (isAmbienceOverlay) renderAmbienceOverlay(app!);
 else if (isCinematicOverlay) renderCinematicOverlay(app!);
