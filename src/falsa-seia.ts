@@ -145,7 +145,8 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
   send({figures:[...state.figures,f]});el.value='';
  });
  root.querySelector('[data-fs-clear-figures]')?.addEventListener('click',()=>send({figures:[]}));
- root.querySelector('[data-fs-clear-question]')?.addEventListener('click',()=>send({question:'',qid:''}));\n root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
+ root.querySelector('[data-fs-clear-question]')?.addEventListener('click',()=>send({question:'',qid:''}));
+ root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
  root.querySelector('[data-fs-reaction]')?.addEventListener('click',()=>send({rid:crypto.randomUUID()}));
  root.querySelector('[data-fs-response]')?.addEventListener('click',()=>{const el=root.querySelector<HTMLInputElement>('#fs-gm-response')!;if(el.value.trim())send({whisper:el.value.trim(),wid:crypto.randomUUID(),rid:crypto.randomUUID()});el.value='';});
  root.querySelector('[data-fs-end]')?.addEventListener('click',()=>send({active:false}));
