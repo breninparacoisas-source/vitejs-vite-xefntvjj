@@ -540,7 +540,7 @@ if (OBR.isAvailable && isShowtimeBackground) {
   console.log('ARTON ENGINE aberto fora do Owlbear Rodeo.');
 }
 
-if (isFalsaSeiaOverlay) renderFalsaSeiaOverlay(app!);
+if (isFalsaSeiaOverlay) { if (OBR.isAvailable) OBR.onReady(() => renderFalsaSeiaOverlay(app!)); else renderFalsaSeiaOverlay(app!); }
 else if (isFalsoAscendidoOverlay) renderFalsoAscendidoOverlay(app!);
 else if (isShowtimeOverlay) renderShowtimeOverlay(app!);
 else if (isAmbienceOverlay) renderAmbienceOverlay(app!);
