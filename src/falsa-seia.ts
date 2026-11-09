@@ -66,8 +66,8 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  <label>Intensidade da névoa <input id="fs-gm-fog" type="range" min="15" max="100" value="72"></label>
  <label>Presença <select id="fs-gm-presence"><option value="absent">Ausente</option><option value="distant">Distante</option><option value="observing">Observando</option><option value="nearby">Próxima</option><option value="manifested">Manifestada</option></select></label>
  <label>Fragmento de voz <input id="fs-gm-whisper" maxlength="180" placeholder="Uma frase que atravessa a névoa..."></label><button type="button" data-fs-whisper>Soltar sussurro</button>
- <label>Pergunta <input id="fs-gm-question" maxlength="300" placeholder="Pergunta aos personagens..."></label><button type="button" data-fs-question>Projetar pergunta</button>
- <label>Identidade da silhueta <input id="fs-gm-title" maxlength="80" placeholder="Título opcional"></label><button type="button" data-fs-figure>Fazer emergir silhueta</button>
+ <label>Pergunta <input id="fs-gm-question" maxlength="300" placeholder="Pergunta aos personagens..."></label><button type="button" data-fs-question>Projetar pergunta</button><button type="button" data-fs-clear-question>Retirar pergunta</button>
+ <label>Identidade da silhueta <input id="fs-gm-title" maxlength="80" placeholder="Título opcional"></label><button type="button" data-fs-figure>Fazer emergir silhueta</button><button type="button" data-fs-clear-figures>Dissolver todas as silhuetas</button>
  <button type="button" data-fs-mode>Permitir exploração livre</button><button type="button" data-fs-reaction>Fazer o espaço reagir</button>
  <label>Resposta do Mestre <input id="fs-gm-response" maxlength="220" placeholder="Responder à interação..."></label><button type="button" data-fs-response>Deixar resposta no ambiente</button>
  <div class="fs-replies" aria-live="polite"><small>O QUE ACONTECE NA CENA</small><div class="fs-reply-list"></div></div><button type="button" data-fs-end>Encerrar Falsa Seia</button></aside>
@@ -144,7 +144,8 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
   const f:Figure={id:crypto.randomUUID(),title:el.value.trim(),x:spot.x+(Math.random()*7-3.5),y:spot.y+(Math.random()*8-4),depth:.72+Math.random()*.48,seed:Math.floor(Math.random()*1000)};
   send({figures:[...state.figures,f]});el.value='';
  });
- root.querySelector('[data-fs-clear-figures]')?.addEventListener('click',()=>send({figures:[]}));\n root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
+ root.querySelector('[data-fs-clear-figures]')?.addEventListener('click',()=>send({figures:[]}));
+ root.querySelector('[data-fs-clear-question]')?.addEventListener('click',()=>send({question:'',qid:''}));\n root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
  root.querySelector('[data-fs-reaction]')?.addEventListener('click',()=>send({rid:crypto.randomUUID()}));
  root.querySelector('[data-fs-response]')?.addEventListener('click',()=>{const el=root.querySelector<HTMLInputElement>('#fs-gm-response')!;if(el.value.trim())send({whisper:el.value.trim(),wid:crypto.randomUUID(),rid:crypto.randomUUID()});el.value='';});
  root.querySelector('[data-fs-end]')?.addEventListener('click',()=>send({active:false}));
