@@ -77,6 +77,20 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  <button class="fs-gm-tab" hidden title="Abrir condução">◈</button><div class="fs-player-hint">A névoa se move. Algo observa.</div><div class="fs-explore-help">WASD / setas para caminhar · arraste para olhar · roda do mouse para aproximar</div><div class="fs-entry-veil" aria-hidden="true"></div>
  </main>`;
 
+ // Névoa de entrada controlada por Web Animations API: não depende de o CSS
+ // acertar o instante inicial da animação durante a abertura do modal Owlbear.
+ const entryVeil=root.querySelector<HTMLElement>('.fs-entry-veil');
+ if(entryVeil){
+  const entry=entryVeil.animate([
+   {opacity:1,transform:'scale(1.12)',filter:'blur(58px)'},
+   {opacity:1,transform:'scale(1.04)',filter:'blur(46px)',offset:.2},
+   {opacity:.94,transform:'scale(1)',filter:'blur(38px)',offset:.48},
+   {opacity:.34,transform:'scale(1.02)',filter:'blur(52px)',offset:.78},
+   {opacity:0,transform:'scale(1.08)',filter:'blur(68px)'}
+  ],{duration:6200,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});
+  entry.finished.then(()=>entryVeil.remove()).catch(()=>entryVeil.remove());
+ }
+
  const world=root.querySelector<HTMLElement>('.fs-world')!;
  const scene=root.querySelector<HTMLElement>('.fs-scene')!;
  const figures=root.querySelector<HTMLElement>('.fs-figures')!;
@@ -93,7 +107,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  const keys=new Set<string>();
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const clamp=(v:number,min:number,max:number)=>Math.max(min,Math.min(max,v));
- const applyCamera=()=>{scene.style.transform='translate3d('+camX.toFixed(1)+'px,'+camY.toFixed(1)+'px,0) scale('+zoom.toFixed(3)+')';};
+ const applyCamera=(time=performance.now())=>{const sway=reduced?0:Math.sin(time/4200)*1.35;const breathe=reduced?0:Math.sin(time/6100)*.055;const roll=reduced?0:Math.sin(time/5300)*.045;scene.style.transform='translate3d('+(camX+sway).toFixed(2)+'px,'+(camY+breathe).toFixed(2)+'px,0) scale('+(zoom+Math.sin(time/7100)*.0015).toFixed(4)+') rotate('+roll.toFixed(3)+'deg)';};
  const frame=()=>{
   const ease=reduced?1:.105;
   camX+=(targetX-camX)*ease;camY+=(targetY-camY)*ease;zoom+=(targetZoom-zoom)*.12;
@@ -105,7 +119,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
    if(keys.has('d')||keys.has('arrowright'))targetX-=speed;
    targetX=clamp(targetX,-world.clientWidth*.62,world.clientWidth*.62);targetY=clamp(targetY,-world.clientHeight*.46,world.clientHeight*.46);
   }
-  applyCamera();raf=window.requestAnimationFrame(frame);
+  applyCamera(performance.now());raf=window.requestAnimationFrame(frame);
  };
  const showHint=(text:string)=>{hint.textContent=text;hint.classList.add('visible');window.clearTimeout(approachTimer);approachTimer=window.setTimeout(()=>hint.classList.remove('visible'),3600);};
  const makeFigure=(f:Figure)=>{const seed=Number.isFinite(f.seed)?f.seed:Math.floor(Math.random()*1000);return '<button type="button" class="fs-figure" data-figure="'+esc(f.id)+'" style="--x:'+f.x+'%;--y:'+f.y+'%;--depth:'+(f.depth||1)+';--seed:'+seed+';--lean:'+(((seed%17)-8)*.22)+'deg;--torso-lean:'+(((seed%13)-6)*.16)+'deg"><span class="figure-aura"></span><span class="figure-body"><i class="figure-head"></i><i class="figure-neck"></i><i class="figure-torso"></i><i class="figure-cloak"></i><i class="figure-trail"></i></span><span class="figure-title">'+esc(f.title||'')+'</span></button>';};
