@@ -125,7 +125,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  try{const m=await OBR.room.getMetadata();const v=m[KEY];if(valid(v))paint(v);}catch(e){console.error(e);}
  OBR.room.onMetadataChange(m=>{const v=m[KEY];if(valid(v))paint(v);});
  OBR.broadcast.onMessage(CHANNEL,e=>{
-  const d=e.data as ({type?:string;state?:State}&Partial<Interaction>);
+  const d=e.data as {type?:string;state?:State;text?:string;player?:string;figure?:string;action?:string};
   if(d?.type==='state'&&valid(d.state))paint(d.state);
   if(isGM&&(d?.type==='reply'||d?.type==='approach'||d?.type==='figure-action'))log((d.player||'Jogador')+' '+(d.type==='approach'?'se aproximou de ':d.type==='figure-action'?'decidiu ':'respondeu: ')+(d.figure?d.figure+' — ':'')+(d.action?d.action+' — ':'')+(d.text||''));
  });
