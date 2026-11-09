@@ -1,10 +1,89 @@
 import OBR, { buildShape } from '@owlbear-rodeo/sdk';
-import { triggerFalseAscendidoVisual } from './showtime';
 import './false-ascendido.css';
 
 const METADATA_KEY = 'com.arton.engine/falso-ascendido/v1';
 const SCENE_METADATA_KEY = 'com.arton.engine/falso-ascendido/local/v1';
 const SCENE_EFFECTS_KEY = 'com.arton.engine/falso-ascendido/effects/v1';
+
+type FAVisualKind = 'mist' | 'shadow' | 'abyss' | 'fracture';
+type FAVisualPayload = { version: 1; id: string; kind: FAVisualKind; intensity: number; durationMs: number; createdAt: number };
+const FA_VISUAL_CHANNEL = 'com.arton.engine/falso-ascendido/manifestation/v1';
+const FA_VISUAL_MODAL = 'com.arton.engine/falso-ascendido/manifestation-overlay';
+let faVisualTimer: number | undefined;
+
+async function openFalsoAscendidoVisual(payload: FAVisualPayload): Promise<void> {
+  const url = new URL('/', window.location.origin);
+  url.searchParams.set('falsoAscendido', '1');
+  url.searchParams.set('kind', payload.kind);
+  url.searchParams.set('effectId', payload.id);
+  url.searchParams.set('intensity', String(payload.intensity));
+  url.searchParams.set('duration', String(payload.durationMs));
+  try { await OBR.modal.close(FA_VISUAL_MODAL); } catch { /* Sem efeito anterior. */ }
+  await OBR.modal.open({
+    id: FA_VISUAL_MODAL, url: url.toString(), fullScreen: true,
+    hideBackdrop: true, hidePaper: true, disablePointerEvents: true,
+  });
+  if (faVisualTimer !== undefined) window.clearTimeout(faVisualTimer);
+  faVisualTimer = window.setTimeout(() => {
+    void OBR.modal.close(FA_VISUAL_MODAL).catch(() => undefined);
+    faVisualTimer = undefined;
+  }, payload.durationMs);
+}
+
+function validFAVisual(value: unknown): value is FAVisualPayload {
+  if (!value || typeof value !== 'object') return false;
+  const p = value as Partial<FAVisualPayload>;
+  return p.version === 1 && typeof p.id === 'string'
+    && ['mist', 'shadow', 'abyss', 'fracture'].includes(p.kind || '')
+    && typeof p.intensity === 'number' && p.intensity >= 0.15 && p.intensity <= 1
+    && typeof p.durationMs === 'number' && p.durationMs >= 5000 && p.durationMs <= 45000
+    && typeof p.createdAt === 'number' && Date.now() - p.createdAt < 60000;
+}
+
+export function initializeFalseAscendidoVisuals(): void {
+  OBR.broadcast.onMessage(FA_VISUAL_CHANNEL, (event) => {
+    if (!validFAVisual(event.data)) return;
+    void openFalsoAscendidoVisual(event.data).catch((error) => console.error('Falha na manifestação do Falso Ascendido:', error));
+  });
+}
+
+async function triggerFalsoAscendidoVisual(kind: FAVisualKind, intensity: number, durationSeconds: number): Promise<void> {
+  if (!connected || !isGM) {
+    OBR.notification.show('Somente o mestre pode despertar uma manifestação.');
+    return;
+  }
+  const payload: FAVisualPayload = {
+    version: 1, id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+    kind, intensity: Math.max(0.15, Math.min(1, intensity)),
+    durationMs: Math.max(5, Math.min(45, durationSeconds)) * 1000, createdAt: Date.now(),
+  };
+  try {
+    await openFalsoAscendidoVisual(payload);
+    await OBR.broadcast.sendMessage(FA_VISUAL_CHANNEL, payload, { destination: 'REMOTE' });
+  } catch (error) {
+    console.error('Erro ao despertar manifestação do Falso Ascendido:', error);
+    OBR.notification.show('A manifestação não conseguiu atravessar a cena.');
+  }
+}
+
+export function renderFalsoAscendidoOverlay(root: HTMLElement): void {
+  const params = new URLSearchParams(window.location.search);
+  const kind = (['mist', 'shadow', 'abyss', 'fracture'].includes(params.get('kind') || '') ? params.get('kind') : 'mist') as FAVisualKind;
+  const intensity = Math.max(0.15, Math.min(1, Number(params.get('intensity')) || 0.65));
+  const effectId = params.get('effectId') || 'vestigio';
+  let seed = 0;
+  for (let i = 0; i < effectId.length; i++) seed = (seed * 31 + effectId.charCodeAt(i)) >>> 0;
+  const x = 18 + seed % 64;
+  const y = 16 + (seed >>> 8) % 68;
+  document.documentElement.style.cssText = 'background:transparent!important;margin:0!important;padding:0!important;';
+  document.body.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
+  root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
+  root.innerHTML = '<main class="fa-cinema fa-cinema-' + kind + '" style="--fa-force:' + intensity + ';--fa-origin-x:' + x + '%;--fa-origin-y:' + y + '%">'
+    + '<div class="fa-cinema-depth"></div><div class="fa-cinema-fog fa-cinema-fog-a"></div><div class="fa-cinema-fog fa-cinema-fog-b"></div>'
+    + '<div class="fa-cinema-shadow"></div><div class="fa-cinema-silhouette"></div><div class="fa-cinema-fracture"></div>'
+    + '<div class="fa-cinema-grain"></div><div class="fa-cinema-vignette"></div></main>';
+}
+
 const STAGES = [
   { name: 'Vestígios', description: 'Sinais isolados de algo que não deveria existir.' },
   { name: 'Ressonância', description: 'Os vestígios começam a se conectar.' },
@@ -277,21 +356,19 @@ export function renderFalseAscendidoPanel(isConnected: boolean, master: boolean)
         <div class="fa-section-title"><div><span>03 / AÇÃO NA MESA</span><h3>Manifestações</h3></div><small>EFEITOS PARA OS JOGADORES</small></div>
         <div class="fa-global-card">
           <p class="fa-help">Dispare uma manifestação visual nas telas dos jogadores ou marque uma região de influência diretamente no cenário.</p>
-          <label for="fa-visual-kind">MANIFESTAÇÃO NA TELA</label>
+          <p class="fa-cinema-note">Não há aviso, legenda ou identificação. A influência atravessa a visão como névoa, sombra e profundidade abissal.</p>
+          <label for="fa-visual-kind">NATUREZA DA MANIFESTAÇÃO</label>
           <select id="fa-visual-kind">
-            <option value="appearance">Ruptura da realidade</option>
-            <option value="presence">Presença sombria</option>
-            <option value="threshold">Limiar entre planos</option>
+            <option value="mist">Névoa — o mundo perde seus contornos</option>
+            <option value="shadow">Sombra — algo atravessa a luz</option>
+            <option value="abyss">Abismo — a profundidade parece não ter fim</option>
+            <option value="fracture">Ruptura — a realidade se dobra por um instante</option>
           </select>
-          <label for="fa-visual-title">TÍTULO (OPCIONAL)</label>
-          <input id="fa-visual-title" maxlength="100" value="A realidade se distorce" placeholder="Uma frase para a manifestação">
-          <label for="fa-visual-message">MENSAGEM</label>
-          <textarea id="fa-visual-message" rows="2" maxlength="180" placeholder="Algo antigo observa vocês...">Algo antigo observa vocês...</textarea>
-          <label for="fa-visual-intensity">INTENSIDADE</label>
-          <input id="fa-visual-intensity" type="range" min="0.2" max="1" step="0.05" value="0.7">
-          <label for="fa-visual-duration">DURAÇÃO (SEGUNDOS)</label>
-          <input id="fa-visual-duration" type="number" min="5" max="30" value="12">
-          <button class="fa-button" data-fa-action="visual" ${saving ? 'disabled' : ''}>Manifestar nas telas dos jogadores</button>
+          <label for="fa-visual-intensity">PRESENÇA</label>
+          <input id="fa-visual-intensity" type="range" min="0.15" max="1" step="0.05" value="0.65">
+          <label for="fa-visual-duration">TEMPO DE MANIFESTAÇÃO (SEGUNDOS)</label>
+          <input id="fa-visual-duration" type="number" min="5" max="45" value="18">
+          <button class="fa-button" data-fa-action="visual" ${saving ? 'disabled' : ''}>Deixar a influência atravessar</button>
           <div class="fa-map-tools">
             <label>MARCA NO MAPA</label>
             <p class="fa-help">Cria uma zona circular compartilhada no centro da visão atual do mestre. Ela permanece na cena até ser removida.</p>
@@ -343,12 +420,10 @@ export function bindFalseAscendidoActions(root: HTMLElement, isConnected: boolea
         void persist(normalizeState({ ...state, globalNote: note }));
       }
       if (button.dataset.faAction === 'visual') {
-        const kind = root.querySelector<HTMLSelectElement>('#fa-visual-kind')?.value || 'appearance';
-        const title = root.querySelector<HTMLInputElement>('#fa-visual-title')?.value || '';
-        const message = root.querySelector<HTMLTextAreaElement>('#fa-visual-message')?.value || '';
-        const intensity = Number(root.querySelector<HTMLInputElement>('#fa-visual-intensity')?.value || 0.7);
-        const duration = Number(root.querySelector<HTMLInputElement>('#fa-visual-duration')?.value || 12);
-        void triggerFalseAscendidoVisual(kind as 'appearance' | 'presence' | 'threshold', title, message, intensity, duration, connected, isGM);
+        const kind = (root.querySelector<HTMLSelectElement>('#fa-visual-kind')?.value || 'mist') as FAVisualKind;
+        const intensity = Number(root.querySelector<HTMLInputElement>('#fa-visual-intensity')?.value || 0.65);
+        const duration = Number(root.querySelector<HTMLInputElement>('#fa-visual-duration')?.value || 18);
+        void triggerFalsoAscendidoVisual(kind, intensity, duration);
       }
       if (button.dataset.faAction === 'map-zone') void createInfluenceZone();
       if (button.dataset.faAction === 'clear-map') void clearInfluenceZones();
