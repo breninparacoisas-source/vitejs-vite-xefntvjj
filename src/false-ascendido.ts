@@ -35,7 +35,7 @@ function validFAVisual(value: unknown): value is FAVisualPayload {
   const p = value as Partial<FAVisualPayload>;
   return p.version === 1 && typeof p.id === 'string'
     && ['mist', 'shadow', 'abyss', 'fracture'].includes(p.kind || '')
-    && typeof p.intensity === 'number' && p.intensity >= 0.15 && p.intensity <= 1
+    && typeof p.intensity === 'number' && p.intensity >= 0.3 && p.intensity <= 1
     && typeof p.durationMs === 'number' && p.durationMs >= 5000 && p.durationMs <= 45000
     && typeof p.createdAt === 'number' && Date.now() - p.createdAt < 60000;
 }
@@ -54,7 +54,7 @@ async function triggerFalsoAscendidoVisual(kind: FAVisualKind, intensity: number
   }
   const payload: FAVisualPayload = {
     version: 1, id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
-    kind, intensity: Math.max(0.15, Math.min(1, intensity)),
+    kind, intensity: Math.max(0.3, Math.min(1, intensity)),
     durationMs: Math.max(5, Math.min(45, durationSeconds)) * 1000, createdAt: Date.now(),
   };
   try {
@@ -69,7 +69,8 @@ async function triggerFalsoAscendidoVisual(kind: FAVisualKind, intensity: number
 export function renderFalsoAscendidoOverlay(root: HTMLElement): void {
   const params = new URLSearchParams(window.location.search);
   const kind = (['mist', 'shadow', 'abyss', 'fracture'].includes(params.get('kind') || '') ? params.get('kind') : 'mist') as FAVisualKind;
-  const intensity = Math.max(0.15, Math.min(1, Number(params.get('intensity')) || 0.65));
+  const intensity = Math.max(0.3, Math.min(1, Number(params.get('intensity')) || 0.9));
+  const durationMs = Math.max(5000, Math.min(45000, Number(params.get('duration')) || 18000));
   const effectId = params.get('effectId') || 'vestigio';
   let seed = 0;
   for (let i = 0; i < effectId.length; i++) seed = (seed * 31 + effectId.charCodeAt(i)) >>> 0;
@@ -78,7 +79,7 @@ export function renderFalsoAscendidoOverlay(root: HTMLElement): void {
   document.documentElement.style.cssText = 'background:transparent!important;margin:0!important;padding:0!important;';
   document.body.style.cssText = 'margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important;';
   root.style.cssText = 'position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;';
-  root.innerHTML = '<main class="fa-cinema fa-cinema-' + kind + '" style="--fa-force:' + intensity + ';--fa-origin-x:' + x + '%;--fa-origin-y:' + y + '%">'
+  root.innerHTML = '<main class="fa-cinema fa-cinema-' + kind + '" style="--fa-force:' + intensity + ';--fa-origin-x:' + x + '%;--fa-origin-y:' + y + '%;--fa-life:' + durationMs + 'ms">'
     + '<div class="fa-cinema-depth"></div><div class="fa-cinema-fog fa-cinema-fog-a"></div><div class="fa-cinema-fog fa-cinema-fog-b"></div>'
     + '<div class="fa-cinema-shadow"></div><div class="fa-cinema-silhouette"></div><div class="fa-cinema-fracture"></div>'
     + '<div class="fa-cinema-grain"></div><div class="fa-cinema-vignette"></div></main>';
@@ -365,7 +366,7 @@ export function renderFalseAscendidoPanel(isConnected: boolean, master: boolean)
             <option value="fracture">Ruptura — a realidade se dobra por um instante</option>
           </select>
           <label for="fa-visual-intensity">PRESENÇA</label>
-          <input id="fa-visual-intensity" type="range" min="0.15" max="1" step="0.05" value="0.65">
+          <input id="fa-visual-intensity" type="range" min="0.3" max="1" step="0.05" value="0.9">
           <label for="fa-visual-duration">TEMPO DE MANIFESTAÇÃO (SEGUNDOS)</label>
           <input id="fa-visual-duration" type="number" min="5" max="45" value="18">
           <button class="fa-button" data-fa-action="visual" ${saving ? 'disabled' : ''}>Deixar a influência atravessar</button>
@@ -421,7 +422,7 @@ export function bindFalseAscendidoActions(root: HTMLElement, isConnected: boolea
       }
       if (button.dataset.faAction === 'visual') {
         const kind = (root.querySelector<HTMLSelectElement>('#fa-visual-kind')?.value || 'mist') as FAVisualKind;
-        const intensity = Number(root.querySelector<HTMLInputElement>('#fa-visual-intensity')?.value || 0.65);
+        const intensity = Number(root.querySelector<HTMLInputElement>('#fa-visual-intensity')?.value || 0.9);
         const duration = Number(root.querySelector<HTMLInputElement>('#fa-visual-duration')?.value || 18);
         void triggerFalsoAscendidoVisual(kind, intensity, duration);
       }
