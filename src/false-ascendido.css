@@ -32,3 +32,66 @@
 @keyframes faGrain{0%{transform:translate(0,0)}25%{transform:translate(2%,-1%)}50%{transform:translate(-1%,2%)}75%{transform:translate(1%,1%)}100%{transform:translate(-2%,-1%)}}
 .fa-cinema-note{font-size:11px;line-height:1.7;color:#a69aaa;margin:0 0 12px;padding-left:12px;border-left:1px solid rgba(170,150,190,.3)}
 @media(prefers-reduced-motion:reduce){.fa-cinema-depth,.fa-cinema-fog,.fa-cinema-shadow,.fa-cinema-silhouette,.fa-cinema-fracture,.fa-cinema-grain{animation:none!important}.fa-cinema-fog{opacity:.25}}
+
+/* Revisão de presença: cada manifestação ocupa a imagem com uma assinatura própria. */
+.fa-cinema{--fa-life:18000ms;opacity:1;will-change:opacity}
+.fa-cinema-depth{animation-duration:calc(var(--fa-life)*.28)}
+.fa-cinema-fog{filter:blur(22px);mix-blend-mode:screen}
+.fa-cinema-fog-a{animation-duration:var(--fa-life);opacity:calc(var(--fa-force)*.9)}
+.fa-cinema-fog-b{animation-duration:calc(var(--fa-life)*.82);opacity:calc(var(--fa-force)*.78)}
+.fa-cinema-shadow{filter:blur(24px);animation-duration:var(--fa-life)}
+.fa-cinema-silhouette{filter:blur(9px);animation-duration:var(--fa-life)}
+.fa-cinema-fracture{filter:blur(7px);animation-duration:calc(var(--fa-life)*.34)}
+.fa-cinema-vignette{background:radial-gradient(ellipse at center,transparent 8%,rgba(0,0,5,.32) 52%,rgba(0,0,3,.88) 115%);transition:opacity .4s}
+.fa-cinema:before{z-index:5;inset:-5%;opacity:0}
+.fa-cinema:after{z-index:6;inset:-5%;opacity:0}
+
+/* Névoa: bancos densos atravessam a tela em planos diferentes. */
+.fa-cinema-mist .fa-cinema-depth{background:linear-gradient(180deg,rgba(3,5,13,.12),rgba(5,7,15,.28)),radial-gradient(ellipse at 50% 110%,rgba(0,0,5,.7),transparent 62%)}
+.fa-cinema-mist .fa-cinema-fog-a{inset:-55%;filter:blur(18px);background:radial-gradient(ellipse at 18% 55%,rgba(190,194,207,.62),transparent 35%),radial-gradient(ellipse at 74% 36%,rgba(136,143,166,.58),transparent 38%),radial-gradient(ellipse at 52% 85%,rgba(104,111,137,.5),transparent 46%);animation:faMistBank var(--fa-life) ease-in-out both;opacity:calc(var(--fa-force)*1.15)}
+.fa-cinema-mist .fa-cinema-fog-b{inset:-50%;filter:blur(30px);background:linear-gradient(100deg,transparent 5%,rgba(171,177,194,.44) 26%,rgba(211,211,220,.4) 43%,rgba(93,101,126,.48) 59%,transparent 82%);animation:faMistVeil calc(var(--fa-life)*.9) ease-in-out both;opacity:calc(var(--fa-force)*.9)}
+.fa-cinema-mist:before{background:linear-gradient(0deg,rgba(3,4,10,.78),transparent 40%,rgba(3,4,10,.32)),radial-gradient(ellipse at 50% 60%,transparent 12%,rgba(5,7,16,.5) 100%);animation:faMistSweep var(--fa-life) ease-in-out both;opacity:var(--fa-force)}
+.fa-cinema-mist .fa-cinema-vignette{opacity:calc(var(--fa-force)*.9)}
+.fa-cinema-mist .fa-cinema-shadow,.fa-cinema-mist .fa-cinema-silhouette,.fa-cinema-mist .fa-cinema-fracture{display:none}
+
+/* Sombra: massas negras orgânicas cruzam o campo e uma presença toma forma. */
+.fa-cinema-shadow .fa-cinema-depth{background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.05) 0,rgba(0,0,3,.62) 60%,rgba(0,0,2,.96) 100%)}
+.fa-cinema-shadow .fa-cinema-fog-a{background:radial-gradient(ellipse at 20% 40%,rgba(25,24,39,.5),transparent 42%),radial-gradient(ellipse at 75% 70%,rgba(19,18,31,.6),transparent 40%);opacity:calc(var(--fa-force)*.7)}
+.fa-cinema-shadow .fa-cinema-fog-b{display:none}
+.fa-cinema-shadow .fa-cinema-shadow{inset:-30%;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,2,1) 0 18%,rgba(0,0,3,.88) 34%,transparent 68%);filter:blur(20px);animation:faShadowMass var(--fa-life) cubic-bezier(.18,.6,.2,1) both}
+.fa-cinema-shadow .fa-cinema-silhouette{width:min(44vw,560px);height:88vh;background:radial-gradient(ellipse at 50% 23%,rgba(0,0,2,.99) 0 13%,transparent 14%),radial-gradient(ellipse at 50% 55%,rgba(0,0,2,.98) 0 25%,transparent 26%),linear-gradient(90deg,transparent 20%,rgba(0,0,2,.8) 49%,transparent 80%);filter:blur(8px);animation:faShadowFigure var(--fa-life) ease both}
+.fa-cinema-shadow:before{inset:-30%;background:radial-gradient(ellipse at 10% 45%,rgba(0,0,0,.96),transparent 43%),radial-gradient(ellipse at 92% 68%,rgba(0,0,0,.95),transparent 46%);filter:blur(24px);animation:faShadowTendrils var(--fa-life) ease-in-out both;opacity:var(--fa-force)}
+.fa-cinema-shadow .fa-cinema-vignette{opacity:1;background:radial-gradient(ellipse at center,transparent 4%,rgba(0,0,0,.48) 48%,rgba(0,0,0,.98) 115%)}
+
+/* Abismo: um poço vertical sem fundo abre no centro, com bordas de profundidade. */
+.fa-cinema-abyss .fa-cinema-depth{inset:-25%;background:radial-gradient(ellipse at 50% 52%,#000 0 13%,rgba(0,0,4,.98) 24%,rgba(4,3,15,.92) 34%,rgba(0,0,4,.52) 51%,transparent 74%);animation:faAbyssMaw var(--fa-life) ease-in-out both}
+.fa-cinema-abyss .fa-cinema-fog-a{inset:-25%;background:radial-gradient(ellipse at 50% 52%,transparent 0 15%,rgba(100,78,129,.4) 19%,rgba(29,25,52,.45) 25%,transparent 42%),radial-gradient(ellipse at 50% 100%,rgba(12,10,26,.78),transparent 58%);filter:blur(17px);opacity:var(--fa-force);animation:faAbyssRim var(--fa-life) ease-in-out both}
+.fa-cinema-abyss .fa-cinema-fog-b{background:linear-gradient(180deg,transparent 0%,rgba(22,17,40,.4) 45%,rgba(0,0,0,.95) 100%);opacity:calc(var(--fa-force)*.9);animation:faAbyssFall var(--fa-life) ease-in both}
+.fa-cinema-abyss .fa-cinema-shadow{inset:-25%;background:radial-gradient(ellipse at 50% 50%,#000 0 19%,rgba(0,0,4,.92) 33%,transparent 66%);filter:blur(10px);animation:faAbyssDrop var(--fa-life) cubic-bezier(.2,.7,.1,1) both}
+.fa-cinema-abyss .fa-cinema-silhouette{display:none}
+.fa-cinema-abyss .fa-cinema-vignette{opacity:1;background:radial-gradient(ellipse at 50% 50%,transparent 0 12%,rgba(0,0,0,.45) 38%,rgba(0,0,0,.98) 100%)}
+.fa-cinema-abyss:after{inset:-10%;background:repeating-linear-gradient(180deg,transparent 0 8%,rgba(120,100,150,.08) 8.2%,transparent 8.8%);filter:blur(12px);animation:faAbyssLines var(--fa-life) linear both;opacity:var(--fa-force)}
+
+/* Ruptura: cortes oblíquos e ondas de espaço quebrado, sem texto ou HUD. */
+.fa-cinema-fracture .fa-cinema-depth{background:radial-gradient(ellipse at center,rgba(0,0,0,.1),rgba(0,0,0,.72) 100%);animation:faFracturePulse var(--fa-life) ease both}
+.fa-cinema-fracture .fa-cinema-fog-a{background:linear-gradient(112deg,transparent 15%,rgba(95,83,120,.55) 46%,rgba(215,205,226,.4) 49%,rgba(0,0,0,.8) 51%,transparent 66%);filter:blur(9px);animation:faFractureTear var(--fa-life) ease both;opacity:var(--fa-force)}
+.fa-cinema-fracture .fa-cinema-fog-b{background:repeating-linear-gradient(176deg,transparent 0 13%,rgba(165,152,186,.18) 13.2%,transparent 13.8%);filter:blur(4px);animation:faFractureRipple var(--fa-life) ease both;opacity:var(--fa-force)}
+.fa-cinema-fracture .fa-cinema-fracture{inset:-30%;background:repeating-linear-gradient(102deg,transparent 0 18%,rgba(0,0,0,.94) 18.2% 19%,rgba(184,165,205,.58) 19.2% 19.45%,transparent 20% 37%);filter:blur(3px);animation:faFractureSlashes var(--fa-life) steps(1,end) both;opacity:var(--fa-force)}
+.fa-cinema-fracture:before{background:linear-gradient(90deg,transparent 48%,rgba(210,194,230,.4) 49.5%,rgba(0,0,0,.95) 50%,transparent 52%);filter:blur(5px);animation:faFractureFlash var(--fa-life) ease both;opacity:var(--fa-force)}
+.fa-cinema-fracture .fa-cinema-vignette{opacity:calc(var(--fa-force)*.9)}
+@keyframes faMistBank{0%{transform:translate(-22vw,12vh) scale(.8);opacity:0}18%{opacity:calc(var(--fa-force)*1.1)}58%{transform:translate(6vw,-2vh) scale(1.2);opacity:var(--fa-force)}100%{transform:translate(22vw,-10vh) scale(1.35);opacity:calc(var(--fa-force)*.45)}}
+@keyframes faMistVeil{0%{transform:translate(24vw,-8vh) scale(1.1);opacity:0}25%{opacity:var(--fa-force)}100%{transform:translate(-20vw,8vh) scale(1.25);opacity:calc(var(--fa-force)*.75)}}
+@keyframes faMistSweep{0%,100%{transform:translateY(12vh);opacity:.3}45%{transform:translateY(-5vh);opacity:var(--fa-force)}}
+@keyframes faShadowMass{0%{transform:translate(-55vw,12vh) scale(.55);opacity:0}28%{opacity:var(--fa-force)}58%{transform:translate(0,0) scale(1.45);opacity:var(--fa-force)}100%{transform:translate(58vw,-14vh) scale(1.8);opacity:.2}}
+@keyframes faShadowFigure{0%,14%{opacity:0;transform:translate(-50%,-50%) scale(.65)}38%{opacity:var(--fa-force);transform:translate(-50%,-50%) scale(1)}72%{opacity:calc(var(--fa-force)*.9);transform:translate(-50%,-47%) scale(1.08)}100%{opacity:0;transform:translate(-42%,-42%) scale(1.2)}}
+@keyframes faShadowTendrils{0%{transform:translateX(-15%) scale(.8);opacity:0}40%{opacity:var(--fa-force)}100%{transform:translateX(15%) scale(1.25);opacity:var(--fa-force)}}
+@keyframes faAbyssMaw{0%{transform:scale(.35);opacity:.1}45%{transform:scale(1.15);opacity:1}100%{transform:scale(1.28);opacity:1}}
+@keyframes faAbyssRim{0%{transform:scale(.5) rotate(-8deg);opacity:0}35%{opacity:var(--fa-force)}100%{transform:scale(1.2) rotate(5deg);opacity:var(--fa-force)}}
+@keyframes faAbyssDrop{0%{transform:translateY(-24vh) scale(.5);opacity:0}35%{opacity:var(--fa-force)}100%{transform:translateY(28vh) scale(1.7);opacity:var(--fa-force)}}
+@keyframes faAbyssFall{0%{transform:translateY(-35vh);opacity:0}30%{opacity:var(--fa-force)}100%{transform:translateY(35vh);opacity:var(--fa-force)}}
+@keyframes faAbyssLines{0%{transform:translateY(-12%)}100%{transform:translateY(12%)}}
+@keyframes faFracturePulse{0%,100%{filter:brightness(1)}15%,38%{filter:brightness(.5)}22%,48%{filter:brightness(1.35)}}
+@keyframes faFractureTear{0%,100%{transform:translateX(-25%) skewX(-8deg);opacity:0}20%,55%{opacity:var(--fa-force)}70%{transform:translateX(18%) skewX(12deg);opacity:var(--fa-force)}}
+@keyframes faFractureRipple{0%{transform:scaleY(.7) translateX(10%);opacity:0}35%{opacity:var(--fa-force)}100%{transform:scaleY(1.2) translateX(-10%);opacity:0}}
+@keyframes faFractureSlashes{0%,100%{opacity:0;transform:translateX(-15%)}18%,21%,44%,48%,72%{opacity:var(--fa-force);transform:translateX(0)}}
+@keyframes faFractureFlash{0%,100%{opacity:0}18%,20%,44%,46%{opacity:var(--fa-force)}}
