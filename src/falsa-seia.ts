@@ -73,7 +73,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  const applyCamera=()=>{scene.style.transform='translate3d('+camX+'px,'+camY+'px,0) scale('+zoom+')';};
  const moveCamera=(x:number,y:number)=>{targetX=x;targetY=y;if(reduced){camX=x;camY=y;applyCamera();return;}scene.style.transition='transform 1.25s cubic-bezier(.18,.72,.18,1)';camX=x;camY=y;applyCamera();window.setTimeout(()=>{scene.style.transition='transform .16s linear';},1300);};
  const showHint=(text:string)=>{hint.textContent=text;hint.classList.add('visible');window.clearTimeout(approachTimer);approachTimer=window.setTimeout(()=>hint.classList.remove('visible'),3300);};
- const makeFigure=(f:Figure)=>'<button class="fs-figure" data-figure="'+esc(f.id)+'" data-x="'+f.x+'" data-y="'+f.y+'" style="--x:'+f.x+'%;--y:'+f.y+'%;--depth:'+f.depth+'"><span class="figure-aura"></span><span class="figure-body"><i class="figure-head"></i><i class="figure-torso"></i><i class="figure-cloak"></i></span><span class="figure-title">'+esc(f.title||'')+'</span></button>';
+ const makeFigure=(f:Figure)=>'<button class="fs-figure" data-figure="'+esc(f.id)+'" data-x="'+f.x+'" data-y="'+f.y+'" style="--x:'+f.x+'%;--y:'+f.y+'%;--depth:'+(f.depth||1)+'"><span class="figure-aura"></span><span class="figure-body"><i class="figure-head"></i><i class="figure-torso"></i><i class="figure-cloak"></i></span><span class="figure-title">'+esc(f.title||'')+'</span></button>';
  const paint=(v:State)=>{
   state=v;world.style.setProperty('--fog',String(v.fog/100));world.dataset.mode=v.mode;world.dataset.presence=v.presence;
   figures.innerHTML=v.figures.map(makeFigure).join('');
@@ -92,7 +92,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  OBR.broadcast.onMessage(CHANNEL,e=>{
   const d=e.data as {type?:string;state?:State;text?:string;player?:string};
   if(d?.type==='state'&&valid(d.state))paint(d.state);
-  if(d?.type==='reply'&&d.text&&isGM){const log=root.querySelector<HTMLElement>('.fs-replies');if(log){const line=document.createElement('p');line.textContent=(d.player?d.player+': ':'Jogador: ')+d.text;log.prepend(line);}}
+  if((d?.type==='reply'||d?.type==='approach')&&d.text&&isGM){const log=root.querySelector<HTMLElement>('.fs-replies');if(log){const line=document.createElement('p');line.textContent=(d.player?d.player+': ':'Jogador: ')+d.text;log.prepend(line);}}
  });
 
  consolePanel.querySelector('.fs-console-close')?.addEventListener('click',()=>{consolePanel.classList.add('collapsed');});
@@ -118,6 +118,7 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
   figure.classList.add('approached');
   const title=figure.querySelector('.figure-title')?.textContent?.trim();
   showHint(title?'Você se aproxima de '+title+'.':'A silhueta parece perceber sua aproximação.');
+  if(!isGM){void OBR.player.getName().then(player=>OBR.broadcast.sendMessage(CHANNEL,{type:'approach',text:'aproximou-se de '+(title||'uma silhueta sem nome'),player},{destination:'REMOTE'}));}
   world.classList.remove('world-reaction');void world.offsetWidth;world.classList.add('world-reaction');
  });
 
@@ -128,6 +129,5 @@ export async function renderFalsaSeiaOverlay(root:HTMLElement){
  world.addEventListener('wheel',e=>{if(state.mode!=='explore')return;e.preventDefault();zoom=Math.max(.8,Math.min(1.65,zoom+(e.deltaY<0?.06:-.06)));scene.style.transition='transform .25s ease-out';applyCamera();},{passive:false});
  const onKey=(e:KeyboardEvent)=>{if(state.mode!=='explore'||/INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName))return;const k=e.key.toLowerCase();const step=e.shiftKey?38:22;if(['w','arrowup'].includes(k)){e.preventDefault();move(0,step);}else if(['s','arrowdown'].includes(k)){e.preventDefault();move(0,-step);}else if(['a','arrowleft'].includes(k)){e.preventDefault();move(step,0);}else if(['d','arrowright'].includes(k)){e.preventDefault();move(-step,0);}else if(k==='escape'){question.classList.remove('show');}};
  window.addEventListener('keydown',onKey);
- root.addEventListener('keydown',onKey);
  if(!isGM)world.dataset.mode=state.mode;
 }
