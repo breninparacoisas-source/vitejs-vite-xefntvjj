@@ -370,6 +370,8 @@ function renderPage(): string {
       'Aqui construiremos o sistema de eventos manuais, automáticos e acionados pelos jogadores.',
     cinematic:
       'Conduza despedidas, revelações e outros momentos decisivos com sequências dramáticas.',
+    falsaSeia:
+      'Espaço mental imersivo, com condução cinematográfica e exploração livre controlada pelo Mestre.',
     falsoAscendido:
       'Ferramentas secretas do mestre para acompanhar a influência global, as manifestações locais e os acontecimentos ligados ao Falso Ascendido.',
     cenas:
