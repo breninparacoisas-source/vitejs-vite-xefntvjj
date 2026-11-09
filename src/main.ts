@@ -155,7 +155,7 @@ function render() {
           <button data-page="cinematic" class="${currentPage === 'cinematic' ? 'active' : ''}">
             CINEMÁTICO
           </button>
-          <button data-page="falsaSeia">Falsa Seia</button>
+          <button data-page="falsaSeia" class="${currentPage === 'falsaSeia' ? 'active' : ''}">Falsa Seia</button>
           <button data-page="falsoAscendido" class="${currentPage === 'falsoAscendido' ? 'active' : ''}">
             <span class="nav-icon">◈</span> Falso Ascendido
           </button>
@@ -178,7 +178,7 @@ function render() {
         <div class="sidebar-footer">
           <span class="status-dot"></span>
           ${connected ? 'CONECTADO AO OWLBEAR' : 'AGUARDANDO CONEXÃO'}
-          <small>ARTON ENGINE · 0.23.2</small>
+          <small>ARTON ENGINE · 0.23.4</small>
         </div>
       </aside>
 
