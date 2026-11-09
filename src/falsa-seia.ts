@@ -44,12 +44,10 @@ export function renderFalsaSeiaOverlay(root:HTMLElement){
   if(v.qid&&v.qid!==lastQuestion){lastQuestion=v.qid;question.querySelector('p')!.textContent=v.question;question.classList.add('show');}
  };
  const send=(patch:Partial<State>)=>{if(isGM)void publish({...state,...patch}).catch(error=>{console.error(error);OBR.notification.show('Não foi possível atualizar a Falsa Seia.');});};
- OBR.onReady(async()=>{
-  if(isGM){consolePanel.hidden=false;gmTab.hidden=false;}
+ if(isGM){consolePanel.hidden=false;gmTab.hidden=false;}
   try{const m=await OBR.room.getMetadata();const v=m[KEY];if(valid(v))paint(v);}catch(e){console.error(e);}
   OBR.room.onMetadataChange(m=>{const v=m[KEY];if(valid(v))paint(v);});
   OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;state?:State;text?:string;player?:string};if(d?.type==='state'&&valid(d.state))paint(d.state);if(d?.type==='reply'&&d.text&&isGM){const log=root.querySelector<HTMLElement>('.fs-replies');if(log){const line=document.createElement('p');line.textContent=(d.player?d.player+': ':'Jogador: ')+d.text;log.prepend(line);}}});
- });
  consolePanel.querySelector('.fs-console-close')?.addEventListener('click',()=>{consolePanel.classList.add('collapsed');});
  gmTab.addEventListener('click',()=>consolePanel.classList.remove('collapsed'));
  root.querySelector('#fs-gm-fog')?.addEventListener('input',e=>{const value=Number((e.target as HTMLInputElement).value);world.style.setProperty('--fog',String(value/100));});
