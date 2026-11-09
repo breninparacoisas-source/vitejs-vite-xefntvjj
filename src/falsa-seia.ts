@@ -4,15 +4,17 @@ import './falsa-seia.css';
 const CHANNEL='com.arton.engine/falsa-seia/v1';
 const MODAL_ID='com.arton.engine/falsa-seia/overlay';
 const KEY='com.arton.engine/falsa-seia/state';
+let backgroundIsGM=false;
 type Figure={id:string;title:string;x:number;y:number};
 type State={active:boolean;mode:'cinematic'|'explore';fog:number;presence:string;whisper:string;wid:string;question:string;qid:string;figures:Figure[]};
 let state:State={active:false,mode:'cinematic',fog:72,presence:'absent',whisper:'',wid:'',question:'',qid:'',figures:[]};
 const esc=(v:string)=>v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 const valid=(v:unknown):v is State=>!!v&&typeof v==='object'&&typeof (v as State).active==='boolean'&&((v as State).mode==='cinematic'||(v as State).mode==='explore')&&typeof (v as State).fog==='number'&&Array.isArray((v as State).figures);
-async function openOverlay(){const url=new URL('/',window.location.origin);url.searchParams.set('falsaSeia','1');await OBR.modal.open({id:MODAL_ID,url:url.toString(),fullScreen:true,hideBackdrop:true,hidePaper:true,disablePointerEvents:false});}
+async function openOverlay(){const url=new URL('/',window.location.origin);url.searchParams.set('falsaSeia','1');if(backgroundIsGM)url.searchParams.set('gm','1');await OBR.modal.open({id:MODAL_ID,url:url.toString(),fullScreen:true,hideBackdrop:true,hidePaper:true,disablePointerEvents:false});}
 async function closeOverlay(){try{await OBR.modal.close(MODAL_ID);}catch{/* already closed */}}
 async function publish(next:State){state={...next};await OBR.room.setMetadata({[KEY]:state});await OBR.broadcast.sendMessage(CHANNEL,{type:'state',state},{destination:'REMOTE'});}
 export function initializeFalsaSeiaBackground(){
+ void OBR.player.getRole().then(role=>{backgroundIsGM=role==='GM';}).catch(console.error);
  OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;state?:State};if(d?.type==='state'&&valid(d.state)){state=d.state;if(state.active)void openOverlay().catch(console.error);else void closeOverlay();}});
  void OBR.room.getMetadata().then(m=>{const v=m[KEY];if(valid(v)){state=v;if(v.active)void openOverlay().catch(console.error);}}).catch(console.error);
  OBR.room.onMetadataChange(m=>{const v=m[KEY];if(valid(v)){state=v;if(v.active)void openOverlay().catch(console.error);else void closeOverlay();}});
@@ -29,9 +31,9 @@ export function bindFalsaSeiaActions(root:HTMLElement,connected:boolean,isGM:boo
 }
 export function renderFalsaSeiaOverlay(root:HTMLElement){
  root.classList.add('falsa-seia-overlay');
- root.innerHTML='<main class="fs-world" data-mode="cinematic"><div class="fs-sky"></div><div class="fs-horizon"></div><div class="fs-ruins"></div><div class="fs-fog"></div><div class="fs-ground"></div><div class="fs-presence"></div><div class="fs-figures"></div><div class="fs-whisper"></div><div class="fs-ripple"></div><form class="fs-question"><p></p><input placeholder="Responder..." maxlength="500" aria-label="Sua resposta"><button>Enviar</button></form><aside class="fs-gm-console" hidden><button class="fs-console-close" title="Recolher painel">×</button><span>CONDUÇÃO DA CENA</span><label>Atmosfera <input id="fs-gm-fog" type="range" min="20" max="100" value="72"></label><label>Presença <select id="fs-gm-presence"><option value="absent">Ausente</option><option value="distant">Distante</option><option value="observing">Observando</option><option value="nearby">Próxima</option><option value="manifested">Manifestada</option></select></label><label>Sussurro <input id="fs-gm-whisper" maxlength="180" placeholder="Fragmento de voz..."></label><button type="button" data-fs-whisper>Fazer surgir</button><label>Pergunta <input id="fs-gm-question" maxlength="300" placeholder="Pergunta aos personagens..."></label><button type="button" data-fs-question>Projetar na névoa</button><label>Silhueta <input id="fs-gm-title" maxlength="80" placeholder="Título opcional"></label><button type="button" data-fs-figure>Fazer emergir</button><button type="button" data-fs-mode>Ativar exploração livre</button><button type="button" data-fs-end>Encerrar Falsa Seia</button></aside><button class="fs-gm-tab" hidden title="Abrir condução">◈</button><div class="fs-player-hint">A névoa se move. Algo observa.</div></main>';
+ root.innerHTML='<main class="fs-world" data-mode="cinematic"><div class="fs-sky"></div><div class="fs-horizon"></div><div class="fs-ruins"></div><div class="fs-fog"></div><div class="fs-ground"></div><div class="fs-presence"></div><div class="fs-figures"></div><div class="fs-whisper"></div><div class="fs-ripple"></div><form class="fs-question"><p></p><input placeholder="Responder..." maxlength="500" aria-label="Sua resposta"><button>Enviar</button></form><aside class="fs-gm-console" hidden><button class="fs-console-close" title="Recolher painel">×</button><span>CONDUÇÃO DA CENA</span><label>Atmosfera <input id="fs-gm-fog" type="range" min="20" max="100" value="72"></label><label>Presença <select id="fs-gm-presence"><option value="absent">Ausente</option><option value="distant">Distante</option><option value="observing">Observando</option><option value="nearby">Próxima</option><option value="manifested">Manifestada</option></select></label><label>Sussurro <input id="fs-gm-whisper" maxlength="180" placeholder="Fragmento de voz..."></label><button type="button" data-fs-whisper>Fazer surgir</button><label>Pergunta <input id="fs-gm-question" maxlength="300" placeholder="Pergunta aos personagens..."></label><button type="button" data-fs-question>Projetar na névoa</button><label>Silhueta <input id="fs-gm-title" maxlength="80" placeholder="Título opcional"></label><button type="button" data-fs-figure>Fazer emergir</button><button type="button" data-fs-mode>Ativar exploração livre</button><div class="fs-replies" aria-live="polite"><small>RESPOSTAS DOS JOGADORES</small></div><button type="button" data-fs-end>Encerrar Falsa Seia</button></aside><button class="fs-gm-tab" hidden title="Abrir condução">◈</button><div class="fs-player-hint">A névoa se move. Algo observa.</div></main>';
  const world=root.querySelector<HTMLElement>('.fs-world')!,figures=root.querySelector<HTMLElement>('.fs-figures')!,whisper=root.querySelector<HTMLElement>('.fs-whisper')!,question=root.querySelector<HTMLElement>('.fs-question')!,consolePanel=root.querySelector<HTMLElement>('.fs-gm-console')!,gmTab=root.querySelector<HTMLButtonElement>('.fs-gm-tab')!;
- let lastWhisper='',lastQuestion='',panX=0,panY=0,dragging=false,lastX=0,lastY=0,isGM=false;
+ let lastWhisper='',lastQuestion='',panX=0,panY=0,dragging=false,lastX=0,lastY=0;const isGM=new URLSearchParams(window.location.search).get('gm')==='1';
  const paint=(v:State)=>{
   state=v;world.style.setProperty('--fog',String(v.fog/100));world.dataset.mode=v.mode;world.dataset.presence=v.presence;
   figures.innerHTML=v.figures.map(f=>'<button class="fs-figure" data-figure="'+esc(f.id)+'" style="left:'+f.x+'%;top:'+f.y+'%"><i></i><span>'+esc(f.title||'')+'</span></button>').join('');
@@ -41,13 +43,12 @@ export function renderFalsaSeiaOverlay(root:HTMLElement){
   if(v.wid&&v.wid!==lastWhisper){lastWhisper=v.wid;whisper.textContent=v.whisper;whisper.style.left=(12+Math.random()*58)+'%';whisper.style.top=(18+Math.random()*48)+'%';whisper.classList.remove('show');void whisper.offsetWidth;whisper.classList.add('show');}
   if(v.qid&&v.qid!==lastQuestion){lastQuestion=v.qid;question.querySelector('p')!.textContent=v.question;question.classList.add('show');}
  };
- const send=(patch:Partial<State>)=>{if(isGM)void publish({...state,...patch}).catch(console.error);};
+ const send=(patch:Partial<State>)=>{if(isGM)void publish({...state,...patch}).catch(error=>{console.error(error);OBR.notification.show('Não foi possível atualizar a Falsa Seia.');});};
  OBR.onReady(async()=>{
-  try{isGM=(await OBR.player.getRole())==='GM';if(isGM){consolePanel.hidden=false;gmTab.hidden=false;}}
-  catch(e){console.warn('Não foi possível identificar o papel do jogador na Falsa Seia.',e);}
+  if(isGM){consolePanel.hidden=false;gmTab.hidden=false;}
   try{const m=await OBR.room.getMetadata();const v=m[KEY];if(valid(v))paint(v);}catch(e){console.error(e);}
   OBR.room.onMetadataChange(m=>{const v=m[KEY];if(valid(v))paint(v);});
-  OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;state?:State};if(d?.type==='state'&&valid(d.state))paint(d.state);});
+  OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;state?:State;text?:string;player?:string};if(d?.type==='state'&&valid(d.state))paint(d.state);if(d?.type==='reply'&&d.text&&isGM){const log=root.querySelector<HTMLElement>('.fs-replies');if(log){const line=document.createElement('p');line.textContent=(d.player?d.player+': ':'Jogador: ')+d.text;log.prepend(line);}}});
  });
  consolePanel.querySelector('.fs-console-close')?.addEventListener('click',()=>{consolePanel.classList.add('collapsed');});
  gmTab.addEventListener('click',()=>consolePanel.classList.remove('collapsed'));
@@ -59,7 +60,7 @@ export function renderFalsaSeiaOverlay(root:HTMLElement){
  root.querySelector('[data-fs-figure]')?.addEventListener('click',()=>{const n=state.figures.length,el=root.querySelector<HTMLInputElement>('#fs-gm-title')!;send({figures:[...state.figures,{id:String(Date.now()),title:el.value.trim(),x:22+(n*21)%60,y:35+(n*17)%34}]});el.value='';});
  root.querySelector('[data-fs-mode]')?.addEventListener('click',()=>send({mode:state.mode==='explore'?'cinematic':'explore'}));
  root.querySelector('[data-fs-end]')?.addEventListener('click',()=>send({active:false}));
- question.addEventListener('submit',e=>{e.preventDefault();const input=question.querySelector('input')!,value=input.value.trim();if(value){void OBR.broadcast.sendMessage(CHANNEL,{type:'reply',text:value,player:'Jogador'},{destination:'REMOTE'});}input.value='';question.classList.remove('show');});
+ question.addEventListener('submit',e=>{e.preventDefault();const input=question.querySelector('input')!,value=input.value.trim();if(value){void OBR.player.getName().then(player=>OBR.broadcast.sendMessage(CHANNEL,{type:'reply',text:value,player},{destination:'REMOTE'}));}input.value='';question.classList.remove('show');});
  world.addEventListener('click',e=>{const figure=(e.target as HTMLElement).closest<HTMLButtonElement>('.fs-figure');if(figure){figure.classList.toggle('approached');const ripple=root.querySelector<HTMLElement>('.fs-ripple')!;ripple.style.left=figure.style.left;ripple.style.top=figure.style.top;ripple.classList.remove('pulse');void ripple.offsetWidth;ripple.classList.add('pulse');}});
  world.addEventListener('pointerdown',e=>{if(state.mode!=='explore'||(e.target as HTMLElement).closest('button,input,form,aside'))return;dragging=true;lastX=e.clientX;lastY=e.clientY;world.setPointerCapture(e.pointerId);});
  world.addEventListener('pointermove',e=>{if(!dragging)return;panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;world.style.setProperty('--pan-x',panX+'px');world.style.setProperty('--pan-y',panY+'px');});
