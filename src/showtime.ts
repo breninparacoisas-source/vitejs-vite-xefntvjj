@@ -134,6 +134,18 @@ async function fireEffect(
   }
 }
 
+export async function triggerFalseAscendidoVisual(
+  kind: EffectKind, title: string, message: string, intensity: number,
+  durationSeconds: number, connected: boolean, isGM: boolean,
+): Promise<void> {
+  await fireEffect(kind, title, message, {
+    durationMs: Math.max(5, Math.min(30, durationSeconds)) * 1000,
+    opacity: 1, scale: 1,
+    intensity: Math.max(0.2, Math.min(1, intensity)),
+    wordCount: 0, speed: 1, omenStyle: 'hallucination',
+  }, connected, isGM);
+}
+
 function updateRangeLabels(root: HTMLElement): void {
   const pairs: Array<[string, string, (value: number) => string]> = [
     ['rupture-intensity', 'rupture-intensity-value', (v) => Math.round(v * 100) + '%'],
