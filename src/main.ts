@@ -4,6 +4,7 @@ import OBR from '@owlbear-rodeo/sdk';
 import { bindShowtimeActions, initializeShowtimeBackground, renderShowtimeOverlay, renderShowtimePanel } from './showtime';
 import { bindAmbienceActions, initializeAmbienceBackground, initializeAmbiencePanel, renderAmbienceOverlay, renderAmbiencePanel } from './ambience';
 import { bindCinematicActions, initializeCinematicBackground, renderCinematicOverlay, renderCinematicPanel } from './cinematic';
+import { bindFalseAscendidoActions, initializeFalseAscendido, renderFalseAscendidoPanel } from './false-ascendido';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -27,6 +28,10 @@ const pages = {
   cinematic: {
     title: 'CINEMÁTICO',
     subtitle: 'Conduza momentos importantes da narrativa com ritmo e atmosfera.',
+  },
+  falsoAscendido: {
+    title: 'FALSO ASCENDIDO',
+    subtitle: 'Acompanhe a influência e registre os avanços de seus planos.',
   },
   cenas: {
     title: 'Cenas',
@@ -148,6 +153,9 @@ function render() {
           <button data-page="cinematic" class="${currentPage === 'cinematic' ? 'active' : ''}">
             CINEMÁTICO
           </button>
+          <button data-page="falsoAscendido" class="${currentPage === 'falsoAscendido' ? 'active' : ''}">
+            <span class="nav-icon">◈</span> Falso Ascendido
+          </button>
           <button data-page="cenas" class="${currentPage === 'cenas' ? 'active' : ''}">
             <span class="nav-icon">◉</span> Cenas
           </button>
@@ -212,12 +220,14 @@ function render() {
   bindShowtimeActions(app!, connected, isGM);
   bindAmbienceActions(app!, connected, isGM);
   bindCinematicActions(app!, connected, isGM);
+  bindFalseAscendidoActions(app!, connected, isGM);
 }
 
 function renderPage(): string {
   if (currentPage === 'eventos') return renderShowtimePanel(connected, isGM);
   if (currentPage === 'ambience') return renderAmbiencePanel(connected, isGM);
   if (currentPage === 'cinematic') return renderCinematicPanel(connected, isGM);
+  if (currentPage === 'falsoAscendido') return renderFalseAscendidoPanel(connected, isGM);
 
   if (currentPage === 'central') {
     const active = session.active;
@@ -355,6 +365,8 @@ function renderPage(): string {
       'Aqui construiremos o sistema de eventos manuais, automáticos e acionados pelos jogadores.',
     cinematic:
       'Conduza despedidas, revelações e outros momentos decisivos com sequências dramáticas.',
+    falsoAscendido:
+      'Ferramentas secretas do mestre para acompanhar a influência global, as manifestações locais e os acontecimentos ligados ao Falso Ascendido.',
     cenas:
       'Aqui construiremos transições, efeitos visuais, sons e revelações cinematográficas.',
     interacoes:
@@ -493,6 +505,7 @@ if (OBR.isAvailable && isShowtimeBackground) {
       isGM = (await OBR.player.getRole()) === 'GM';
       playerName = await OBR.player.getName();
       const metadata = await OBR.room.getMetadata();
+      await initializeFalseAscendido(isGM);
       const savedSession = metadata[METADATA_KEY] as SessionData | undefined;
       if (savedSession) session = savedSession;
       const updatePlayers = async () => {
@@ -506,6 +519,7 @@ if (OBR.isAvailable && isShowtimeBackground) {
         const updated = metadata[METADATA_KEY] as SessionData | undefined;
         if (updated) { session = updated; render(); }
       });
+      OBR.room.onMetadataChange(() => { if (currentPage === 'falsoAscendido') render(); });
       console.log('ARTON ENGINE conectado ao Owlbear Rodeo!');
       render();
     } catch (error) {
