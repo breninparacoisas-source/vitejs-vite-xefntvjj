@@ -5,13 +5,15 @@ const CHANNEL='com.arton.engine/falsa-seia/v1';
 const MODAL_ID='com.arton.engine/falsa-seia/overlay';
 const KEY='com.arton.engine/falsa-seia/state';
 let backgroundIsGM=false;
+let overlayOpened=false;
+let overlayOpening:Promise<void>|null=null;
 type Figure={id:string;title:string;x:number;y:number};
 type State={active:boolean;mode:'cinematic'|'explore';fog:number;presence:string;whisper:string;wid:string;question:string;qid:string;figures:Figure[]};
 let state:State={active:false,mode:'cinematic',fog:72,presence:'absent',whisper:'',wid:'',question:'',qid:'',figures:[]};
 const esc=(v:string)=>v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 const valid=(v:unknown):v is State=>!!v&&typeof v==='object'&&typeof (v as State).active==='boolean'&&((v as State).mode==='cinematic'||(v as State).mode==='explore')&&typeof (v as State).fog==='number'&&Array.isArray((v as State).figures);
-async function openOverlay(){const url=new URL('/',window.location.origin);url.searchParams.set('falsaSeia','1');if(backgroundIsGM)url.searchParams.set('gm','1');await OBR.modal.open({id:MODAL_ID,url:url.toString(),fullScreen:true,hideBackdrop:true,hidePaper:true,disablePointerEvents:false});}
-async function closeOverlay(){try{await OBR.modal.close(MODAL_ID);}catch{/* already closed */}}
+async function openOverlay(){if(overlayOpened)return;if(overlayOpening){await overlayOpening;return;}const url=new URL('/',window.location.origin);url.searchParams.set('falsaSeia','1');if(backgroundIsGM)url.searchParams.set('gm','1');overlayOpening=OBR.modal.open({id:MODAL_ID,url:url.toString(),fullScreen:true,hideBackdrop:true,hidePaper:true,disablePointerEvents:false}).then(()=>{overlayOpened=true;}).finally(()=>{overlayOpening=null;});await overlayOpening;}
+async function closeOverlay(){overlayOpened=false;try{await OBR.modal.close(MODAL_ID);}catch{/* already closed */}}
 async function publish(next:State){state={...next};await OBR.room.setMetadata({[KEY]:state});await OBR.broadcast.sendMessage(CHANNEL,{type:'state',state},{destination:'REMOTE'});}
 export async function initializeFalsaSeiaBackground(){
  try{backgroundIsGM=(await OBR.player.getRole())==='GM';}catch(error){console.error('Falha ao identificar o Mestre no background da Falsa Seia.',error);}
