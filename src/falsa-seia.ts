@@ -55,7 +55,10 @@ export function bindFalsaSeiaActions(root:HTMLElement,connected:boolean,isGM:boo
 }
 
 export async function renderFalsaSeiaOverlay(root:HTMLElement){
- root.classList.add('falsa-seia-overlay');
+ document.documentElement.style.cssText='margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:#070b0a!important;';
+ document.body.style.cssText='margin:0!important;padding:0!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:#070b0a!important;';
+ root.className='falsa-seia-overlay';
+ root.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#070b0a!important;isolation:isolate!important;';
  root.innerHTML=`<main class="fs-world" data-mode="cinematic" data-presence="absent">
  <div class="fs-atmosphere"><div class="fs-mist mist-one"></div><div class="fs-mist mist-two"></div><div class="fs-mist mist-three"></div><div class="fs-haze"></div><div class="fs-grain"></div></div>
  <div class="fs-scene"><div class="fs-depth depth-far"></div><div class="fs-depth depth-near"></div><div class="fs-ground"></div><div class="fs-presence"></div><div class="fs-figures"></div></div>
