@@ -95,3 +95,22 @@ html:has(#app.falsa-seia-overlay),body:has(#app.falsa-seia-overlay){width:100%!i
 @keyframes fs-world-pulse{0%,100%{filter:none}35%{filter:brightness(1.12) saturate(.88)}}
 @media(max-width:700px){.fs-gm-console{right:8px;top:8px;width:min(280px,calc(100vw - 16px));max-height:calc(100dvh - 16px)}.fs-question{bottom:12%}.fs-explore-help{left:10px;bottom:10px;font-size:8px}.fs-action-veil{bottom:10%}}
 @media(prefers-reduced-motion:reduce){.fs-world *,.fs-world *:before,.fs-world *:after{animation-duration:1ms!important;transition-duration:1ms!important}}
+
+
+/* 0.27 — correção de geometria, enquadramento e profundidade */
+.falsa-seia-overlay,.falsa-seia-overlay *{box-sizing:border-box}
+.falsa-seia-overlay .fs-world{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:100%!important;overflow:hidden!important;contain:layout paint style!important;background:#070b0a!important}
+.falsa-seia-overlay .fs-atmosphere{position:absolute!important;inset:-18%!important;overflow:hidden!important;filter:none!important}
+.falsa-seia-overlay .fs-scene{position:absolute!important;inset:-12%!important;width:auto!important;height:auto!important;transform-origin:50% 52%!important}
+.falsa-seia-overlay .fs-depth{inset:0!important}
+.falsa-seia-overlay .depth-far:before,.falsa-seia-overlay .depth-far:after,.falsa-seia-overlay .depth-near:before,.falsa-seia-overlay .depth-near:after{border-radius:50%!important;clip-path:none!important;filter:blur(100px)!important;opacity:.32!important}
+.falsa-seia-overlay .fs-ground{left:-45%!important;right:-45%!important;bottom:-35%!important;height:78%!important;border-radius:50%!important;background:radial-gradient(ellipse at 50% 15%,#c4d1c01c 0,transparent 40%),radial-gradient(ellipse at 23% 42%,#aabcae17 0,transparent 44%),radial-gradient(ellipse at 78% 45%,#aabcae17 0,transparent 48%),radial-gradient(ellipse at 50% 75%,#111b16aa 0,transparent 70%)!important;filter:blur(100px)!important}
+.falsa-seia-overlay .fs-figure{width:clamp(150px,18vw,280px)!important;height:clamp(280px,54vh,560px)!important;opacity:.48!important;filter:blur(1px) drop-shadow(0 12px 48px #0009)!important}
+.falsa-seia-overlay .figure-body{inset:0!important;filter:none!important;opacity:.92!important;animation:fs-figure-drift 19s ease-in-out infinite alternate!important}
+.falsa-seia-overlay .figure-body>i{display:none!important}
+.falsa-seia-overlay .figure-body:before{content:"";position:absolute;inset:2% -20% -8%;border-radius:48% 52% 48% 52%/28% 24% 32% 36%;background:radial-gradient(ellipse at 50% 13%,#020605 0 7%,#030706b8 13%,transparent 24%),radial-gradient(ellipse at 50% 35%,#030706e8 0 19%,#040807c9 35%,transparent 55%),radial-gradient(ellipse at 48% 69%,#020504f0 0 25%,#030706b8 44%,transparent 68%),radial-gradient(ellipse at 50% 90%,#030706aa 0 14%,transparent 48%);filter:blur(24px);mask-image:radial-gradient(ellipse at 50% 48%,#000 24%,#000 54%,transparent 78%);animation:fs-figure-melt 18s ease-in-out infinite alternate}
+.falsa-seia-overlay .figure-aura{inset:-35% -65%!important;background:radial-gradient(ellipse,#b4c7b51b 0,transparent 68%)!important;filter:blur(72px)!important}
+.falsa-seia-overlay .figure-title{font-size:clamp(12px,1.2vw,16px)!important;text-shadow:0 0 28px #d9e7dc,0 2px 18px #000!important}
+.falsa-seia-overlay .fs-presence:before,.falsa-seia-overlay .fs-presence:after{border-radius:50%!important;filter:blur(110px)!important}
+.falsa-seia-overlay .fs-entry-veil{position:absolute!important;z-index:100!important;inset:-25%!important;opacity:1;background:radial-gradient(ellipse at 15% 70%,#dce8dd 0,transparent 38%),radial-gradient(ellipse at 82% 58%,#c6d5c9 0,transparent 43%),radial-gradient(ellipse at 52% 100%,#d7e2d8 0,transparent 50%),radial-gradient(ellipse at 50% 45%,#111b16 0,transparent 75%),#050908!important;filter:blur(44px)!important;pointer-events:none!important;will-change:opacity,transform,filter}
+@keyframes fs-figure-melt{0%{transform:translate3d(-1%,0,0) scaleX(.92) scaleY(1);filter:blur(22px)}50%{transform:translate3d(1.5%,-1%,0) scaleX(1.04) scaleY(1.02);filter:blur(30px)}100%{transform:translate3d(-.5%,1%,0) scaleX(.97) scaleY(.98);filter:blur(25px)}}
