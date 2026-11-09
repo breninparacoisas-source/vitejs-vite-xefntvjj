@@ -25,7 +25,7 @@ export function renderFalsaSeiaPanel(connected:boolean,isGM:boolean){
 }
 export function bindFalsaSeiaActions(root:HTMLElement,connected:boolean,isGM:boolean){
  const can=connected&&isGM;
- root.querySelector('[data-start]')?.addEventListener('click',()=>{if(can)void publish({...state,active:true}).then(openOverlay).catch(e=>{console.error(e);OBR.notification.show('Não foi possível abrir a Falsa Seia.');});});
+ root.querySelector('[data-start]')?.addEventListener('click',()=>{if(can)void publish({...state,active:true}).catch(e=>{console.error(e);OBR.notification.show('Não foi possível abrir a Falsa Seia.');});});
  root.querySelector('[data-stop]')?.addEventListener('click',()=>{if(can)void publish({...state,active:false}).then(closeOverlay);});
  OBR.broadcast.onMessage(CHANNEL,e=>{const d=e.data as {type?:string;text?:string;player?:string};if(d?.type==='reply'&&d.text){const el=root.querySelector('#fs-reply');if(el)el.textContent=(d.player?d.player+': ':'')+d.text;}});
 }
